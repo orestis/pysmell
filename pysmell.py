@@ -54,7 +54,6 @@ if __name__ == '__main__':
             for f in files:
                 if not f.endswith('.py'):
                     continue
-#                print f
                 s = open(os.path.join(root, f), 'r').read()
                 classes = getClassDict(s, codeFinder)
                 if 'UnitTests' in dirs:
