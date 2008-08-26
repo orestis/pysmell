@@ -1,7 +1,8 @@
-import sys
+import sys, os
 import compiler
 from codefinder import CodeFinder
 from compiler.visitor import ExampleASTVisitor
+from pprint import pprint
 
 source = """
 class Aclass(object):
@@ -19,7 +20,7 @@ def test(aname):
     aname.do_other_stuff()
 """
 
-def method_arguments(self, func):
+def check_method_arguments(self, func):
     if self.inClass:
         if func.argnames:
             if func.argnames[0] != 'self':
@@ -29,18 +30,34 @@ def method_arguments(self, func):
             print ('no args!')
 
 
-def getClassDict(source):
+def getClassDict(source, codeFinder=None):
     tree = compiler.parse(source)
-    codeFinder = CodeFinder()
+    if codeFinder is None:
+        codeFinder = CodeFinder()
     compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
     return codeFinder.classes
 
+def generateClassTag(classes):
+    f = open('PYSMELLTAGS', 'w')
+    pprint(classes._classes, f)
+    f.close()
+
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
+    if len(sys.argv) == 2:
         source = open(sys.argv[1], 'r').read()
-    tree = compiler.parse(source)
-    codeFinder = CodeFinder()
-    codeFinder.addChecker('Function', method_arguments)
-    compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+        generateClassTag(getClassDict(source))
+    elif len(sys.argv) == 1:
+        codeFinder = CodeFinder()
+        classes = None
+        for root, dirs, files in os.walk(os.getcwd()):
+            for f in files:
+                if not f.endswith('.py'):
+                    continue
+#                print f
+                s = open(os.path.join(root, f), 'r').read()
+                classes = getClassDict(s, codeFinder)
+                if 'UnitTests' in dirs:
+                    dirs.remove('UnitTests')
+        generateClassTag(classes)
 

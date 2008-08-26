@@ -53,8 +53,13 @@ class CodeFinder(object):
     def currentClass(self):
         return self.inClass and self.scope[0].name or None
 
-    OTHER = set(['Assign', 'AssName', 'Stmt', 'CallFunc', 'Const', 'Module',
-                 'Discard', 'Printnl', 'Name', 'Return', 'Mod', 'Add'])
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple', 'AugAssign',
+                'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
+                'Discard', 'Div', 'If', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
+                'GenExprFor', 'Global', 'Import', 'Keyword', 'Lambda', 'List', 'ListComp',
+                'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
+                'Pass', 'Printnl', 'Raise', 'Return', 'Slice', 'Stmt', 'Sub', 'Subscript',
+                'Tuple', 'TryExcept', 'TryFinally', 'UnarySub', 'While', 'Yield'])
 
     def __getattr__(self, attr):
         if attr[5:] in self.OTHER:
@@ -70,13 +75,16 @@ class CodeFinder(object):
         if self.inClass:
             if isinstance(node.expr, ast.Name):
                 if node.expr.name == 'self':
-                    print 'in class, self Accessing', node.attrname, 'of', self.currentClass
+                    pass
+#                    print 'in class, self Accessing', node.attrname, 'of', self.currentClass
             elif isinstance(node.expr, ast.CallFunc):
-                print 'in class, trying to access %s attr of %s' % (node.attrname, node.expr)
+                pass
+#                print 'in class, trying to access %s attr of %s' % (node.attrname, node.expr)
             else:
-                print 'in class, Accessing', node.attrname, 'of', node.expr
-        else:
-            self.accesses.setdefault(node.expr.name, set([])).add(node.attrname)
+                pass
+#                print 'in class, Accessing', node.attrname, 'of', node.expr
+#        else:
+#            self.accesses.setdefault(node.expr.name, set([])).add(node.attrname)
 
     @VisitChildren
     def visitAssAttr(self, node):
@@ -85,7 +93,7 @@ class CodeFinder(object):
                 if node.expr.name == 'self':
                     self.classes.addProperty(self.currentClass, node.attrname)
                     return
-        print 'assigning', node.expr, node.attrname
+#        print 'assigning', node.expr, node.attrname
 
 
     def visitClass(self, klass):
@@ -101,7 +109,7 @@ class CodeFinder(object):
         self.accesses = {}
         if self.inClass:
             if func.name != '__init__':
-                if func.decorators and 'property' in [n.name for n in func.decorators]:
+                if func.decorators and 'property' in [getName(n) for n in func.decorators]:
                     self.classes.addProperty(self.currentClass, func.name)
                 else:
                     self.classes.addMethod(self.currentClass, func.name, func.argnames[1:], func.doc or "")
@@ -117,6 +125,12 @@ class CodeFinder(object):
 
 
 
+def getName(node):
+    if isinstance(node, (ast.Class, ast.Name, ast.Function)):
+        return node.name
+    if isinstance(node, (ast.CallFunc),):
+        return node.node.name
+    raise 'Unknown node', type(node)
 
             
 
