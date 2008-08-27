@@ -39,7 +39,7 @@ def getClassDict(source, codeFinder=None):
 
 def generateClassTag(classes):
     f = open('PYSMELLTAGS', 'w')
-    pprint(classes._classes, f)
+    pprint(classes._classes, f, width=100)
     f.close()
 
 

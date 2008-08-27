@@ -11,10 +11,12 @@ class ClassDict(object):
         self._classes[klass]['constructor'] = []
 
     def addMethod(self, klass, method, args, docstring):
-        self._classes[klass]['methods'].append((method, args, docstring))
+        if (method, args, docstring) not in self._classes[klass]['methods']:
+            self._classes[klass]['methods'].append((method, args, docstring))
 
     def addProperty(self, klass, prop):
-        self._classes[klass]['properties'].append(prop)
+        if prop not in self._classes[klass]['properties']:
+            self._classes[klass]['properties'].append(prop)
 
     def setConstructor(self, klass, args):
         self._classes[klass]['constructor'] = args
@@ -55,10 +57,10 @@ class CodeFinder(object):
 
     OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple', 'AugAssign',
                 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
-                'Discard', 'Div', 'If', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
+                'Discard', 'Div', 'If', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
                 'GenExprFor', 'Global', 'Import', 'Keyword', 'Lambda', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Printnl', 'Raise', 'Return', 'Slice', 'Stmt', 'Sub', 'Subscript',
+                'Pass', 'Power', 'Printnl', 'Raise', 'Return', 'Slice', 'Stmt', 'Sub', 'Subscript',
                 'Tuple', 'TryExcept', 'TryFinally', 'UnarySub', 'While', 'Yield'])
 
     def __getattr__(self, attr):

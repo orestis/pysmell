@@ -33,6 +33,16 @@ class FunctionalTest(unittest.TestCase):
             },
         }
         self.assertEquals(output._classes, expected)
+        self.fail('check *args **kwargs')
+    
+    def testSimpleAutoComplete(self):
+        'should accept initialy a starting string and return everything that matches'
+        self.fail()
+
+
+    def testTypeInferencing(self):
+        'given a valid code block, try to narrow down the possible classes and return that'
+        self.fail()
 
 if __name__ == '__main__':
     unittest.main()
