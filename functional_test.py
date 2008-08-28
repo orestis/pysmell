@@ -34,7 +34,7 @@ class FunctionalTest(unittest.TestCase):
                 'methods': [('jump', ['howhigh'], ''), ('duck', [], 'hi im a docstring')],
             },
         }
-        self.assertEquals(output._classes, expected)
+        self.assertEquals(output._modules['CLASSES'], expected)
         self.fail('check *args **kwargs')
 
     def testPackage(self):
@@ -46,8 +46,8 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = {
             'ModuleA': {
                 'FUNCTIONS': [('TopLevelFunction', ['arg1', 'arg2'], "")],
-                'PROPERTIES': ['CONSTANT',],
-                'CLASSES': [
+                'CONSTANTS': ['CONSTANT',],
+                'CLASSES':
                     {'ClassA': {
                             'bases': ['object'],
                             'docstring': '',
@@ -55,7 +55,7 @@ class FunctionalTest(unittest.TestCase):
                             'properties': ['classPropertyA', 'classPropertyB', 'propertyA', 'propertyB', 'propertyC', 'propertyD'],
                             'methods': [('methodA', ['argA', 'argB', '*args', '**kwargs'], '')]
                         },
-                     'ClassB': {
+                     'ChildClassA': {
                             'bases': ['ClassA', 'object'],
                             'docstring': 'a class docstring, imagine that',
                             'constructor': ['conArg'],
@@ -63,7 +63,7 @@ class FunctionalTest(unittest.TestCase):
                             'methods': [('extraMethod', [], 'i have a docstring')],
                         }
                     }
-                ]
+                
             }
                         
         }

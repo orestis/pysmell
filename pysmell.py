@@ -40,7 +40,7 @@ def getClassDict(source, codeFinder=None):
 
 def generateClassTag(classes):
     f = open(os.path.join(os.getcwd(), 'PYSMELLTAGS'), 'w')
-    pprint(classes._classes, f, width=100)
+    pprint(classes._modules, f, width=100)
     f.close()
 
 
@@ -53,6 +53,7 @@ def processArgList(argList):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
+                    codeFinder.setFilename(f)
                     s = open(os.path.join(root, f), 'r').read()
                     if s:
                         classes = getClassDict(s, codeFinder)

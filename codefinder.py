@@ -6,7 +6,7 @@ class ClassDict(object):
 
     def enterModule(self, module):
         self.currentModule = module
-        self._modules[module] = {'CLASSES': {}}
+        self._modules[module] = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': []}
 
     def exitModule(self):
         self.currentModule = None
@@ -26,9 +26,15 @@ class ClassDict(object):
         if (method, args, docstring) not in self.currentClass(klass)['methods']:
             self.currentClass(klass)['methods'].append((method, args, docstring))
 
+    def addFunction(self, function, args, docstring):
+        self._modules[self.currentModule]['FUNCTIONS'].append((function, args, docstring))
+
     def addProperty(self, klass, prop):
-        if prop not in self.currentClass(klass)['properties']:
-            self.currentClass(klass)['properties'].append(prop)
+        if klass is not None:
+            if prop not in self.currentClass(klass)['properties']:
+                self.currentClass(klass)['properties'].append(prop)
+        else:
+            self._modules[self.currentModule]['CONSTANTS'].append(prop)
 
     def setConstructor(self, klass, args):
         self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
@@ -44,12 +50,15 @@ def VisitChildren(fun):
     return decorated
 
 class CodeFinder(object):
-    def __init__(self, filename):
+    def __init__(self):
         self.scope = []
         self.checkers = {}
         self.classes = ClassDict()
         self.accesses = {}
-        self._module = filename[:-3]
+        self.module = '__main__'
+
+    def setFilename(self, filename):
+        self.module = filename[:-3]
 
     def addChecker(self, nodeType, func):
         self.checkers.setdefault(nodeType, []).append(func)
@@ -94,12 +103,10 @@ class CodeFinder(object):
         for c in node.getChildNodes():
             self.visit(c)
 
-
     def visitModule(self, node):
-        self.classes.enterModule(self._module)
+        self.classes.enterModule(self.module)
         self.visit(node.node)
         self.classes.exitModule()
-
 
     @VisitChildren
     def visitGetattr(self, node):
@@ -108,8 +115,6 @@ class CodeFinder(object):
                 if node.expr.name == 'self':
                     pass
             elif isinstance(node.expr, ast.CallFunc):
-                pass
-            else:
                 pass
 
     @VisitChildren
@@ -123,15 +128,15 @@ class CodeFinder(object):
     def visitAssName(self, node):
         if self.inClass and len(self.scope) == 1:
             self.classes.addProperty(self.currentClass, node.name)
-
-
+        elif len(self.scope) == 0:
+            self.classes.addProperty(None, node.name)
 
     def visitClass(self, klass):
         self.enterScope(klass)
-        self.classes.enterClass(klass.name, [getName(b) for b in klass.bases], klass.doc or '')
+        if len(self.scope) == 1:
+            self.classes.enterClass(klass.name, [getName(b) for b in klass.bases], klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
-
 
     def visitFunction(self, func):
         for check in self.checkers.get('Function', []):
@@ -147,6 +152,8 @@ class CodeFinder(object):
                     self.classes.addMethod(self.currentClass, func.name, getFuncArgs(func), func.doc or "")
             else:
                 self.classes.setConstructor(self.currentClass, getFuncArgs(func))
+        elif len(self.scope) == 1:
+            self.classes.addFunction(func.name, getFuncArgs(func, inClass=False), func.doc or "")
 
         self.visit(func.code)
         self.exitScope()
@@ -169,8 +176,10 @@ def getName(node):
 
             
 
-def getFuncArgs(func):
-    args = func.argnames[1:]
+def getFuncArgs(func, inClass=True):
+    args = func.argnames[:]
+    if inClass:
+        args = args[1:]
     if func.kwargs and func.varargs:
         args[-1] = '**' + args[-1]
         args[-2] = '*' + args[-2]
