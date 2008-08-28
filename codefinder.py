@@ -2,27 +2,39 @@ from compiler import ast
 
 class ClassDict(object):
     def __init__(self):
-        self._classes = {}
+        self._modules = {}
 
-    def addClass(self, klass):
-        self._classes[klass] = {}
-        self._classes[klass]['methods'] = []
-        self._classes[klass]['properties'] = []
-        self._classes[klass]['constructor'] = []
+    def enterModule(self, module):
+        self.currentModule = module
+        self._modules[module] = {'CLASSES': {}}
+
+    def exitModule(self):
+        self.currentModule = None
+
+    def currentClass(self, klass):
+        return self._modules[self.currentModule]['CLASSES'][klass]
+
+    def enterClass(self, klass, bases, docstring):
+        self._modules[self.currentModule]['CLASSES'][klass] = {}
+        self._modules[self.currentModule]['CLASSES'][klass]['methods'] = []
+        self._modules[self.currentModule]['CLASSES'][klass]['properties'] = []
+        self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = []
+        self._modules[self.currentModule]['CLASSES'][klass]['bases'] = bases
+        self._modules[self.currentModule]['CLASSES'][klass]['docstring'] = docstring
 
     def addMethod(self, klass, method, args, docstring):
-        if (method, args, docstring) not in self._classes[klass]['methods']:
-            self._classes[klass]['methods'].append((method, args, docstring))
+        if (method, args, docstring) not in self.currentClass(klass)['methods']:
+            self.currentClass(klass)['methods'].append((method, args, docstring))
 
     def addProperty(self, klass, prop):
-        if prop not in self._classes[klass]['properties']:
-            self._classes[klass]['properties'].append(prop)
+        if prop not in self.currentClass(klass)['properties']:
+            self.currentClass(klass)['properties'].append(prop)
 
     def setConstructor(self, klass, args):
-        self._classes[klass]['constructor'] = args
+        self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
 
     def __repr__(self):
-        return repr(self._classes)
+        return repr(self._modules)
 
 
 def VisitChildren(fun):
@@ -32,34 +44,45 @@ def VisitChildren(fun):
     return decorated
 
 class CodeFinder(object):
-    def __init__(self):
+    def __init__(self, filename):
         self.scope = []
         self.checkers = {}
         self.classes = ClassDict()
         self.accesses = {}
+        self._module = filename[:-3]
 
     def addChecker(self, nodeType, func):
         self.checkers.setdefault(nodeType, []).append(func)
 
     @property
     def inClass(self):
-        return bool(self.scope) and isinstance(self.scope[0], ast.Class)
+        return len(self.scope) > 0 and (isinstance(self.scope[-1], ast.Class) or self.inClassFunction)
+
+    @property
+    def inClassFunction(self):
+        return (len(self.scope) == 2 and 
+                isinstance(self.scope[-1], ast.Function) and
+                isinstance(self.scope[-2], ast.Class))
 
     def enterScope(self, node):
-        self.scope.insert(0, node)
+        self.scope.append(node)
 
     def exitScope(self):
         self.scope.pop()
 
     @property
     def currentClass(self):
-        return self.inClass and self.scope[0].name or None
+        if self.inClassFunction:
+            return self.scope[-2].name
+        elif self.inClass:
+            return self.scope[-1].name
+        return None
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple', 'AugAssign',
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign',
                 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
                 'Discard', 'Div', 'If', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
                 'GenExprFor', 'Global', 'Import', 'Keyword', 'Lambda', 'List', 'ListComp',
-                'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
+                'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
                 'Pass', 'Power', 'Printnl', 'Raise', 'Return', 'Slice', 'Stmt', 'Sub', 'Subscript',
                 'Tuple', 'TryExcept', 'TryFinally', 'UnarySub', 'While', 'Yield'])
 
@@ -72,53 +95,61 @@ class CodeFinder(object):
             self.visit(c)
 
 
+    def visitModule(self, node):
+        self.classes.enterModule(self._module)
+        self.visit(node.node)
+        self.classes.exitModule()
+
+
     @VisitChildren
     def visitGetattr(self, node):
         if self.inClass:
             if isinstance(node.expr, ast.Name):
                 if node.expr.name == 'self':
                     pass
-#                    print 'in class, self Accessing', node.attrname, 'of', self.currentClass
             elif isinstance(node.expr, ast.CallFunc):
                 pass
-#                print 'in class, trying to access %s attr of %s' % (node.attrname, node.expr)
             else:
                 pass
-#                print 'in class, Accessing', node.attrname, 'of', node.expr
-#        else:
-#            self.accesses.setdefault(node.expr.name, set([])).add(node.attrname)
 
     @VisitChildren
     def visitAssAttr(self, node):
-        if self.inClass:
+        if self.inClassFunction:
             if isinstance(node.expr, ast.Name):
                 if node.expr.name == 'self':
                     self.classes.addProperty(self.currentClass, node.attrname)
-                    return
-#        print 'assigning', node.expr, node.attrname
+
+    @VisitChildren
+    def visitAssName(self, node):
+        if self.inClass and len(self.scope) == 1:
+            self.classes.addProperty(self.currentClass, node.name)
+
 
 
     def visitClass(self, klass):
         self.enterScope(klass)
-        self.classes.addClass(klass.name)
+        self.classes.enterClass(klass.name, [getName(b) for b in klass.bases], klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
+
 
     def visitFunction(self, func):
         for check in self.checkers.get('Function', []):
             check(self, func)
 
         self.accesses = {}
-        if self.inClass:
+        self.enterScope(func)
+        if self.inClassFunction:
             if func.name != '__init__':
                 if func.decorators and 'property' in [getName(n) for n in func.decorators]:
                     self.classes.addProperty(self.currentClass, func.name)
                 else:
-                    self.classes.addMethod(self.currentClass, func.name, func.argnames[1:], func.doc or "")
+                    self.classes.addMethod(self.currentClass, func.name, getFuncArgs(func), func.doc or "")
             else:
-                self.classes.setConstructor(self.currentClass, func.argnames[1:])
+                self.classes.setConstructor(self.currentClass, getFuncArgs(func))
 
         self.visit(func.code)
+        self.exitScope()
 
         for name, attrs in self.accesses.items():
             for klass, classattrs in self.classes.items():
@@ -132,7 +163,28 @@ def getName(node):
         return node.name
     if isinstance(node, (ast.CallFunc),):
         return node.node.name
-    raise 'Unknown node', type(node)
+    if isinstance(node, (ast.Const),):
+        return node.value
+    raise 'Unknown node: %r %r' % (type(node), dir(node))
 
             
+
+def getFuncArgs(func):
+    args = func.argnames[1:]
+    if func.kwargs and func.varargs:
+        args[-1] = '**' + args[-1]
+        args[-2] = '*' + args[-2]
+    elif func.kwargs:
+        args[-1] = '**' + args[-1]
+    elif func.varargs:
+        args[-1] = '*' + args[-1]
+
+    offset = bool(func.varargs) + bool(func.kwargs) + 1
+    for default in func.defaults:
+        name = getName(default)
+        if name not in ('None', 'True', 'False'):
+            name = repr(name)
+        args[-offset] = args[-offset] + "=" + name
+
+    return args
 

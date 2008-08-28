@@ -37,26 +37,31 @@ def getClassDict(source, codeFinder=None):
     compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
     return codeFinder.classes
 
+
 def generateClassTag(classes):
-    f = open('PYSMELLTAGS', 'w')
+    f = open(os.path.join(os.getcwd(), 'PYSMELLTAGS'), 'w')
     pprint(classes._classes, f, width=100)
     f.close()
 
 
+def processArgList(argList):
+    codeFinder = CodeFinder()
+    classes = None
+    for item in fileList:
+        if os.path.isdir(item):
+            for root, dirs, files in os.walk(item):
+                for f in files:
+                    if not f.endswith(".py"):
+                        continue
+                    s = open(os.path.join(root, f), 'r').read()
+                    if s:
+                        classes = getClassDict(s, codeFinder)
+    generateClassTag(classes)
+
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        source = open(sys.argv[1], 'r').read()
-        generateClassTag(getClassDict(source))
-    elif len(sys.argv) == 1:
-        codeFinder = CodeFinder()
-        classes = None
-        for root, dirs, files in os.walk(os.getcwd()):
-            for f in files:
-                if not f.endswith('.py'):
-                    continue
-                s = open(os.path.join(root, f), 'r').read()
-                classes = getClassDict(s, codeFinder)
-                if 'UnitTests' in dirs:
-                    dirs.remove('UnitTests')
-        generateClassTag(classes)
+    fileList = sys.argv[1:]
+    if not fileList:
+        fileList = [os.getcwd()]
+    processArgList(fileList)
+
 

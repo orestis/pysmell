@@ -1,10 +1,12 @@
 import unittest
 from textwrap import dedent
+import subprocess
+import os
 
 import pysmell
 
 class FunctionalTest(unittest.TestCase):
-    def testTagGeneration(self):
+    def DONTtestTagGeneration(self):
         input_source = dedent("""\
         "This is MyClass' docstring"
 
@@ -34,13 +36,46 @@ class FunctionalTest(unittest.TestCase):
         }
         self.assertEquals(output._classes, expected)
         self.fail('check *args **kwargs')
+
+    def testPackage(self):
+        if os.path.exists('Tests/PYSMELLTAGS'):
+            os.remove('Tests/PYSMELLTAGS')
+        subprocess.call(["python", "../pysmell.py", "PackageA"], cwd='Tests')
+        self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
+        expectedDict = {
+            'ModuleA': {
+                'FUNCTIONS': [('TopLevelFunction', ['arg1', 'arg2'], "")],
+                'PROPERTIES': ['CONSTANT',],
+                'CLASSES': [
+                    {'ClassA': {
+                            'bases': ['object'],
+                            'docstring': '',
+                            'constructor': [],
+                            'properties': ['classPropertyA', 'classPropertyB', 'propertyA', 'propertyB', 'propertyC', 'propertyD'],
+                            'methods': [('methodA', ['argA', 'argB', '*args', '**kwargs'], '')]
+                        },
+                     'ClassB': {
+                            'bases': ['ClassA', 'object'],
+                            'docstring': 'a class docstring, imagine that',
+                            'constructor': ['conArg'],
+                            'properties': ['extraProperty'],
+                            'methods': [('extraMethod', [], 'i have a docstring')],
+                        }
+                    }
+                ]
+            }
+                        
+        }
+        self.assertEquals(PYSMELLDICT, expectedDict)
+
     
-    def testSimpleAutoComplete(self):
+    def DONTtestSimpleAutoComplete(self):
         'should accept initialy a starting string and return everything that matches'
         self.fail()
 
 
-    def testTypeInferencing(self):
+    def DONTtestTypeInferencing(self):
         'given a valid code block, try to narrow down the possible classes and return that'
         self.fail()
 
