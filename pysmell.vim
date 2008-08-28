@@ -20,7 +20,6 @@ while col > 1:
         break
 if not found:
     vim.command("return 0")
-
 eopython
     "findstart = 0 when we need to return the list of completions
     else
@@ -38,7 +37,28 @@ eopython
                 break
             endif
         endwhile
-        "execute "python vimcomplete('" . cword . "', '" . a:base . "')"
-        return ['test']
+        execute "python vimcomplete('" . cword . "', '" . a:base . "')"
+        return g:pysmell_completions
     endif
 endfunction
+
+python << eopython
+def vimcomplete(cword, base):
+    import vim, os
+    vim.command('let g:pysmell_completions = []')
+    filename = vim.current.buffer.name
+    directory, basename = os.path.split(filename)
+    tagsFile = os.path.join(directory, 'PYSMELLTAGS')
+    PYSMELLDICT = eval(file(tagsFile).read())
+    completions = []
+    for klassDict in PYSMELLDICT.values():
+        completions.extend(klassDict['properties'])
+        completions.extend([name for (name, _, __) in klassDict['methods']])
+    if base:
+        filteredCompletions = [comp for comp in completions if comp.startswith(base)]
+    else:
+        filteredCompletions = completions
+    filteredCompletions.sort()
+    vim.command('let g:pysmell_completions = %r' % (filteredCompletions, ))
+eopython
+set omnifunc=pysmell#Complete
