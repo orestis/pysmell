@@ -89,11 +89,11 @@ class CodeFinder(object):
 
     OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign',
                 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
-                'Discard', 'Div', 'If', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
+                'Discard', 'Div', 'Exec', 'If', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
                 'GenExprFor', 'Global', 'Import', 'Keyword', 'Lambda', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Power', 'Printnl', 'Raise', 'Return', 'Slice', 'Stmt', 'Sub', 'Subscript',
-                'Tuple', 'TryExcept', 'TryFinally', 'UnarySub', 'While', 'Yield'])
+                'Pass', 'Power', 'Printnl', 'Raise', 'Return', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
+                'Tuple', 'TryExcept', 'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
 
     def __getattr__(self, attr):
         if attr[5:] in self.OTHER:
@@ -168,18 +168,18 @@ class CodeFinder(object):
 def getName(node):
     if isinstance(node, (ast.Class, ast.Name, ast.Function)):
         return node.name
-    if isinstance(node, (ast.CallFunc),):
-        return node.node.name
+    #if isinstance(node, (ast.CallFunc),):
+        #return node.node.name
     if isinstance(node, (ast.Const),):
-        return node.value
-    raise 'Unknown node: %r %r' % (type(node), dir(node))
+        return str(node.value)
+    if isinstance(node, (ast.Getattr, ast.Tuple, ast.CallFunc, ast.Lambda),):
+        return '.'.join(map(getName, node.getChildNodes()))
+    raise 'Unknown node: %r %r' % (node, dir(node))
 
             
 
 def getFuncArgs(func, inClass=True):
     args = func.argnames[:]
-    if inClass:
-        args = args[1:]
     if func.kwargs and func.varargs:
         args[-1] = '**' + args[-1]
         args[-2] = '*' + args[-2]
@@ -187,6 +187,9 @@ def getFuncArgs(func, inClass=True):
         args[-1] = '**' + args[-1]
     elif func.varargs:
         args[-1] = '*' + args[-1]
+
+    if inClass:
+        args = args[1:]
 
     offset = bool(func.varargs) + bool(func.kwargs) + 1
     for default in func.defaults:
