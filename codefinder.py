@@ -189,10 +189,17 @@ def getName(node):
         return '.'.join(map(getName, ast.flatten(node)))
     raise 'Unknown node: %r %r' % (node, dir(node))
 
+
+def argToStr(arg):
+    if isinstance(arg, tuple):
+        if len(arg) == 1:
+            return '(%s,)' % argToStr(arg[0])
+        return '(%s)' % ', '.join(argToStr(elem) for elem in arg)
+    return arg
             
 
 def getFuncArgs(func, inClass=True):
-    args = func.argnames[:]
+    args = map(argToStr, func.argnames[:])
     if func.kwargs and func.varargs:
         args[-1] = '**' + args[-1]
         args[-2] = '*' + args[-2]

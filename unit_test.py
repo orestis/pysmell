@@ -59,7 +59,6 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled('[a, b, c]')
         self.assertNamesIsHandled('lambda a: (c, b)')
 
-
     def testClassProperties(self):
         out = self.getModule("""
         class A(object):
@@ -82,6 +81,8 @@ class CodeFinderTest(unittest.TestCase):
                 pass
             def methodArgs(self, arg1, arg2):
                 pass
+            def methodTuple(self, (x, y)):
+                pass
             def methodDefaultArgs(self, arg1, arg2=None):
                 pass
             def methodStar(self, arg1, *args):
@@ -95,6 +96,7 @@ class CodeFinderTest(unittest.TestCase):
         """)
         expectedMethods = [('method', [], 'random docstring'),
                            ('methodArgs', ['arg1', 'arg2'], ''),
+                           ('methodTuple', ['(x, y)'], ''),
                            ('methodDefaultArgs', ['arg1', 'arg2=None'], ''),
                            ('methodStar', ['arg1', '*args'], ''),
                            ('methodKW', ['arg1', '**kwargs'], ''),
@@ -137,6 +139,12 @@ class CodeFinderTest(unittest.TestCase):
         """)
         self.assertEquals(out['CONSTANTS'], ['CONSTANT'])
 
+    def testArgToStr(self):
+        from codefinder import argToStr
+        self.assertEquals(argToStr('stuff'), 'stuff')
+        self.assertEquals(argToStr(('ala', 'ma', 'kota')), '(ala, ma, kota)')
+        self.assertEquals(argToStr((('x1', 'y1'), ('x2', 'y2'))), '((x1, y1), (x2, y2))')
+        self.assertEquals(argToStr(('ala',)), '(ala,)')
 
 if __name__ == '__main__':
     unittest.main()
