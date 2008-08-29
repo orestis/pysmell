@@ -48,10 +48,15 @@ def vimcomplete(cword, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     directory, basename = os.path.split(filename)
+    partialDict = {}
     while not os.path.exists(os.path.join(directory, 'PYSMELLTAGS')):
+        if os.path.exists(os.path.join(directory, 'PYSMELLTAGS.partial')):
+            tagsFile = os.path.join(directory, 'PYSMELLTAGS.partial')
+            partialDict.update(eval(file(tagsFile).read()))
         directory, _ = os.path.split(directory)
     tagsFile = os.path.join(directory, 'PYSMELLTAGS')
     PYSMELLDICT = eval(file(tagsFile).read())
+    PYSMELLDICT.update(partialDict)
     completions = []
     for module, moduleDict in PYSMELLDICT.items():
         completions.extend([{'word': word, 'kind': 't', 'menu': module} for word in moduleDict['CONSTANTS']])

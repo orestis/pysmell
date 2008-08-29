@@ -55,26 +55,36 @@ def process(argList, excluded):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    print '.',
-                    codeFinder.setFilename(f)
-                    try:
-                        s = open(os.path.join(root, f), 'r').read()
-                        if s:
-                            classes = getClassDict(s, codeFinder)
-                    except:
-                        print 'EXCEPTION in', f
-                        print '-=#=- '* 10
-                        print s
-                        print '-=#=- '* 10
-                        raise
+                    classes = processFile(f, codeFinder, root)
+        else: # single file
+            classes = processFile(item, codeFinder, '')
+            
+            
     generateClassTag(classes)
+
+def processFile(f, codeFinder, root):
+    print '.',
+    codeFinder.setFilename(f)
+    try:
+        s = open(os.path.join(root, f), 'r').read()
+        if s:
+            classes = getClassDict(s, codeFinder)
+    except:
+        print 'EXCEPTION in', f
+        print '-=#=- '* 10
+        print s
+        print '-=#=- '* 10
+        raise
+    return classes
 
 if __name__ == '__main__':
     fileList = sys.argv[1:]
+    if '-h' in fileList:
+        print 'Usage: python pysmell.py [PackageA PackageB FileA.py FileB.py] [-x ExcludedDir1 ExcludedDir2]'
+        sys.exit(0)
     if not fileList:
         fileList = [os.getcwd()]
     excluded = []
-    print fileList
     if '-x' in fileList:
         excluded = fileList[fileList.index('-x'):]
         fileList = fileList[:fileList.index('-x') + 1]
