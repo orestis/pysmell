@@ -58,6 +58,8 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled('(a, b, c)')
         self.assertNamesIsHandled('[a, b, c]')
         self.assertNamesIsHandled('lambda a: (c, b)')
+        self.assertNamesIsHandled("lambda name: name[:1] != '_'")
+        
 
     def testClassProperties(self):
         out = self.getModule("""

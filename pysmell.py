@@ -69,6 +69,7 @@ def process(argList, excluded):
 def processFile(f, codeFinder, root):
     print '.',
     codeFinder.setFilename(f)
+    s = None
     try:
         s = open(os.path.join(root, f), 'r').read()
         if s:
@@ -90,8 +91,8 @@ if __name__ == '__main__':
         fileList = [os.getcwd()]
     excluded = []
     if '-x' in fileList:
-        excluded = fileList[fileList.index('-x'):]
-        fileList = fileList[:fileList.index('-x') + 1]
+        excluded = fileList[fileList.index('-x')+1:]
+        fileList = fileList[:fileList.index('-x')]
     process(fileList, excluded)
 
 

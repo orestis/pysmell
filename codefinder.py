@@ -185,8 +185,14 @@ def getName(node):
         return '(%s)' % ', '.join(map(getName, ast.flatten(node)))
     if isinstance(node, (ast.Lambda), ):
         return 'lambda %s: %s' % (', '.join(map(getName, node.argnames)), getName(node.code))
-    if isinstance(node, (ast.Getattr), ):
+    if isinstance(node, (ast.Getattr,), ):
         return '.'.join(map(getName, ast.flatten(node)))
+    if isinstance(node, ast.Compare):
+        rhs = node.asList()[-1]
+        return '%s %r' % (' '.join(map(getName, node.getChildren()[:-1])), rhs.value)
+    if isinstance(node, ast.Slice):
+        children = node.getChildren()
+        return '%s[%s%s]' % (getName(children[0]), ':', children[-1].value)
     raise 'Unknown node: %r %r' % (node, dir(node))
 
 
