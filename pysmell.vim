@@ -51,9 +51,12 @@ def vimcomplete(cword, base):
     tagsFile = os.path.join(directory, 'PYSMELLTAGS')
     PYSMELLDICT = eval(file(tagsFile).read())
     completions = []
-    for klassDict in PYSMELLDICT.values():
-        completions.extend(klassDict['properties'])
-        completions.extend([name for (name, _, __) in klassDict['methods']])
+    for module in PYSMELLDICT.values():
+        completions.extend(module['CONSTANTS'])
+        completions.extend(info[0] for info in module['FUNCTIONS'])
+        for klassDict in module['CLASSES'].values():
+            completions.extend(klassDict['properties'])
+            completions.extend([name for (name, _, __) in klassDict['methods']])
     if base:
         filteredCompletions = [comp for comp in completions if comp.startswith(base)]
     else:

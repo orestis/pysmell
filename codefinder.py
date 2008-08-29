@@ -89,8 +89,8 @@ class CodeFinder(object):
 
     OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign',
                 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
-                'Discard', 'Div', 'Exec', 'If', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
-                'GenExprFor', 'Global', 'Import', 'Keyword', 'Lambda', 'List', 'ListComp',
+                'Discard', 'Div', 'Exec', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
+                'GenExprFor', 'Global', 'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
                 'Pass', 'Power', 'Printnl', 'Raise', 'Return', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
                 'Tuple', 'TryExcept', 'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])

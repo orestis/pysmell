@@ -55,14 +55,14 @@ def process(argList, excluded):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    print f
+                    print '.',
                     codeFinder.setFilename(f)
                     try:
                         s = open(os.path.join(root, f), 'r').read()
                         if s:
                             classes = getClassDict(s, codeFinder)
                     except:
-                        print 'EXCEPTION'
+                        print 'EXCEPTION in', f
                         print '-=#=- '* 10
                         print s
                         print '-=#=- '* 10
