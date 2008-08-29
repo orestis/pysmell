@@ -14,7 +14,7 @@ line = vim.current.buffer[row-1]
 found = False
 while col > 1:
     col -= 1
-    if line[col] == '.' or line[col] == ' ':
+    if line[col] in '. (':
         found = True
         vim.command("return %d" % (col+1))
         break
@@ -55,27 +55,44 @@ def vimcomplete(cword, base):
             partialDict.update(eval(file(tagsFile).read()))
         directory, _ = os.path.split(directory)
     tagsFile = os.path.join(directory, 'PYSMELLTAGS')
+    if not os.path.exists(tagsFile):
+        print 'Could not file PYSMELLTAGS for omnicompletion'
+        vim.command('let g:pysmell_completions = []')
+        return
     PYSMELLDICT = eval(file(tagsFile).read())
     PYSMELLDICT.update(partialDict)
     completions = []
     for module, moduleDict in PYSMELLDICT.items():
-        completions.extend([{'word': word, 'kind': 't', 'menu': module} for word in moduleDict['CONSTANTS']])
-        completions.extend([{'word': info[0], 'kind': 'f', 'menu': module,
-                            'abbr': '%s(%s)' % (info[0], ', '.join([str(sth) for sth in info[1]]))} for info in
-                            moduleDict['FUNCTIONS']])
+        completions.extend([{'word': word, 'kind': 'm', 'menu': module} for word in moduleDict['CONSTANTS']])
+        completions.extend([getCompForFunction(func, module) for func in moduleDict['FUNCTIONS']])
         for klass, klassDict in moduleDict['CLASSES'].items():
-            completions.extend(dict(word=word, kind='m', menu='%s.%s' % (module, klass)) for word in klassDict['properties'])
-            completions.extend([{'word': info[0], 'kind': 'f', 'menu': '%s.%s' % (module, klass),
-                                'abbr': '%s(%s)' % (info[0], ', '.join([str(sth) for sth in info[1]]))} for info in
-                                klassDict['methods']])
+            completions.append(dict(word=klass, kind='t', abbr='%s(%s)' % (klass, _argsList(klassDict['constructor']))))
+            completions.extend([dict(word=word, kind='m', menu='%s:%s' % (module, klass)) for word in klassDict['properties']])
+            completions.extend([getCompForFunction(func, '%s:%s' % (module, klass)) for func in klassDict['methods']])
     if base:
-        filteredCompletions = [comp for comp in completions if
-                                (isinstance(comp, basestring) and comp.startswith(base)) or
-                                (isinstance(comp, dict) and comp['word'].startswith(base))]
+        filteredCompletions = [comp for comp in completions if comp['word'].startswith(base)]
     else:
         filteredCompletions = completions
-    filteredCompletions.sort()
+    filteredCompletions.sort(sortCompletions)
     output = repr(filteredCompletions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
+
+def getCompForFunction(func, menu):
+    return dict(word=func[0], kind='f', menu=menu,
+                            abbr='%s(%s)' % (func[0], _argsList(func[1])))
+
+def _argsList(l):
+     return ', '.join([str(arg) for arg in l])
+
+def sortCompletions(comp1, comp2):
+    word1, word2 = comp1['word'], comp2['word']
+    return _sortCompletions(word1, word2)
+
+def _sortCompletions(word1, word2):
+    if word1.startswith('_'):
+        return _sortCompletions(word1[1:], word2) + 2
+    if word2.startswith('_'):
+        return _sortCompletions(word1, word2[1:]) - 2
+    return cmp(word1, word2)
 eopython
 set omnifunc=pysmell#Complete
