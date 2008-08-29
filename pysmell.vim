@@ -51,17 +51,24 @@ def vimcomplete(cword, base):
     tagsFile = os.path.join(directory, 'PYSMELLTAGS')
     PYSMELLDICT = eval(file(tagsFile).read())
     completions = []
-    for module in PYSMELLDICT.values():
-        completions.extend(module['CONSTANTS'])
-        completions.extend(info[0] for info in module['FUNCTIONS'])
-        for klassDict in module['CLASSES'].values():
-            completions.extend(klassDict['properties'])
-            completions.extend([name for (name, _, __) in klassDict['methods']])
+    for module, moduleDict in PYSMELLDICT.items():
+        completions.extend([{'word': word, 'kind': 't', 'menu': module} for word in moduleDict['CONSTANTS']])
+        completions.extend([{'word': info[0], 'kind': 'f', 'menu': module,
+                            'abbr': '%s(%s)' % (info[0], ', '.join([str(sth) for sth in info[1]]))} for info in
+                            moduleDict['FUNCTIONS']])
+        for klass, klassDict in moduleDict['CLASSES'].items():
+            completions.extend(dict(word=word, kind='m', menu='%s.%s' % (module, klass)) for word in klassDict['properties'])
+            completions.extend([{'word': info[0], 'kind': 'f', 'menu': '%s.%s' % (module, klass),
+                                'abbr': '%s(%s)' % (info[0], ', '.join([str(sth) for sth in info[1]]))} for info in
+                                klassDict['methods']])
     if base:
-        filteredCompletions = [comp for comp in completions if comp.startswith(base)]
+        filteredCompletions = [comp for comp in completions if
+                                (isinstance(comp, basestring) and comp.startswith(base)) or
+                                (isinstance(comp, dict) and comp['word'].startswith(base))]
     else:
         filteredCompletions = completions
     filteredCompletions.sort()
-    vim.command('let g:pysmell_completions = %r' % (filteredCompletions, ))
+    output = repr(filteredCompletions)
+    vim.command('let g:pysmell_completions = %s' % (output, ))
 eopython
 set omnifunc=pysmell#Complete
