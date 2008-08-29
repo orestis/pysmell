@@ -166,14 +166,27 @@ class CodeFinder(object):
 
 
 def getName(node):
+    if node is None: return ''
+    if isinstance(node, (basestring, int, float)):
+        return str(node)
     if isinstance(node, (ast.Class, ast.Name, ast.Function)):
         return node.name
-    #if isinstance(node, (ast.CallFunc),):
-        #return node.node.name
+    if isinstance(node, (ast.Dict),):
+        pairs = ['%s: %s' % pair for pair in [(getName(first), getName(second)) for (first, second) in node.items]]
+        return '{%s}' % ', '.join(pairs)
+    if isinstance(node, ast.CallFunc):
+        notArgs = [n for n in node.getChildNodes() if n not in node.args]
+        return '%s(%s)' % (''.join(map(getName, notArgs)), ', '.join(map(getName, node.args)))
     if isinstance(node, (ast.Const),):
         return str(node.value)
-    if isinstance(node, (ast.Getattr, ast.Tuple, ast.CallFunc, ast.Lambda),):
-        return '.'.join(map(getName, node.getChildNodes()))
+    if isinstance(node, (ast.List),):
+        return '[%s]' % ', '.join(map(getName, ast.flatten(node)))
+    if isinstance(node, (ast.Tuple),):
+        return '(%s)' % ', '.join(map(getName, ast.flatten(node)))
+    if isinstance(node, (ast.Lambda), ):
+        return 'lambda %s: %s' % (', '.join(map(getName, node.argnames)), getName(node.code))
+    if isinstance(node, (ast.Getattr), ):
+        return '.'.join(map(getName, ast.flatten(node)))
     raise 'Unknown node: %r %r' % (node, dir(node))
 
             
@@ -192,11 +205,12 @@ def getFuncArgs(func, inClass=True):
         args = args[1:]
 
     offset = bool(func.varargs) + bool(func.kwargs) + 1
-    for default in func.defaults:
+    for default in reversed(func.defaults):
         name = getName(default)
-        if name not in ('None', 'True', 'False'):
-            name = repr(name)
+        if isinstance(default, ast.Const):
+            name = repr(default.value)
         args[-offset] = args[-offset] + "=" + name
+        offset += 1
 
     return args
 

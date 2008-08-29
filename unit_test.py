@@ -35,6 +35,31 @@ class CodeFinderTest(unittest.TestCase):
         expected = {'A': dict(bases=['object'], properties=[], methods=[], constructor=[], docstring='')}
         self.assertClasses(out, expected)
 
+    def testAdvancedDefaultArguments(self):
+        out = self.getModule("""
+        def function(a=1, b=2, c=None, d=4, e='string', f=Name, g={}):
+            pass
+        """)
+        expected = ('function', ['a=1', 'b=2', 'c=None', 'd=4', "e='string'", 'f=Name', 'g={}'], '')
+        self.assertEquals(out['FUNCTIONS'], [expected])
+
+    def assertNamesIsHandled(self, name):
+        out = self.getModule("""
+        def f(a=%s):
+            pass
+        """ % name)
+        self.assertEquals(out['FUNCTIONS'], [('f', ['a=%s' % name], '')])
+
+    def testNames(self):
+        self.assertNamesIsHandled('A.B.C(1)')
+        self.assertNamesIsHandled('A.B.C()')
+        self.assertNamesIsHandled('A.B.C')
+        self.assertNamesIsHandled('{a: b, c: d}')
+        self.assertNamesIsHandled('(a, b, c)')
+        self.assertNamesIsHandled('[a, b, c]')
+        self.assertNamesIsHandled('lambda a: (c, b)')
+
+
     def testClassProperties(self):
         out = self.getModule("""
         class A(object):
