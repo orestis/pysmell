@@ -55,9 +55,13 @@ def process(argList, excluded):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    classes = processFile(f, codeFinder, root)
+                    newClasses = processFile(f, codeFinder, root)
+                    if newClasses:
+                        classes = newClasses
         else: # single file
-            classes = processFile(item, codeFinder, '')
+            newClasses = processFile(item, codeFinder, '')
+            if newClasses:
+                classes = newClasses
             
             
     generateClassTag(classes)
@@ -69,13 +73,13 @@ def processFile(f, codeFinder, root):
         s = open(os.path.join(root, f), 'r').read()
         if s:
             classes = getClassDict(s, codeFinder)
+            return classes
     except:
         print 'EXCEPTION in', f
         print '-=#=- '* 10
         print s
         print '-=#=- '* 10
         raise
-    return classes
 
 if __name__ == '__main__':
     fileList = sys.argv[1:]
