@@ -148,5 +148,19 @@ class CodeFinderTest(unittest.TestCase):
         self.assertEquals(argToStr((('x1', 'y1'), ('x2', 'y2'))), '((x1, y1), (x2, y2))')
         self.assertEquals(argToStr(('ala',)), '(ala,)')
 
+class CompletionTest(unittest.TestCase):
+    def testWordFinder(self):
+        self.fail('reiimplement the logic of the word-finder in python')
+
+    def testCompletions(self):
+        self.fail('extract the completions logic out and test the hell out of it')
+
+    def testCompleteMembers(self):
+        self.fail('class members (methods, properties) should be presented only after dots')
+
+    def testCompleteArgumentLists(self):
+        self.fail('test how argument lists are filled in')
+        
+
 if __name__ == '__main__':
     unittest.main()

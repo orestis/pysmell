@@ -37,6 +37,8 @@ eopython
                 break
             endif
         endwhile
+        let g:pysmell_args = 0
+        let g:pysmell_completions = [] 
         execute "python vimcomplete('" . cword . "', '" . a:base . "')"
         return g:pysmell_completions
     endif
@@ -57,13 +59,12 @@ def vimcomplete(cword, base):
     tagsFile = os.path.join(directory, 'PYSMELLTAGS')
     if not os.path.exists(tagsFile):
         print 'Could not file PYSMELLTAGS for omnicompletion'
-        vim.command('let g:pysmell_completions = []')
         return
     PYSMELLDICT = eval(file(tagsFile).read())
     PYSMELLDICT.update(partialDict)
     completions = []
     for module, moduleDict in PYSMELLDICT.items():
-        completions.extend([{'word': word, 'kind': 'm', 'menu': module} for word in moduleDict['CONSTANTS']])
+        completions.extend([{'word': word, 'kind': 'd', 'menu': module} for word in moduleDict['CONSTANTS']])
         completions.extend([getCompForFunction(func, module) for func in moduleDict['FUNCTIONS']])
         for klass, klassDict in moduleDict['CLASSES'].items():
             completions.append(dict(word=klass, kind='t', abbr='%s(%s)' % (klass, _argsList(klassDict['constructor']))))
@@ -74,6 +75,13 @@ def vimcomplete(cword, base):
     else:
         filteredCompletions = completions
     filteredCompletions.sort(sortCompletions)
+    if len(filteredCompletions) == 1:
+        #return the arg list instead
+        oldComp = filteredCompletions[0]
+        if oldComp['word'] == base:
+            diff = len(oldComp['abbr']) - len(oldComp['word'])
+            oldComp['word'] = oldComp['abbr']
+            vim.command('let g:pysmell_args = %d' % diff)
     output = repr(filteredCompletions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
 
