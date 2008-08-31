@@ -88,11 +88,11 @@ def processFile(f, codeFinder, root):
             classes = getClassDict(s, codeFinder)
             return classes
     except:
-        print 'EXCEPTION in', f
         print '-=#=- '* 10
-        print s
+        print 'EXCEPTION in', os.path.join(root, f)
         print '-=#=- '* 10
-        raise
+        return None
+        
 
 if __name__ == '__main__':
     fileList = sys.argv[1:]

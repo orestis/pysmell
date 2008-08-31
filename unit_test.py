@@ -60,6 +60,10 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled('[a, b, c]')
         self.assertNamesIsHandled('lambda a: (c, b)')
         self.assertNamesIsHandled("lambda name: name[:1] != '_'")
+        self.assertNamesIsHandled("-180")
+        self.assertNamesIsHandled("10*180")
+        self.assertNamesIsHandled("10>>180")
+        self.assertNamesIsHandled("10<<180")
         
 
     def testClassProperties(self):

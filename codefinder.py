@@ -98,12 +98,12 @@ class CodeFinder(object):
             return self.scope[-1].name
         return None
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign',
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign', 'Backquote',
                 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
                 'Discard', 'Div', 'Exec', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
-                'GenExprFor', 'Global', 'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'List', 'ListComp',
+                'GenExprFor', 'Global', 'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
+                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
                 'Tuple', 'TryExcept', 'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
 
     def __getattr__(self, attr):
@@ -175,6 +175,9 @@ class CodeFinder(object):
                     print name, 'looks like', klass
 
 
+def getNameTwo(template, left, right, leftJ='', rightJ=''):
+    return template % (leftJ.join(map(getName, ast.flatten(left))), rightJ.join(map(getName, ast.flatten(right))))
+    
 
 def getName(node):
     if node is None: return ''
@@ -187,9 +190,17 @@ def getName(node):
         return '{%s}' % ', '.join(pairs)
     if isinstance(node, ast.CallFunc):
         notArgs = [n for n in node.getChildNodes() if n not in node.args]
-        return '%s(%s)' % (''.join(map(getName, notArgs)), ', '.join(map(getName, node.args)))
+        return getNameTwo('%s(%s)', notArgs, node.args, rightJ=', ')
     if isinstance(node, (ast.Const),):
         return str(node.value)
+    if isinstance(node, ast.LeftShift):
+        return getNameTwo('%s<<%s', node.left, node.right)
+    if isinstance(node, ast.RightShift):
+        return getNameTwo('%s>>%s', node.left, node.right)
+    if isinstance(node, ast.Mul):
+        return getNameTwo('%s*%s', node.left, node.right)
+    if isinstance(node, ast.UnarySub):
+        return '-%s' % ''.join(map(getName, ast.flatten(node)))
     if isinstance(node, (ast.List),):
         return '[%s]' % ', '.join(map(getName, ast.flatten(node)))
     if isinstance(node, (ast.Tuple),):
