@@ -4,6 +4,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 
 from codefinder import CodeFinder
+from vimhelper import findCompletions, findWord, findBase
 
 class CodeFinderTest(unittest.TestCase):
     def getModule(self, source):
@@ -148,15 +149,63 @@ class CodeFinderTest(unittest.TestCase):
         self.assertEquals(argToStr((('x1', 'y1'), ('x2', 'y2'))), '((x1, y1), (x2, y2))')
         self.assertEquals(argToStr(('ala',)), '(ala,)')
 
+def compMeth(name, klass):
+    return dict(word=name, abbr='%s()' % name, kind='m', menu='Module:%s' % klass)
+def compFunc(name):
+    return dict(word=name, abbr='%s()' % name, kind='f', menu='Module')
+def compConst(name):
+    return dict(word=name, kind='d', menu='Module')
+def compProp(name, klass):
+    return dict(word=name, kind='m', menu='Module:%s' % klass)
+def compClass(name):
+    return dict(word=name, abbr='%s()' % name,  kind='t', menu='Module')
+class MockVim(object):
+    class _current(object):
+        class _window(object):
+            cursor = (-1, -1)
+        buffer = []
+        window = _window()
+    current = _current()
 class CompletionTest(unittest.TestCase):
-    def testWordFinder(self):
-        self.fail('reiimplement the logic of the word-finder in python')
+    def setUp(self):
+        self.pysmelldict = {'Module': {
+                'CONSTANTS' : ['aconstant', 'bconst'],
+                'FUNCTIONS' : [('a', [], ''), ('arg', [], ''), ('b', [], '')],
+                'CLASSES' : {
+                    'aClass': {
+                        'constructor': [],
+                        'bases': ['object'],
+                        'properties': ['aprop', 'bprop'],
+                        'methods': [('am', [], ''), ('bm', [], ())]
+                    },
+                    'bClass': {
+                        'constructor': [],
+                        'bases': ['AClass'],
+                        'properties': ['cprop', 'dprop'],
+                        'methods': [('cm', [], ''), ('dm', [], ())]
+                    }
+                }
+            }}
+        import vimhelper
+        vimhelper.vim = self.vim = MockVim()
+
+    def testFindBase(self):
+        self.vim.current.buffer = ['aaaa', 'hehe.bbbb', 'cccc']
+        self.vim.current.window.cursor =(2, 6)
+        index = findBase(self.vim)
+        word = findWord(self.vim)
+        self.assertEquals(index, 4)
+        self.assertEquals(word, 'hehe.bb')
 
     def testCompletions(self):
-        self.fail('extract the completions logic out and test the hell out of it')
+        compls = findCompletions('b', 'b', self.pysmelldict)
+        expected = [compFunc('b'), compClass('bClass'), compConst('bconst')]
+        self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
-        self.fail('class members (methods, properties) should be presented only after dots')
+        compls = findCompletions('somethign.a', 'a', self.pysmelldict)
+        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
+        self.assertEquals(compls, expected)
 
     def testCompleteArgumentLists(self):
         self.fail('test how argument lists are filled in')
