@@ -1,3 +1,14 @@
+# vimhelper.py
+# Companion to pysmell.vim
+# Copyright (C) 2008 Orestis Markou
+# All rights reserved
+# E-mail: orestis@orestis.gr
+
+# pysmell v0.1
+# http://orestis.gr
+
+# Released subject to the BSD License 
+
 import os
 
 def findBase(vim):

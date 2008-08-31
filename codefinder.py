@@ -1,3 +1,14 @@
+# codefinder.py
+# Statically analyze python code
+# Copyright (C) 2008 Orestis Markou
+# All rights reserved
+# E-mail: orestis@orestis.gr
+
+# pysmell v0.1
+# http://orestis.gr
+
+# Released subject to the BSD License 
+
 from compiler import ast
 
 class ClassDict(object):
@@ -92,7 +103,7 @@ class CodeFinder(object):
                 'Discard', 'Div', 'Exec', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
                 'GenExprFor', 'Global', 'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Power', 'Printnl', 'Raise', 'Return', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
+                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
                 'Tuple', 'TryExcept', 'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
 
     def __getattr__(self, attr):

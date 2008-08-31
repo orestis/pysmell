@@ -1,3 +1,15 @@
+# pysmelltags.py
+# Statically analyze python code and generate PYSMELLTAGS file
+# Copyright (C) 2008 Orestis Markou
+# All rights reserved
+# E-mail: orestis@orestis.gr
+
+# pysmell v0.1
+# http://orestis.gr
+
+# Released subject to the BSD License 
+
+
 import sys, os
 import compiler
 from codefinder import CodeFinder
@@ -85,7 +97,7 @@ def processFile(f, codeFinder, root):
 if __name__ == '__main__':
     fileList = sys.argv[1:]
     if '-h' in fileList:
-        print 'Usage: python pysmell.py [PackageA PackageB FileA.py FileB.py] [-x ExcludedDir1 ExcludedDir2]'
+        print 'Usage: python pysmelltags.py [PackageA PackageB FileA.py FileB.py] [-x ExcludedDir1 ExcludedDir2]'
         sys.exit(0)
     if not fileList:
         fileList = [os.getcwd()]
