@@ -5,8 +5,6 @@ if !has('python')
 endif
 
 python << eopython
-import sys
-sys.path.append('/Users/orestis/Developer')
 from pysmell import vimhelper
 import vim
 eopython
@@ -15,6 +13,9 @@ function! pysmell#Complete(findstart, base)
     "findstart = 1 when we need to get the text length
     if a:findstart == 1
 python << eopython
+row, col = vim.current.window.cursor
+vim.command('let g:pysmell_origCol = %d' % col)
+vim.command('let g:pysmell_origLine = %r' % vim.current.buffer[row-1])
 index = vimhelper.findBase(vim)
 vim.command('return %d' % index)
 eopython
@@ -23,7 +24,10 @@ eopython
         let g:pysmell_args = 0
         let g:pysmell_completions = [] 
 python << eopython
-cword = vimhelper.findWord(vim)
+origCol = int(vim.eval('g:pysmell_origCol'))
+origLine = vim.eval('g:pysmell_origLine')
+
+cword = vimhelper.findWord(vim, origCol, origLine)
 vim.command('let cword = %r' % cword)
 eopython
         execute "python vimcomplete('" . cword . "', '" . a:base . "')"

@@ -3,7 +3,7 @@ from textwrap import dedent
 import subprocess
 import os
 
-import pysmell
+import pysmelltags
 
 class FunctionalTest(unittest.TestCase):
     def DONTtestTagGeneration(self):
@@ -40,7 +40,7 @@ class FunctionalTest(unittest.TestCase):
     def testPackage(self):
         if os.path.exists('Tests/PYSMELLTAGS'):
             os.remove('Tests/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmell.py", "PackageA"], cwd='Tests')
+        subprocess.call(["python", "../pysmelltags.py", "PackageA"], cwd='Tests')
         self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
         expectedDict = {

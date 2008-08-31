@@ -4,23 +4,27 @@ def findBase(vim):
     row, col = vim.current.window.cursor
     line = vim.current.buffer[row-1]
     index = col
-    while index > 1:
+    # col points at the end of the completed string
+    # so col-1 is the last character of base
+    while index > 0:
         index -= 1
-        if line[index] == '.':
+        if line[index] in '. ':
+            index += 1
             break
-    return index + 1
-
+    return index #this is zero based :S
     
 
-def findWord(vim):
-    row, col = vim.current.window.cursor
-    line = vim.current.buffer[row-1]
-    index = col
-    while index > 1:
+def findWord(vim, origCol, origLine):
+    # vim moves the cursor and deletes the text by the time we are called
+    # so we need the original position and the original line...
+    index = origCol
+    while index > 0:
         index -= 1
-        if line[index] == ' ':
+        if origLine[index] == ' ':
+            index +=1
             break
-    return line[index+1:col+1]
+    cword = origLine[index:origCol]
+    return cword
 
 
 def findCompletions(cword, base, PYSMELLDICT):
@@ -47,7 +51,6 @@ def findCompletions(cword, base, PYSMELLDICT):
         if oldComp['word'] == base:
             diff = len(oldComp['abbr']) - len(oldComp['word'])
             oldComp['word'] = oldComp['abbr']
-            vim.command('let g:pysmell_args = %d' % diff)
     return filteredCompletions
     
 def getCompForFunction(func, menu, kind):

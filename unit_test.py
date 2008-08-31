@@ -166,6 +166,7 @@ class MockVim(object):
         buffer = []
         window = _window()
     current = _current()
+    command = lambda _, __:None
 class CompletionTest(unittest.TestCase):
     def setUp(self):
         self.pysmelldict = {'Module': {
@@ -189,13 +190,38 @@ class CompletionTest(unittest.TestCase):
         import vimhelper
         vimhelper.vim = self.vim = MockVim()
 
-    def testFindBase(self):
-        self.vim.current.buffer = ['aaaa', 'hehe.bbbb', 'cccc']
+    def testFindBaseName(self):
+        self.vim.current.buffer = ['aaaa', 'bbbb', 'cccc']
+        self.vim.current.window.cursor =(2, 2)
+        index = findBase(self.vim)
+        word = findWord(self.vim, 2, 'bbbb')
+        self.assertEquals(index, 0)
+        self.assertEquals(word, 'bb')
+
+    def testFindBaseNameIndent(self):
+        self.vim.current.buffer = ['aaaa', '    bbbb', 'cccc']
         self.vim.current.window.cursor =(2, 6)
         index = findBase(self.vim)
-        word = findWord(self.vim)
+        word = findWord(self.vim, 6, '    bbbb')
         self.assertEquals(index, 4)
+        self.assertEquals(word, 'bb')
+
+    def testFindBaseProp(self):
+        self.vim.current.buffer = ['aaaa', 'hehe.bbbb', 'cccc']
+        self.vim.current.window.cursor =(2, 7)
+        index = findBase(self.vim)
+        word = findWord(self.vim, 7, 'hehe.bbbb')
+        self.assertEquals(index, 5)
         self.assertEquals(word, 'hehe.bb')
+
+    def testFindBasePropIndent(self):
+        self.vim.current.buffer = ['aaaa', '    hehe.bbbb', 'cccc']
+        self.vim.current.window.cursor =(2, 11)
+        index = findBase(self.vim)
+        word = findWord(self.vim, 11, '    hehe.bbbb')
+        self.assertEquals(index, 9)
+        self.assertEquals(word, 'hehe.bb')
+
 
     def testCompletions(self):
         compls = findCompletions('b', 'b', self.pysmelldict)
