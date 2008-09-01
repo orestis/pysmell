@@ -29,13 +29,13 @@ class FunctionalTest(unittest.TestCase):
                     },
                 },
             'PackageA': {
-                'FUNCTIONS': [('SneakyFunction'), [], ""],
+                'FUNCTIONS': [('SneakyFunction', [], "")],
                 'CONSTANTS': ['SneakyConstant'],
                 'CLASSES':{
                     'SneakyClass': {
                             'bases': [],
                             'docstring': '',
-                            'constructor': '',
+                            'constructor': [],
                             'properties': [],
                             'methods': []
                             }
@@ -44,13 +44,13 @@ class FunctionalTest(unittest.TestCase):
                 }
         self.packageB = {
             'PackageB': {
-                'FUNCTIONS': [('SneakyFunction'), [], ""],
+                'FUNCTIONS': [('SneakyFunction', [], "")],
                 'CONSTANTS': ['SneakyConstant'],
                 'CLASSES':{
                     'SneakyClass': {
                             'bases': [],
                             'docstring': '',
-                            'constructor': '',
+                            'constructor': [],
                             'properties': [],
                             'methods': []
                             }
@@ -59,37 +59,6 @@ class FunctionalTest(unittest.TestCase):
                 }
             
         
-    def DONTtestTagGeneration(self):
-        input_source = dedent("""\
-        "This is MyClass' docstring"
-
-        class MyClass(object):
-            def __init__(self, first, last):
-                self.firstname = first
-                self.lastname = last
-
-            @property
-            def fullname(self):
-                return self.firstname + " " + self.lastname
-
-            def jump(self, howhigh):
-                print 'Jumping %d up' % howhigh
-
-            def duck(self):
-                'hi im a docstring'
-                print 'its a trap'
-
-        """)
-        output = pysmell.getClassDict(input_source)
-        expected = {'MyClass': {
-                'constructor': ['first', 'last'],
-                'properties': ['firstname', 'lastname', 'fullname'],
-                'methods': [('jump', ['howhigh'], ''), ('duck', [], 'hi im a docstring')],
-            },
-        }
-        self.assertEquals(output._modules['CLASSES'], expected)
-        self.fail('check *args **kwargs')
-
     def testMultiPackage(self):
         if os.path.exists('Tests/PYSMELLTAGS'):
             os.remove('Tests/PYSMELLTAGS')
@@ -102,7 +71,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertEquals(PYSMELLDICT, expectedDict)
 
     
-    def testPackage(self):
+    def testPackageA(self):
         if os.path.exists('Tests/PYSMELLTAGS'):
             os.remove('Tests/PYSMELLTAGS')
         subprocess.call(["python", "../pysmelltags.py", "PackageA"], cwd='Tests')
@@ -111,11 +80,16 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageA
         self.assertEquals(PYSMELLDICT, expectedDict)
 
-    
-    def testPackageHandling(self):
-        self.fail('django does a lot of top-level package in __init__.py')
-        self.fail('pysmell should handle packages as well (I think that just p.p.module will do)')
+    def testPackageB(self):
+        if os.path.exists('Tests/PYSMELLTAGS'):
+            os.remove('Tests/PYSMELLTAGS')
+        subprocess.call(["python", "../pysmelltags.py", "PackageB"], cwd='Tests')
+        self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
+        expectedDict = self.packageB
+        self.assertEquals(PYSMELLDICT, expectedDict)
 
+    
     def DONTtestTypeInferencing(self):
         'given a valid code block, try to narrow down the possible classes and return that'
         self.fail()

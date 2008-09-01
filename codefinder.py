@@ -66,10 +66,14 @@ class CodeFinder(object):
         self.checkers = {}
         self.classes = ClassDict()
         self.accesses = {}
-        self.module = '__main__'
+        self.module = '__module__'
+        self.package = '__package__'
 
-    def setFilename(self, filename):
-        self.module = filename[:-3]
+    def setModule(self, module):
+        self.module = module
+
+    def setPackage(self, package):
+        self.package = package
 
     def addChecker(self, nodeType, func):
         self.checkers.setdefault(nodeType, []).append(func)
@@ -115,7 +119,10 @@ class CodeFinder(object):
             self.visit(c)
 
     def visitModule(self, node):
-        self.classes.enterModule(self.module)
+        if self.module == '__init__':
+            self.classes.enterModule('%s' % self.package)
+        else:
+            self.classes.enterModule('%s.%s' % (self.package, self.module))
         self.visit(node.node)
         self.classes.exitModule()
 

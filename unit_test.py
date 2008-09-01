@@ -10,10 +10,11 @@ class CodeFinderTest(unittest.TestCase):
     def getModule(self, source):
         tree = compiler.parse(dedent(source))
         codeFinder = CodeFinder()
-        codeFinder.setFilename('TestModule.py')
+        codeFinder.setModule('TestModule')
+        codeFinder.setPackage('TestPackage')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         try:
-            return eval(repr(codeFinder.classes))['TestModule']
+            return eval(repr(codeFinder.classes))['TestPackage.TestModule']
         except:
             print 'EXCEPTION WHEN EVALING:'
             print repr(codeFinder.classes)
@@ -24,6 +25,22 @@ class CodeFinderTest(unittest.TestCase):
         out = self.getModule("")
         expected = {}
         self.assertClasses(out, expected)
+
+    def testOnlyPackage(self):
+        source = """
+        class A(object):
+            pass
+        """
+        tree = compiler.parse(dedent(source))
+        codeFinder = CodeFinder()
+        codeFinder.setPackage('TestPackage')
+        codeFinder.setModule('__init__')
+        compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+        expected = {'TestPackage': {'CLASSES': {'A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
+            'FUNCTIONS': [], 'CONSTANTS': []}
+        }
+        actual = eval(repr(codeFinder.classes))
+        self.assertEquals(actual, expected)
 
     def assertClasses(self, moduleDict, expected):
         self.assertEquals(moduleDict['CLASSES'], expected)

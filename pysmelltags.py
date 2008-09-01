@@ -79,14 +79,11 @@ def process(argList, excluded):
     generateClassTag(classes)
 
 def processFile(f, codeFinder, root):
-    print os.path.join(root, f),
-    if f == '__init__.py':
-        codeFinder.setFilename(os.path.split(root)[-1])
-    else:
-        codeFinder.setFilename(f)
+    package = os.path.split(root)[-1]
+    codeFinder.setPackage(package)
+    codeFinder.setModule(f[:-3])
     try:
         classes = getClassDict(os.path.join(root, f), codeFinder)
-        print len(classes._modules.keys())
         return classes
     except:
         print '-=#=- '* 10
