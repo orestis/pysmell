@@ -27,7 +27,13 @@ class FunctionalTest(unittest.TestCase):
                             'methods': [('extraMethod', [], 'i have a docstring')],
                         }
                     },
-                },
+            },
+            'PackageA.NestedPackage.EvenMore.ModuleC': {
+                'FUNCTIONS': [],
+                'CONSTANTS': ['NESTED'],
+                'CLASSES':{}
+            },
+
             'PackageA': {
                 'FUNCTIONS': [('SneakyFunction', [], "")],
                 'CONSTANTS': ['SneakyConstant'],
@@ -40,8 +46,9 @@ class FunctionalTest(unittest.TestCase):
                             'methods': []
                             }
                         }
-                    }
-                }
+            }
+        }
+        
         self.packageB = {
             'PackageB': {
                 'FUNCTIONS': [('SneakyFunction', [], "")],
@@ -53,10 +60,10 @@ class FunctionalTest(unittest.TestCase):
                             'constructor': [],
                             'properties': [],
                             'methods': []
-                            }
-                        }
                     }
                 }
+            }
+        }
             
         
     def testMultiPackage(self):

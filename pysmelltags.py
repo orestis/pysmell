@@ -47,18 +47,18 @@ def getClassDict(path, codeFinder=None):
     if codeFinder is None:
         codeFinder = CodeFinder()
     compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
-    return codeFinder.classes
+    return codeFinder.modules
 
 
-def generateClassTag(classes):
+def generateClassTag(modules):
     f = open(os.path.join(os.getcwd(), 'PYSMELLTAGS'), 'w')
-    pprint(classes._modules, f, width=100)
+    pprint(modules, f, width=100)
     f.close()
 
 
 def process(argList, excluded):
     codeFinder = CodeFinder()
-    classes = None
+    modules = None
     for item in fileList:
         if os.path.isdir(item):
             for root, dirs, files in os.walk(item):
@@ -67,27 +67,36 @@ def process(argList, excluded):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    newClasses = processFile(f, codeFinder, root)
-                    if newClasses:
-                        classes = newClasses
+                    newmodules = processFile(f, root, item, codeFinder)
+                    if newmodules:
+                        modules = newmodules
         else: # single file
-            newClasses = processFile(item, codeFinder, '')
-            if newClasses:
-                classes = newClasses
+            newmodules = processFile(item, codeFinder, '')
+            if newmodules:
+                modules = newmodules
             
             
-    generateClassTag(classes)
+    generateClassTag(modules)
 
-def processFile(f, codeFinder, root):
-    package = os.path.split(root)[-1]
+def processFile(f, path, root, codeFinder):
+    head, tail = os.path.split(path)
+    packageHieararchy = [tail]
+    while head:
+        head, tail = os.path.split(head)
+        packageHieararchy.append(tail)
+    packageHieararchy.reverse()
+
+    index = packageHieararchy.index(root)
+    package = '.'.join(packageHieararchy[index:])
+
     codeFinder.setPackage(package)
     codeFinder.setModule(f[:-3])
     try:
-        classes = getClassDict(os.path.join(root, f), codeFinder)
-        return classes
+        modules = getClassDict(os.path.join(path, f), codeFinder)
+        return modules
     except:
         print '-=#=- '* 10
-        print 'EXCEPTION in', os.path.join(root, f)
+        print 'EXCEPTION in', os.path.join(path, f)
         print '-=#=- '* 10
         return None
         

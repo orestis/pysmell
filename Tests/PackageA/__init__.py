@@ -1,4 +1,4 @@
-class SneakyClass():
+class SneakyClass:
     pass
     
 def SneakyFunction():

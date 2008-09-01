@@ -11,7 +11,7 @@
 
 from compiler import ast
 
-class ClassDict(object):
+class ModuleDict(object):
     def __init__(self):
         self._modules = {}
 
@@ -21,6 +21,9 @@ class ClassDict(object):
 
     def exitModule(self):
         self.currentModule = None
+
+    def isModuleEmpty(self, module):
+        return self._modules[module] == {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': []}
 
     def currentClass(self, klass):
         return self._modules[self.currentModule]['CLASSES'][klass]
@@ -51,7 +54,10 @@ class ClassDict(object):
         self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
 
     def __repr__(self):
-        return repr(self._modules)
+        nonEmptyModules = dict((k, v) for (k, v) in self._modules.items() if not self.isModuleEmpty(k))
+        if nonEmptyModules:
+            return repr(nonEmptyModules)
+        return ''
 
 
 def VisitChildren(fun):
@@ -64,7 +70,7 @@ class CodeFinder(object):
     def __init__(self):
         self.scope = []
         self.checkers = {}
-        self.classes = ClassDict()
+        self.modules = ModuleDict()
         self.accesses = {}
         self.module = '__module__'
         self.package = '__package__'
@@ -120,11 +126,11 @@ class CodeFinder(object):
 
     def visitModule(self, node):
         if self.module == '__init__':
-            self.classes.enterModule('%s' % self.package)
+            self.modules.enterModule('%s' % self.package)
         else:
-            self.classes.enterModule('%s.%s' % (self.package, self.module))
+            self.modules.enterModule('%s.%s' % (self.package, self.module))
         self.visit(node.node)
-        self.classes.exitModule()
+        self.modules.exitModule()
 
     @VisitChildren
     def visitGetattr(self, node):
@@ -140,19 +146,19 @@ class CodeFinder(object):
         if self.inClassFunction:
             if isinstance(node.expr, ast.Name):
                 if node.expr.name == 'self':
-                    self.classes.addProperty(self.currentClass, node.attrname)
+                    self.modules.addProperty(self.currentClass, node.attrname)
 
     @VisitChildren
     def visitAssName(self, node):
         if self.inClass and len(self.scope) == 1:
-            self.classes.addProperty(self.currentClass, node.name)
+            self.modules.addProperty(self.currentClass, node.name)
         elif len(self.scope) == 0:
-            self.classes.addProperty(None, node.name)
+            self.modules.addProperty(None, node.name)
 
     def visitClass(self, klass):
         self.enterScope(klass)
         if len(self.scope) == 1:
-            self.classes.enterClass(klass.name, [getName(b) for b in klass.bases], klass.doc or '')
+            self.modules.enterClass(klass.name, [getName(b) for b in klass.bases], klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
 
@@ -165,19 +171,19 @@ class CodeFinder(object):
         if self.inClassFunction:
             if func.name != '__init__':
                 if func.decorators and 'property' in [getName(n) for n in func.decorators]:
-                    self.classes.addProperty(self.currentClass, func.name)
+                    self.modules.addProperty(self.currentClass, func.name)
                 else:
-                    self.classes.addMethod(self.currentClass, func.name, getFuncArgs(func), func.doc or "")
+                    self.modules.addMethod(self.currentClass, func.name, getFuncArgs(func), func.doc or "")
             else:
-                self.classes.setConstructor(self.currentClass, getFuncArgs(func))
+                self.modules.setConstructor(self.currentClass, getFuncArgs(func))
         elif len(self.scope) == 1:
-            self.classes.addFunction(func.name, getFuncArgs(func, inClass=False), func.doc or "")
+            self.modules.addFunction(func.name, getFuncArgs(func, inClass=False), func.doc or "")
 
         self.visit(func.code)
         self.exitScope()
 
         for name, attrs in self.accesses.items():
-            for klass, classattrs in self.classes.items():
+            for klass, classattrs in self.modules.items():
                 if attrs.issubset(classattrs):
                     print name, 'looks like', klass
 

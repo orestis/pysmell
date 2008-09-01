@@ -14,17 +14,22 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setPackage('TestPackage')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         try:
-            return eval(repr(codeFinder.classes))['TestPackage.TestModule']
+            return eval(repr(codeFinder.modules))['TestPackage.TestModule']
         except:
             print 'EXCEPTION WHEN EVALING:'
-            print repr(codeFinder.classes)
+            print repr(codeFinder.modules)
             print '=-' * 20
             raise
 
-    def testEmptyModule(self):
-        out = self.getModule("")
-        expected = {}
-        self.assertClasses(out, expected)
+    def testEmpty(self):
+        tree = compiler.parse("")
+        codeFinder = CodeFinder()
+        codeFinder.setModule('TestModule')
+        codeFinder.setPackage('TestPackage')
+        compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+        self.assertTrue(codeFinder.modules.isModuleEmpty('TestPackage.TestModule'), 'should be empty')
+        self.assertEquals(repr(codeFinder.modules), "")
+
 
     def testOnlyPackage(self):
         source = """
@@ -39,7 +44,7 @@ class CodeFinderTest(unittest.TestCase):
         expected = {'TestPackage': {'CLASSES': {'A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
             'FUNCTIONS': [], 'CONSTANTS': []}
         }
-        actual = eval(repr(codeFinder.classes))
+        actual = eval(repr(codeFinder.modules))
         self.assertEquals(actual, expected)
 
     def assertClasses(self, moduleDict, expected):
