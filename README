@@ -6,7 +6,7 @@ The first target is Vim, because that's what I'm using and because its completio
 
 ##Download and Installation
 
-PySmell's code is available at [GitHub](http://github.com/orestis/pysmell/tree/v0.1). You can click 'Download' to get it as a zip/tar if you don't have git installed.
+PySmell's code is available at [GitHub](http://github.com/orestis/pysmell/tree/v0.2). You can click 'Download' to get it as a zip/tar if you don't have git installed.
 
 Extract and drop the pysmell package somewhere in your PYTHONPATH. Distutils coming soon!
 
