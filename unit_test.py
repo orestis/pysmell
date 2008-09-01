@@ -177,8 +177,8 @@ class CodeFinderTest(unittest.TestCase):
 
 def compMeth(name, klass):
     return dict(word=name, abbr='%s()' % name, kind='m', menu='Module:%s' % klass)
-def compFunc(name):
-    return dict(word=name, abbr='%s()' % name, kind='f', menu='Module')
+def compFunc(name, args=''):
+    return dict(word=name, abbr='%s(%s)' % (name, args), kind='f', menu='Module')
 def compConst(name):
     return dict(word=name, kind='d', menu='Module')
 def compProp(name, klass):
@@ -197,7 +197,7 @@ class CompletionTest(unittest.TestCase):
     def setUp(self):
         self.pysmelldict = {'Module': {
                 'CONSTANTS' : ['aconstant', 'bconst'],
-                'FUNCTIONS' : [('a', [], ''), ('arg', [], ''), ('b', [], '')],
+                'FUNCTIONS' : [('a', [], ''), ('arg', [], ''), ('b', ['arg1', 'arg2'], '')],
                 'CLASSES' : {
                     'aClass': {
                         'constructor': [],
@@ -224,6 +224,22 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(index, 0)
         self.assertEquals(word, 'bb')
 
+    def testFindBaseMethodCall(self):
+        self.vim.current.buffer = ['aaaa', 'a.bbbb(', 'cccc']
+        self.vim.current.window.cursor =(2, 7)
+        index = findBase(self.vim)
+        word = findWord(self.vim, 7, 'a.bbbb(')
+        self.assertEquals(index, 2)
+        self.assertEquals(word, 'a.bbbb(')
+
+    def testFindBaseFuncCall(self):
+        self.vim.current.buffer = ['aaaa', 'bbbb(', 'cccc']
+        self.vim.current.window.cursor =(2, 5)
+        index = findBase(self.vim)
+        word = findWord(self.vim, 5, 'bbbb(')
+        self.assertEquals(index, 0)
+        self.assertEquals(word, 'bbbb(')
+
     def testFindBaseNameIndent(self):
         self.vim.current.buffer = ['aaaa', '    bbbb', 'cccc']
         self.vim.current.window.cursor =(2, 6)
@@ -248,10 +264,9 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(index, 9)
         self.assertEquals(word, 'hehe.bb')
 
-
     def testCompletions(self):
         compls = findCompletions('b', 'b', self.pysmelldict)
-        expected = [compFunc('b'), compClass('bClass'), compConst('bconst')]
+        expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
@@ -260,7 +275,10 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(compls, expected)
 
     def testCompleteArgumentLists(self):
-        self.fail('test how argument lists are filled in')
+        compls = findCompletions('b(', 'b(', self.pysmelldict)
+        orig = compFunc('b', 'arg1, arg2')
+        orig['word'] = orig['abbr']
+        self.assertEquals(compls, [orig])
         
 
 if __name__ == '__main__':

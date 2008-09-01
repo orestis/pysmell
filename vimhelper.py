@@ -4,7 +4,7 @@
 # All rights reserved
 # E-mail: orestis@orestis.gr
 
-# pysmell v0.1
+# pysmell v0.2
 # http://orestis.gr
 
 # Released subject to the BSD License 
@@ -39,35 +39,49 @@ def findWord(vim, origCol, origLine):
 
 
 def findCompletions(cword, base, PYSMELLDICT):
-    completions = []
     isAttrLookup = '.' in cword
+    isArgCompletion = base.endswith('(') and cword.endswith(base)
+    if isArgCompletion:
+        lindex = 0
+        if isAttrLookup:
+            lindex = cword.rindex('.')
+        funcName = cword[lindex:-1]
+
+    completions = []
     for module, moduleDict in PYSMELLDICT.items():
         if not isAttrLookup:
-            completions.extend([{'word': word, 'kind': 'd', 'menu': module} for word in moduleDict['CONSTANTS']])
-            completions.extend([getCompForFunction(func, module, 'f') for func in moduleDict['FUNCTIONS']])
+            completions.extend([{'word': word, 'kind': 'd', 'menu': module} for
+                                    word in moduleDict['CONSTANTS']])
+            completions.extend([getCompForFunction(func, module, 'f') for func
+                                    in moduleDict['FUNCTIONS']])
         for klass, klassDict in moduleDict['CLASSES'].items():
             if not isAttrLookup:
-                completions.append(dict(word=klass, kind='t', menu=module, abbr='%s(%s)' % (klass, _argsList(klassDict['constructor']))))
+                completions.append(dict(word=klass, kind='t', menu=module,
+                                abbr='%s(%s)' % (klass, _argsList(klassDict['constructor']))))
             else:
-                completions.extend([dict(word=word, kind='m', menu='%s:%s' % (module, klass)) for word in klassDict['properties']])
-                completions.extend([getCompForFunction(func, '%s:%s' % (module, klass), 'm') for func in klassDict['methods']])
-    if base:
-        filteredCompletions = [comp for comp in completions if comp['word'].startswith(base)]
+                completions.extend([dict(word=word, kind='m', menu='%s:%s' %
+                                (module, klass)) for word in klassDict['properties']])
+                completions.extend([getCompForFunction(func, '%s:%s' % (module,
+                            klass), 'm') for func in klassDict['methods']])
+    if base and not isArgCompletion:
+        filteredCompletions = [comp for comp in completions if
+                            comp['word'].lower().startswith(base.lower())]
+    elif isArgCompletion:
+        filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
     else:
         filteredCompletions = completions
     filteredCompletions.sort(sortCompletions)
-    if len(filteredCompletions) == 1:
+
+    if filteredCompletions and isArgCompletion:
         #return the arg list instead
         oldComp = filteredCompletions[0]
-        if oldComp['word'] == base:
-            diff = len(oldComp['abbr']) - len(oldComp['word'])
+        if oldComp['word'] == funcName:
             oldComp['word'] = oldComp['abbr']
     return filteredCompletions
     
 def getCompForFunction(func, menu, kind):
     return dict(word=func[0], kind=kind, menu=menu,
                             abbr='%s(%s)' % (func[0], _argsList(func[1])))
-
 def _argsList(l):
      return ', '.join([str(arg) for arg in l])
 

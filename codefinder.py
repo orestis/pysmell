@@ -4,7 +4,7 @@
 # All rights reserved
 # E-mail: orestis@orestis.gr
 
-# pysmell v0.1
+# pysmell v0.2
 # http://orestis.gr
 
 # Released subject to the BSD License 
@@ -54,7 +54,8 @@ class ModuleDict(object):
         self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
 
     def __repr__(self):
-        nonEmptyModules = dict((k, v) for (k, v) in self._modules.items() if not self.isModuleEmpty(k))
+        nonEmptyModules = dict((k, v) for (k, v) in self._modules.items() if
+                                        not self.isModuleEmpty(k))
         if nonEmptyModules:
             return repr(nonEmptyModules)
         return ''
@@ -86,7 +87,8 @@ class CodeFinder(object):
 
     @property
     def inClass(self):
-        return len(self.scope) > 0 and (isinstance(self.scope[-1], ast.Class) or self.inClassFunction)
+        return (len(self.scope) > 0 and (isinstance(self.scope[-1], ast.Class)
+                    or self.inClassFunction))
 
     @property
     def inClassFunction(self):
@@ -108,13 +110,15 @@ class CodeFinder(object):
             return self.scope[-1].name
         return None
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign', 'Backquote',
-                'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare', 'Const', 'Continue', 'Dict',
-                'Discard', 'Div', 'Exec', 'FloorDiv', 'For', 'From', 'GenExpr', 'GenExprIf', 'GenExprInner',
-                'GenExprFor', 'Global', 'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',
-                'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift', 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript',
-                'Tuple', 'TryExcept', 'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign',
+                'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare',
+                'Const', 'Continue', 'Dict', 'Discard', 'Div', 'Exec', 'FloorDiv', 'For',
+                'From', 'GenExpr', 'GenExprIf', 'GenExprInner', 'GenExprFor', 'Global',
+                'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List',
+                'ListComp', 'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
+                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift',
+                'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript', 'Tuple', 'TryExcept',
+                'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
 
     def __getattr__(self, attr):
         if attr[5:] in self.OTHER:
@@ -158,7 +162,8 @@ class CodeFinder(object):
     def visitClass(self, klass):
         self.enterScope(klass)
         if len(self.scope) == 1:
-            self.modules.enterClass(klass.name, [getName(b) for b in klass.bases], klass.doc or '')
+            self.modules.enterClass(klass.name, [getName(b) for b in
+                                        klass.bases], klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
 
@@ -173,11 +178,13 @@ class CodeFinder(object):
                 if func.decorators and 'property' in [getName(n) for n in func.decorators]:
                     self.modules.addProperty(self.currentClass, func.name)
                 else:
-                    self.modules.addMethod(self.currentClass, func.name, getFuncArgs(func), func.doc or "")
+                    self.modules.addMethod(self.currentClass, func.name,
+                                    getFuncArgs(func), func.doc or "")
             else:
                 self.modules.setConstructor(self.currentClass, getFuncArgs(func))
         elif len(self.scope) == 1:
-            self.modules.addFunction(func.name, getFuncArgs(func, inClass=False), func.doc or "")
+            self.modules.addFunction(func.name, getFuncArgs(func,
+                                inClass=False), func.doc or "")
 
         self.visit(func.code)
         self.exitScope()
@@ -189,7 +196,8 @@ class CodeFinder(object):
 
 
 def getNameTwo(template, left, right, leftJ='', rightJ=''):
-    return template % (leftJ.join(map(getName, ast.flatten(left))), rightJ.join(map(getName, ast.flatten(right))))
+    return template % (leftJ.join(map(getName, ast.flatten(left))),
+                        rightJ.join(map(getName, ast.flatten(right))))
     
 
 def getName(node):
@@ -199,7 +207,8 @@ def getName(node):
     if isinstance(node, (ast.Class, ast.Name, ast.Function)):
         return node.name
     if isinstance(node, ast.Dict):
-        pairs = ['%s: %s' % pair for pair in [(getName(first), getName(second)) for (first, second) in node.items]]
+        pairs = ['%s: %s' % pair for pair in [(getName(first), getName(second))
+                        for (first, second) in node.items]]
         return '{%s}' % ', '.join(pairs)
     if isinstance(node, ast.CallFunc):
         notArgs = [n for n in node.getChildNodes() if n not in node.args]
