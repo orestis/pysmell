@@ -1,0 +1,10 @@
+PySmell v0.2
+
+Added support for nested packages
+Exceptions in files are not blocking the process
+Switched to parseFile, shouldn't have to worry about line endings
+
+PySmell v0.1 
+
+Initial, roughly working version
+
