@@ -185,13 +185,13 @@ def getName(node):
         return str(node)
     if isinstance(node, (ast.Class, ast.Name, ast.Function)):
         return node.name
-    if isinstance(node, (ast.Dict),):
+    if isinstance(node, ast.Dict):
         pairs = ['%s: %s' % pair for pair in [(getName(first), getName(second)) for (first, second) in node.items]]
         return '{%s}' % ', '.join(pairs)
     if isinstance(node, ast.CallFunc):
         notArgs = [n for n in node.getChildNodes() if n not in node.args]
         return getNameTwo('%s(%s)', notArgs, node.args, rightJ=', ')
-    if isinstance(node, (ast.Const),):
+    if isinstance(node, ast.Const):
         return str(node.value)
     if isinstance(node, ast.LeftShift):
         return getNameTwo('%s<<%s', node.left, node.right)
@@ -201,13 +201,13 @@ def getName(node):
         return getNameTwo('%s*%s', node.left, node.right)
     if isinstance(node, ast.UnarySub):
         return '-%s' % ''.join(map(getName, ast.flatten(node)))
-    if isinstance(node, (ast.List),):
+    if isinstance(node, ast.List):
         return '[%s]' % ', '.join(map(getName, ast.flatten(node)))
-    if isinstance(node, (ast.Tuple),):
+    if isinstance(node, ast.Tuple):
         return '(%s)' % ', '.join(map(getName, ast.flatten(node)))
-    if isinstance(node, (ast.Lambda), ):
+    if isinstance(node, ast.Lambda):
         return 'lambda %s: %s' % (', '.join(map(getName, node.argnames)), getName(node.code))
-    if isinstance(node, (ast.Getattr,), ):
+    if isinstance(node, ast.Getattr):
         return '.'.join(map(getName, ast.flatten(node)))
     if isinstance(node, ast.Compare):
         rhs = node.asList()[-1]
