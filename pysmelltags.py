@@ -71,7 +71,7 @@ def process(argList, excluded):
                     if newmodules:
                         modules = newmodules
         else: # single file
-            newmodules = processFile(item, codeFinder, '')
+            newmodules = processFile(item, '', '', codeFinder)
             if newmodules:
                 modules = newmodules
             

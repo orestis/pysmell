@@ -96,6 +96,9 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageB
         self.assertEquals(PYSMELLDICT, expectedDict)
 
+
+    def testSingleFiles(self):
+        self.fail("fixme")
     
     def DONTtestTypeInferencing(self):
         'given a valid code block, try to narrow down the possible classes and return that'
