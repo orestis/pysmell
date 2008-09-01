@@ -70,10 +70,9 @@ class FunctionalTest(unittest.TestCase):
         self.assertEquals(PYSMELLDICT, expectedDict)
 
     
-    def DONTtestSimpleAutoComplete(self):
-        'should accept initialy a starting string and return everything that matches'
-        self.fail()
-
+    def testPackageHandling(self):
+        self.fail('django does a lot of top-level package in __init__.py')
+        self.fail('pysmell should handle packages as well (I think that just p.p.module will do)')
 
     def DONTtestTypeInferencing(self):
         'given a valid code block, try to narrow down the possible classes and return that'

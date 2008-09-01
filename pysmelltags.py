@@ -42,8 +42,8 @@ def check_method_arguments(self, func):
             print ('no args!')
 
 
-def getClassDict(source, codeFinder=None):
-    tree = compiler.parse(source.replace('\r\n', '\n'))
+def getClassDict(path, codeFinder=None):
+    tree = compiler.parseFile(path)
     if codeFinder is None:
         codeFinder = CodeFinder()
     compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
@@ -79,14 +79,15 @@ def process(argList, excluded):
     generateClassTag(classes)
 
 def processFile(f, codeFinder, root):
-    print '.',
-    codeFinder.setFilename(f)
-    s = None
+    print os.path.join(root, f),
+    if f == '__init__.py':
+        codeFinder.setFilename(os.path.split(root)[-1])
+    else:
+        codeFinder.setFilename(f)
     try:
-        s = open(os.path.join(root, f), 'r').read()
-        if s:
-            classes = getClassDict(s, codeFinder)
-            return classes
+        classes = getClassDict(os.path.join(root, f), codeFinder)
+        print len(classes._modules.keys())
+        return classes
     except:
         print '-=#=- '* 10
         print 'EXCEPTION in', os.path.join(root, f)
@@ -99,12 +100,23 @@ if __name__ == '__main__':
     if '-h' in fileList:
         print 'Usage: python pysmelltags.py [PackageA PackageB FileA.py FileB.py] [-x ExcludedDir1 ExcludedDir2]'
         sys.exit(0)
-    if not fileList:
-        fileList = [os.getcwd()]
+    timing = False
     excluded = []
+    if '-t' in fileList:
+        timing = True
+        fileList.remove('-t')
     if '-x' in fileList:
         excluded = fileList[fileList.index('-x')+1:]
         fileList = fileList[:fileList.index('-x')]
+    if not fileList:
+        fileList = [os.getcwd()]
+
+    if timing:
+        import time
+        start = time.clock()
     process(fileList, excluded)
+    if timing:
+        took = time.clock() - start
+        print 'took %f seconds' % took
 
 
