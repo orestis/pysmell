@@ -66,6 +66,17 @@ class CodeFinderTest(unittest.TestCase):
         expected = ('function', ['a=1', 'b=2', 'c=None', 'd=4', "e='string'", 'f=Name', 'g={}'], '')
         self.assertEquals(out['FUNCTIONS'], [expected])
 
+    def testOldStyleDecoratorProperties(self):
+        out = self.getModule("""
+        class A:
+            def __a(self):
+                pass
+            a = property(__a)
+        """)
+        expected = {'A': dict(bases=[], properties=['a'], methods=[('__a', [], '')], constructor=[], docstring='')}
+        self.assertClasses(out, expected)
+
+
     def assertNamesIsHandled(self, name):
         out = self.getModule("""
         def f(a=%s):
@@ -176,15 +187,15 @@ class CodeFinderTest(unittest.TestCase):
         self.assertEquals(argToStr(('ala',)), '(ala,)')
 
 def compMeth(name, klass):
-    return dict(word=name, abbr='%s()' % name, kind='m', menu='Module:%s' % klass)
+    return dict(word=name, abbr='%s()' % name, kind='m', menu='Module:%s' % klass, dup='1')
 def compFunc(name, args=''):
-    return dict(word=name, abbr='%s(%s)' % (name, args), kind='f', menu='Module')
+    return dict(word=name, abbr='%s(%s)' % (name, args), kind='f', menu='Module', dup='1')
 def compConst(name):
-    return dict(word=name, kind='d', menu='Module')
+    return dict(word=name, kind='d', menu='Module', dup='1')
 def compProp(name, klass):
-    return dict(word=name, kind='m', menu='Module:%s' % klass)
+    return dict(word=name, kind='m', menu='Module:%s' % klass, dup='1')
 def compClass(name):
-    return dict(word=name, abbr='%s()' % name,  kind='t', menu='Module')
+    return dict(word=name, abbr='%s()' % name,  kind='t', menu='Module', dup='1')
 class MockVim(object):
     class _current(object):
         class _window(object):

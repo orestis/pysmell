@@ -48,22 +48,8 @@ def findCompletions(vim, origLine, origCol, base, PYSMELLDICT):
             lindex = leftSide.rindex('.') + 1
         funcName = leftSide[lindex:-1].lstrip()
 
-    completions = []
-    for module, moduleDict in PYSMELLDICT.items():
-        if not isAttrLookup:
-            completions.extend([{'word': word, 'kind': 'd', 'menu': module} for
-                                    word in moduleDict['CONSTANTS']])
-            completions.extend([getCompForFunction(func, module, 'f') for func
-                                    in moduleDict['FUNCTIONS']])
-        for klass, klassDict in moduleDict['CLASSES'].items():
-            if not isAttrLookup:
-                completions.append(dict(word=klass, kind='t', menu=module,
-                                abbr='%s(%s)' % (klass, _argsList(klassDict['constructor']))))
-            else:
-                completions.extend([dict(word=word, kind='m', menu='%s:%s' %
-                                (module, klass)) for word in klassDict['properties']])
-                completions.extend([getCompForFunction(func, '%s:%s' % (module,
-                            klass), 'm') for func in klassDict['methods']])
+    completions = _createCompletionList(PYSMELLDICT, isAttrLookup)
+
     if base and not isArgCompletion:
         filteredCompletions = [comp for comp in completions if
                             comp['word'].lower().startswith(base.lower())]
@@ -82,9 +68,29 @@ def findCompletions(vim, origLine, origCol, base, PYSMELLDICT):
                 rindex = -1
             oldComp['word'] = oldComp['abbr'][:rindex]
     return filteredCompletions
+
+def _createCompletionList(PYSMELLDICT, isAttrLookup):
+    completions = []
+    for module, moduleDict in PYSMELLDICT.items():
+        if not isAttrLookup:
+            completions.extend([dict(word=word, kind='d', menu=module, dup='1') for
+                                    word in moduleDict['CONSTANTS']])
+            completions.extend([getCompForFunction(func, module, 'f') for func
+                                    in moduleDict['FUNCTIONS']])
+        for klass, klassDict in moduleDict['CLASSES'].items():
+            if not isAttrLookup:
+                completions.append(dict(word=klass, kind='t', menu=module, dup='1',
+                                abbr='%s(%s)' % (klass, _argsList(klassDict['constructor']))))
+            else:
+                completions.extend([dict(word=word, kind='m', dup='1', menu='%s:%s' %
+                                (module, klass)) for word in klassDict['properties']])
+                completions.extend([getCompForFunction(func, '%s:%s' % (module,
+                            klass), 'm') for func in klassDict['methods']])
     
+    return completions
+
 def getCompForFunction(func, menu, kind):
-    return dict(word=func[0], kind=kind, menu=menu,
+    return dict(word=func[0], kind=kind, menu=menu, dup='1',
                             abbr='%s(%s)' % (func[0], _argsList(func[1])))
 def _argsList(l):
      return ', '.join([str(arg) for arg in l])
