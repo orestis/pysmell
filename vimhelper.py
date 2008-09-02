@@ -38,14 +38,15 @@ def findWord(vim, origCol, origLine):
     return cword
 
 
-def findCompletions(cword, base, PYSMELLDICT):
-    isAttrLookup = '.' in cword
-    isArgCompletion = base.endswith('(') and cword.endswith(base)
+def findCompletions(vim, origLine, origCol, base, PYSMELLDICT):
+    leftSide, rightSide = origLine[:origCol], origLine[origCol:]
+    isAttrLookup = '.' in leftSide
+    isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
         lindex = 0
         if isAttrLookup:
-            lindex = cword.rindex('.')
-        funcName = cword[lindex:-1]
+            lindex = leftSide.rindex('.') + 1
+        funcName = leftSide[lindex:-1].lstrip()
 
     completions = []
     for module, moduleDict in PYSMELLDICT.items():
@@ -76,7 +77,10 @@ def findCompletions(cword, base, PYSMELLDICT):
         #return the arg list instead
         oldComp = filteredCompletions[0]
         if oldComp['word'] == funcName:
-            oldComp['word'] = oldComp['abbr']
+            rindex = None
+            if rightSide.startswith(')'):
+                rindex = -1
+            oldComp['word'] = oldComp['abbr'][:rindex]
     return filteredCompletions
     
 def getCompForFunction(func, menu, kind):

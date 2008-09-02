@@ -265,17 +265,35 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(word, 'hehe.bb')
 
     def testCompletions(self):
-        compls = findCompletions('b', 'b', self.pysmelldict)
+        compls = findCompletions(self.vim, 'b', 1, 'b', self.pysmelldict)
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
-        compls = findCompletions('somethign.a', 'a', self.pysmelldict)
+        compls = findCompletions(self.vim, 'somethign.a', 11, 'a', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
 
+    def testCompleteArgumentListsPropRightParen(self):
+        compls = findCompletions(self.vim, 'self.bm()', 8, 'bm(', self.pysmelldict)
+        orig = compMeth('bm', 'aClass')
+        orig['word'] = orig['abbr'][:-1]
+        self.assertEquals(compls, [orig])
+        
+    def testCompleteArgumentListsProp(self):
+        compls = findCompletions(self.vim, 'self.bm(', 8, 'bm(', self.pysmelldict)
+        orig = compMeth('bm', 'aClass')
+        orig['word'] = orig['abbr']
+        self.assertEquals(compls, [orig])
+        
+    def testCompleteArgumentListsRightParen(self):
+        compls = findCompletions(self.vim, '   b()', 5, 'b(', self.pysmelldict)
+        orig = compFunc('b', 'arg1, arg2')
+        orig['word'] = orig['abbr'][:-1]
+        self.assertEquals(compls, [orig])
+
     def testCompleteArgumentLists(self):
-        compls = findCompletions('b(', 'b(', self.pysmelldict)
+        compls = findCompletions(self.vim, '  b(', 4, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])

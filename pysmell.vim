@@ -37,20 +37,18 @@ python << eopython
 origCol = int(vim.eval('g:pysmell_origCol'))
 origLine = vim.eval('g:pysmell_origLine')
 
-cword = vimhelper.findWord(vim, origCol, origLine)
-vim.command('let cword = %r' % cword)
 eopython
-        execute "python vimcomplete('" . cword . "', '" . a:base . "')"
+        execute "python vimcomplete('" . g:pysmell_origLine . "', '" . g:pysmell_origCol . "', '" . a:base . "')"
         return g:pysmell_completions
     endif
 endfunction
 
 python << eopython
-def vimcomplete(cword, base):
+def vimcomplete(origLine, origCol, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     PYSMELLDICT = vimhelper.findPYSMELLDICT(filename)
-    completions = vimhelper.findCompletions(cword, base, PYSMELLDICT)
+    completions = vimhelper.findCompletions(vim, origLine, int(origCol), base, PYSMELLDICT)
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
 
