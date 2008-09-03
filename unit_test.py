@@ -196,6 +196,7 @@ def compProp(name, klass):
     return dict(word=name, kind='m', menu='Module:%s' % klass, dup='1')
 def compClass(name):
     return dict(word=name, abbr='%s()' % name,  kind='t', menu='Module', dup='1')
+
 class MockVim(object):
     class _current(object):
         class _window(object):
@@ -204,6 +205,7 @@ class MockVim(object):
         window = _window()
     current = _current()
     command = lambda _, __:None
+
 class CompletionTest(unittest.TestCase):
     def setUp(self):
         self.pysmelldict = {'Module': {

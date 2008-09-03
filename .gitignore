@@ -1,2 +1,4 @@
 *.swp
 *.pyc
+.DS_Store
+PYSMELLTAGS
