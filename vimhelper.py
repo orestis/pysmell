@@ -10,6 +10,7 @@
 # Released subject to the BSD License 
 
 import os
+import re
 
 def findBase(vim):
     row, col = vim.current.window.cursor
@@ -24,7 +25,6 @@ def findBase(vim):
             break
     return index #this is zero based :S
     
-
 def findWord(vim, origCol, origLine):
     # vim moves the cursor and deletes the text by the time we are called
     # so we need the original position and the original line...
@@ -37,8 +37,76 @@ def findWord(vim, origCol, origLine):
     cword = origLine[index:origCol]
     return cword
 
+def matchCaseInsetively(base):
+    return lambda comp: comp.lower().startswith(base.lower())
+
+def matchCaseSensitively(base):
+    return lambda comp: comp.startswith(base)
+
+def camelGroups(word):
+    groups = []
+    rest = word
+    while rest:
+        i, limit = 0, len(rest)
+        while i < limit:
+            suspect = rest[1:i+1]
+            if i and not (suspect.islower() and suspect.isalnum()):
+                break
+            i += 1
+        part, rest = rest[:i], rest[i:]
+        groups.append(part)
+    return groups
+
+def matchCamelCasedPrecise(base):
+    baseGr = camelGroups(base)
+    baseLen = len(baseGr)
+    def check(comp):
+        compGr = camelGroups(comp)
+        return baseLen <= len(compGr) and all(matchCaseSensitively(bg)(cg) for bg, cg in zip(baseGr, compGr))
+    return check
+
+def matchCamelCased(base):
+    baseGr = camelGroups(base)
+    baseLen = len(baseGr)
+    def check(comp):
+        compGr = camelGroups(comp)
+        return baseLen <= len(compGr) and all(matchCaseInsetively(bg)(cg) for bg, cg in zip(baseGr, compGr))
+    return check
+
+def matchSmartass(base):
+    rev_base_letters = list(reversed(base.lower()))
+    def check(comp):
+        stack = rev_base_letters[:]
+        for group in camelGroups(comp):
+            lowered = group.lower()
+            while True:
+                if lowered and stack:
+                    if lowered.startswith(stack[-1]):
+                        stack.pop()
+                    lowered = lowered[1:]
+                else:
+                    break
+        return not stack
+    return check
+
+def matchFuzzyCS(base):
+    regex = re.compile('.*'.join([] + list(base) + []))
+    return lambda comp: bool(regex.match(comp))
+
+def matchFuzzyCI(base):
+    regex = re.compile('.*'.join([] + list(base) + []), re.IGNORECASE)
+    return lambda comp: bool(regex.match(comp))
 
 def findCompletions(vim, origLine, origCol, base, PYSMELLDICT):
+    doesMatch = {
+        'case-sensitive': matchCaseSensitively,
+        'case-insensitive': matchCaseInsetively,
+        'camel-case': matchCamelCased,
+        'camel-case-sensitive': matchCamelCasedPrecise,
+        'smartass': matchSmartass,
+        'fuzzy-ci': matchFuzzyCI,
+        'fuzzy-cs': matchFuzzyCS,
+    }.get(vim.eval('g:pysmell_matcher'), matchCaseInsetively)(base)
     leftSide, rightSide = origLine[:origCol], origLine[origCol:]
     isAttrLookup = '.' in leftSide
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
@@ -51,8 +119,7 @@ def findCompletions(vim, origLine, origCol, base, PYSMELLDICT):
     completions = _createCompletionList(PYSMELLDICT, isAttrLookup)
 
     if base and not isArgCompletion:
-        filteredCompletions = [comp for comp in completions if
-                            comp['word'].lower().startswith(base.lower())]
+        filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
     elif isArgCompletion:
         filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
     else:
@@ -121,5 +188,3 @@ def findPYSMELLDICT(filename):
     PYSMELLDICT = eval(file(tagsFile).read())
     PYSMELLDICT.update(partialDict)
     return PYSMELLDICT
-    
-    

@@ -54,3 +54,4 @@ def vimcomplete(origLine, origCol, base):
 
 eopython
 set omnifunc=pysmell#Complete
+let g:pysmell_matcher='case-insensitive'
