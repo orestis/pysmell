@@ -11,6 +11,15 @@
 
 import os
 import re
+try:
+    all
+except:
+     def all(iterable):
+         for element in iterable:
+             if not element:
+                 return False
+         return True
+    
 
 def findBase(vim):
     row, col = vim.current.window.cursor

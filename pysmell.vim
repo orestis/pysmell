@@ -36,15 +36,15 @@ eopython
 python << eopython
 origCol = int(vim.eval('g:pysmell_origCol'))
 origLine = vim.eval('g:pysmell_origLine')
+vimcompletePYSMELL(origLine, origCol, vim.eval("a:base"))
 
 eopython
-        execute "python vimcomplete('" . g:pysmell_origLine . "', '" . g:pysmell_origCol . "', '" . a:base . "')"
         return g:pysmell_completions
     endif
 endfunction
 
 python << eopython
-def vimcomplete(origLine, origCol, base):
+def vimcompletePYSMELL(origLine, origCol, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     PYSMELLDICT = vimhelper.findPYSMELLDICT(filename)
@@ -53,5 +53,4 @@ def vimcomplete(origLine, origCol, base):
     vim.command('let g:pysmell_completions = %s' % (output, ))
 
 eopython
-set omnifunc=pysmell#Complete
 let g:pysmell_matcher='case-insensitive'

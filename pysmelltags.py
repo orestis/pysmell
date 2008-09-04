@@ -52,7 +52,7 @@ def getClassDict(path, codeFinder=None):
 
 def generateClassTag(modules):
     f = open(os.path.join(os.getcwd(), 'PYSMELLTAGS'), 'w')
-    pprint(modules, f, width=100)
+    pprint(modules._modules, f, width=100)
     f.close()
 
 
