@@ -9,6 +9,7 @@
 
 # Released subject to the BSD License 
 
+import os
 from compiler import ast
 
 class ModuleDict(object):
@@ -60,6 +61,10 @@ class ModuleDict(object):
             return repr(nonEmptyModules)
         return ''
 
+    def update(self, other):
+        if other:
+            self._modules.update(other._modules)
+
 
 def VisitChildren(fun):
     def decorated(self, *args, **kwargs):
@@ -67,23 +72,36 @@ def VisitChildren(fun):
         self.handleChildren(args[0])
     return decorated
 
-class CodeFinder(object):
+class BaseVisitor(object):
     def __init__(self):
         self.scope = []
-        self.checkers = {}
+
+
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple',
+                'AugAssign', 'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc',
+                'Compare', 'Const', 'Continue', 'Dict', 'Discard', 'Div', 'Exec',
+                'FloorDiv', 'For', 'From', 'Function', 'GenExpr', 'GenExprIf',
+                'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 'Import',
+                'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',
+                'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
+                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift',
+                'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript', 'Tuple', 'TryExcept',
+                'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
+
+    def __getattr__(self, attr):
+        if attr[5:] in self.OTHER:
+            return self.handleChildren
+
+    def handleChildren(self, node):
+        for c in node.getChildNodes():
+            self.visit(c)
+
+class CodeFinder(BaseVisitor):
+    def __init__(self):
+        BaseVisitor.__init__(self)
         self.modules = ModuleDict()
-        self.accesses = {}
         self.module = '__module__'
         self.package = '__package__'
-
-    def setModule(self, module):
-        self.module = module
-
-    def setPackage(self, package):
-        self.package = package
-
-    def addChecker(self, nodeType, func):
-        self.checkers.setdefault(nodeType, []).append(func)
 
     @property
     def inClass(self):
@@ -109,24 +127,11 @@ class CodeFinder(object):
         elif self.inClass:
             return self.scope[-1].name
         return None
+    def setModule(self, module):
+        self.module = module
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssTuple', 'AugAssign',
-                'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc', 'Compare',
-                'Const', 'Continue', 'Dict', 'Discard', 'Div', 'Exec', 'FloorDiv', 'For',
-                'From', 'GenExpr', 'GenExprIf', 'GenExprInner', 'GenExprFor', 'Global',
-                'If', 'Import', 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List',
-                'ListComp', 'ListCompFor', 'ListCompIf', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift',
-                'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript', 'Tuple', 'TryExcept',
-                'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
-
-    def __getattr__(self, attr):
-        if attr[5:] in self.OTHER:
-            return self.handleChildren
-
-    def handleChildren(self, node):
-        for c in node.getChildNodes():
-            self.visit(c)
+    def setPackage(self, package):
+        self.package = package
 
     def visitModule(self, node):
         if self.module == '__init__':
@@ -168,10 +173,6 @@ class CodeFinder(object):
         self.exitScope()
 
     def visitFunction(self, func):
-        for check in self.checkers.get('Function', []):
-            check(self, func)
-
-        self.accesses = {}
         self.enterScope(func)
         if self.inClassFunction:
             if func.name != '__init__':
@@ -188,11 +189,6 @@ class CodeFinder(object):
 
         self.visit(func.code)
         self.exitScope()
-
-        for name, attrs in self.accesses.items():
-            for klass, classattrs in self.modules.items():
-                if attrs.issubset(classattrs):
-                    print name, 'looks like', klass
 
 
 def getNameTwo(template, left, right, leftJ='', rightJ=''):
@@ -270,4 +266,97 @@ def getFuncArgs(func, inClass=True):
         offset += 1
 
     return args
+
+
+def getClassDict(path, codeFinder=None):
+    tree = compiler.parseFile(path)
+    if codeFinder is None:
+        codeFinder = CodeFinder()
+    compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+    return codeFinder.modules
+
+
+def processFile(f, path, root):
+    codeFinder = CodeFinder()
+    head, tail = os.path.split(path)
+    packageHieararchy = [tail]
+    while head:
+        head, tail = os.path.split(head)
+        packageHieararchy.append(tail)
+    packageHieararchy.reverse()
+
+    index = packageHieararchy.index(root)
+    package = '.'.join(packageHieararchy[index:])
+
+    codeFinder.setPackage(package)
+    codeFinder.setModule(f[:-3])
+    try:
+        modules = getClassDict(os.path.join(path, f), codeFinder)
+        return modules
+    except:
+        print '-=#=- '* 10
+        print 'EXCEPTION in', os.path.join(path, f)
+        print '-=#=- '* 10
+        return None
+        
+
+class SelfInferer(BaseVisitor):
+    def __init__(self):
+        BaseVisitor.__init__(self)
+        self.classRanges = []
+        self.lastlineno = 1
+
+    def handleChildren(self, node):
+        self.lastlineno = node.lineno
+        BaseVisitor.handleChildren(self, node)
+
+    def visitClass(self, klassNode):
+        self.visit(klassNode.code)
+        nestedStart, nestedEnd = None, None
+        for klass, start, end in self.classRanges:
+            if start > klassNode.lineno and end < self.lastlineno:
+                nestedStart, nestedEnd = start, end
+                
+            
+        if nestedStart == nestedEnd == None:
+            self.classRanges.append((klassNode.name, klassNode.lineno, self.lastlineno))
+        else:
+            start, end = klassNode.lineno, self.lastlineno
+            self.classRanges.append((klassNode.name, start, nestedStart-1))
+            self.classRanges.append((klassNode.name, nestedEnd+1, end))
+        self.lastlineno = klassNode.lineno
+            
+
+
+
+
+import compiler
+from compiler.visitor import ExampleASTVisitor
+
+def infer(source, lineNo):
+    sourceLines = source.splitlines()
+    try:
+        tree = compiler.parse(source)
+    except:
+        line = sourceLines[lineNo-1]
+        unindented = line.lstrip()
+        indentation = len(line) - len(unindented)
+        sourceLines[lineNo-1] = '%spass' % (' ' * indentation)
+
+        replacedSource = '\n'.join(sourceLines)
+        tree = compiler.parse(replacedSource)
+            
+
+    inferer = SelfInferer()
+    compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
+    classRanges = inferer.classRanges
+    classRanges.sort(sortClassRanges)
+    
+    for klass, start, end in classRanges:
+        if lineNo >= start:
+            return klass
+    return None
+
+def sortClassRanges(a, b):
+    return b[1] - a[1]
 

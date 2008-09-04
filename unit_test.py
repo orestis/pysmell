@@ -3,8 +3,33 @@ from textwrap import dedent
 import compiler
 from compiler.visitor import ExampleASTVisitor
 
-from codefinder import CodeFinder
+from codefinder import CodeFinder, infer, ModuleDict
 from vimhelper import findCompletions, findWord, findBase
+
+
+class ModuleDictTest(unittest.TestCase):
+    def testUpdate(self):
+        total = ModuleDict()
+        total.enterModule('mod1')
+        total.enterClass('cls1', [], 'doc1')
+        total.enterModule('mod2')
+        total.enterClass('cls2', [], 'doc2')
+
+        md1 = ModuleDict()
+        md1.enterModule('mod1')
+        md1.enterClass('cls1', [], 'doc1')
+
+        md2 = ModuleDict()
+        md2.enterModule('mod2')
+        md2.enterClass('cls2', [], 'doc2')
+
+        md3 = ModuleDict()
+        md3.update(md1)
+        self.assertEquals(repr(md3), repr(md1))
+        md3.update(md2)
+        self.assertEquals(repr(md3), repr(total))
+        md3.update(None)
+        self.assertEquals(repr(md3), repr(total))
 
 class CodeFinderTest(unittest.TestCase):
     def getModule(self, source):
@@ -310,7 +335,76 @@ class CompletionTest(unittest.TestCase):
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
+
+    def testInferSelfSimple(self):
+        source = dedent("""\
+            import something
+            class AClass(object):
+                def amethod(self, other):
+                    other.do_something()
+                    self.
+
+                def another(self):
+                    pass
+        """)
+        klass = infer(source, 5)
+        self.assertEquals(klass, 'AClass')
+
+    def testInferSelfMultipleClasses(self):
         
+        source = dedent("""\
+            import something
+            class AClass(object):
+                def amethod(self, other):
+                    other.do_something()
+                    class Sneak(object):
+                        def sth(self):
+                            class EvenSneakier(object):
+                                pass
+                            pass
+                    pass
+
+                def another(self):
+                    pass
+
+
+
+            class BClass(object):
+                def newmethod(self, something):
+                    wibble = [i for i in self.a]
+                    pass
+
+                def newerMethod(self, somethingelse):
+                    if Bugger:
+                        self.ass
+        """)
+        
+        self.assertEquals(infer(source, 1), None, 'no class yet!')
+        for line in range(2, 5):
+            klass = infer(source, line)
+            self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
+
+        for line in range(5, 7):
+            klass = infer(source, line)
+            self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
+
+        for line in range(7, 9):
+            klass = infer(source, line)
+            self.assertEquals(klass, 'EvenSneakier', 'wrong class %s in line %d' % (klass, line))
+
+        line = 9
+        klass = infer(source, line)
+        self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
+
+        for line in range(10, 17):
+            klass = infer(source, line)
+            self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
+
+        for line in range(17, 51):
+            klass = infer(source, line)
+            self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
+
+
 
 if __name__ == '__main__':
     unittest.main()

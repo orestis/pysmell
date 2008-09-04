@@ -11,9 +11,7 @@
 
 
 import sys, os
-import compiler
-from codefinder import CodeFinder
-from compiler.visitor import ExampleASTVisitor
+from codefinder import ModuleDict, processFile
 from pprint import pprint
 
 source = """
@@ -32,23 +30,6 @@ def test(aname):
     aname.do_other_stuff()
 """
 
-def check_method_arguments(self, func):
-    if self.inClass:
-        if func.argnames:
-            if func.argnames[0] != 'self':
-                print ('self! in class %s, function %s, line %d' %
-                    (self.currentClass, func.name, func.lineno))
-        else:
-            print ('no args!')
-
-
-def getClassDict(path, codeFinder=None):
-    tree = compiler.parseFile(path)
-    if codeFinder is None:
-        codeFinder = CodeFinder()
-    compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
-    return codeFinder.modules
-
 
 def generateClassTag(modules):
     f = open(os.path.join(os.getcwd(), 'PYSMELLTAGS'), 'w')
@@ -57,8 +38,7 @@ def generateClassTag(modules):
 
 
 def process(argList, excluded):
-    codeFinder = CodeFinder()
-    modules = None
+    modules = ModuleDict()
     for item in fileList:
         if os.path.isdir(item):
             for root, dirs, files in os.walk(item):
@@ -67,39 +47,15 @@ def process(argList, excluded):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    newmodules = processFile(f, root, item, codeFinder)
-                    if newmodules:
-                        modules = newmodules
+                    newmodules = processFile(f, root, item)
+                    modules.update(newmodules)
         else: # single file
-            newmodules = processFile(item, '', '', codeFinder)
-            if newmodules:
-                modules = newmodules
-            
+            newmodules = processFile(item, '', '')
+            modules.update(newmodules)
             
     generateClassTag(modules)
 
-def processFile(f, path, root, codeFinder):
-    head, tail = os.path.split(path)
-    packageHieararchy = [tail]
-    while head:
-        head, tail = os.path.split(head)
-        packageHieararchy.append(tail)
-    packageHieararchy.reverse()
 
-    index = packageHieararchy.index(root)
-    package = '.'.join(packageHieararchy[index:])
-
-    codeFinder.setPackage(package)
-    codeFinder.setModule(f[:-3])
-    try:
-        modules = getClassDict(os.path.join(path, f), codeFinder)
-        return modules
-    except:
-        print '-=#=- '* 10
-        print 'EXCEPTION in', os.path.join(path, f)
-        print '-=#=- '* 10
-        return None
-        
 
 if __name__ == '__main__':
     fileList = sys.argv[1:]
