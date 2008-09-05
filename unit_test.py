@@ -412,7 +412,7 @@ class CompletionTest(unittest.TestCase):
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
 
 
-    def testCompleteWithSelfInder(self):
+    def testCompleteWithSelfInfer(self):
         source = dedent("""\
             class aClass(object):
                 def sth(self):
@@ -422,6 +422,10 @@ class CompletionTest(unittest.TestCase):
         compls = findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'), compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
         self.assertEquals(compls, expected)
+
+
+    def testClassHierarchies(self):
+        self.fail()
 
 
     def testCamelGroups(self):
