@@ -427,6 +427,9 @@ class CompletionTest(unittest.TestCase):
     def testClassHierarchies(self):
         self.fail()
 
+    def testTrickyBases(self):
+        self.fail("isinstance(sth, ACLASS)")
+        self.fail("from Module.ACLASS import ACLASS")
 
     def testCamelGroups(self):
         from idehelper import camelGroups
