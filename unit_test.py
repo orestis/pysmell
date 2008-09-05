@@ -5,7 +5,8 @@ from compiler.visitor import ExampleASTVisitor
 
 from pprint import pformat
 from codefinder import CodeFinder, infer, ModuleDict
-from vimhelper import findCompletions, findWord, findBase
+from vimhelper import findWord, findBase
+from idehelper import findCompletions
 
 
 class ModuleDictTest(unittest.TestCase):
@@ -15,6 +16,8 @@ class ModuleDictTest(unittest.TestCase):
         total.enterClass('cls1', [], 'doc1')
         total.enterModule('mod2')
         total.enterClass('cls2', [], 'doc2')
+
+        self.assertEquals(pformat(total), pformat(total._modules))
 
         md1 = ModuleDict()
         md1.enterModule('mod1')
@@ -26,11 +29,11 @@ class ModuleDictTest(unittest.TestCase):
 
         md3 = ModuleDict()
         md3.update(md1)
-        self.assertEquals(repr(md3), repr(md1))
+        self.assertEquals(pformat(md3), pformat(md1))
         md3.update(md2)
-        self.assertEquals(repr(md3), repr(total))
+        self.assertEquals(pformat(md3), pformat(total))
         md3.update(None)
-        self.assertEquals(repr(md3), repr(total))
+        self.assertEquals(pformat(md3), pformat(total))
 
 class CodeFinderTest(unittest.TestCase):
     def getModule(self, source):
@@ -43,7 +46,7 @@ class CodeFinderTest(unittest.TestCase):
             return eval(pformat(codeFinder.modules))['TestPackage.TestModule']
         except:
             print 'EXCEPTION WHEN EVALING:'
-            print repr(codeFinder.modules)
+            print pformat(codeFinder.modules)
             print '=-' * 20
             raise
 
@@ -306,35 +309,35 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(word, 'hehe.bb')
 
     def testCompletions(self):
-        compls = findCompletions(self.vim, 'b', 1, 'b', self.pysmelldict)
+        compls = findCompletions(None, '', 'b', 1, 'b', self.pysmelldict)
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
-        compls = findCompletions(self.vim, 'somethign.a', 11, 'a', self.pysmelldict)
+        compls = findCompletions(None, '', 'somethign.a', 11, 'a', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
 
     def testCompleteArgumentListsPropRightParen(self):
-        compls = findCompletions(self.vim, 'self.bm()', 8, 'bm(', self.pysmelldict)
+        compls = findCompletions(None, '', 'self.bm()', 8, 'bm(', self.pysmelldict)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsProp(self):
-        compls = findCompletions(self.vim, 'self.bm(', 8, 'bm(', self.pysmelldict)
+        compls = findCompletions(None, '', 'self.bm(', 8, 'bm(', self.pysmelldict)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsRightParen(self):
-        compls = findCompletions(self.vim, '   b()', 5, 'b(', self.pysmelldict)
+        compls = findCompletions(None, '', '   b()', 5, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
 
     def testCompleteArgumentLists(self):
-        compls = findCompletions(self.vim, '  b(', 4, 'b(', self.pysmelldict)
+        compls = findCompletions(None, '', '  b(', 4, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
@@ -408,7 +411,7 @@ class CompletionTest(unittest.TestCase):
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
 
     def testCamelGroups(self):
-        from vimhelper import camelGroups
+        from idehelper import camelGroups
         def assertCamelGroups(word, groups):
             self.assertEquals(list(camelGroups(word)), groups.split())
         assertCamelGroups('alaMaKota', 'ala Ma Kota')
@@ -417,7 +420,7 @@ class CompletionTest(unittest.TestCase):
         assertCamelGroups('ala_ma_kota', 'ala _ma _kota')
 
     def testMatchers(self):
-        from vimhelper import (matchCaseSensitively, matchCaseInsetively,
+        from idehelper import (matchCaseSensitively, matchCaseInsetively,
                 matchCamelCased, matchSmartass, matchFuzzyCS, matchFuzzyCI)
         def assertMatches(base, word):
             msg = "should complete %r for %r with %s" % (base, word, testedFunction.__name__)

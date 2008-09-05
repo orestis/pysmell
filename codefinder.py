@@ -65,7 +65,10 @@ class ModuleDict(dict):
         return [self._modules[k] for k in self.keys()]
 
     def items(self):
-        return [(k, self._modules[k]) for k in self.keys()]
+        return list(self.iteritems())
+
+    def iteritems(self):
+        return ((k, self._modules[k]) for k in self.keys())
 
     def __getitem__(self, item):
         return self._modules[item]
