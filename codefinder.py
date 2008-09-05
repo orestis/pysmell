@@ -54,13 +54,6 @@ class ModuleDict(dict):
     def setConstructor(self, klass, args):
         self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
 
-#    def __repr__(self):
-#        nonEmptyModules = dict((k, v) for (k, v) in self._modules.items() if
-#                                        not self.isModuleEmpty(k))
-#        if nonEmptyModules:
-#            return repr(nonEmptyModules)
-#        return ''
-
     def update(self, other):
         if other:
             self._modules.update(other._modules)

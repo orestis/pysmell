@@ -3,6 +3,7 @@ from textwrap import dedent
 import compiler
 from compiler.visitor import ExampleASTVisitor
 
+from pprint import pformat
 from codefinder import CodeFinder, infer, ModuleDict
 from vimhelper import findCompletions, findWord, findBase
 
@@ -39,7 +40,7 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setPackage('TestPackage')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         try:
-            return eval(repr(codeFinder.modules))['TestPackage.TestModule']
+            return eval(pformat(codeFinder.modules))['TestPackage.TestModule']
         except:
             print 'EXCEPTION WHEN EVALING:'
             print repr(codeFinder.modules)
@@ -53,7 +54,7 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setPackage('TestPackage')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         self.assertTrue(codeFinder.modules.isModuleEmpty('TestPackage.TestModule'), 'should be empty')
-        self.assertEquals(repr(codeFinder.modules), "")
+        self.assertEquals(pformat(codeFinder.modules), "{}")
 
 
     def testOnlyPackage(self):
@@ -69,7 +70,7 @@ class CodeFinderTest(unittest.TestCase):
         expected = {'TestPackage': {'CLASSES': {'A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
             'FUNCTIONS': [], 'CONSTANTS': []}
         }
-        actual = eval(repr(codeFinder.modules))
+        actual = eval(pformat(codeFinder.modules))
         self.assertEquals(actual, expected)
 
     def assertClasses(self, moduleDict, expected):
