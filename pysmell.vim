@@ -37,7 +37,7 @@ python << eopython
 origCol = int(vim.eval('g:pysmell_origCol'))
 origLine = vim.eval('g:pysmell_origLine')
 origSource = '\n'.join(vim.current.buffer)
-vimcompletePYSMELL(origSource, origLine, origCol, vim.eval("a:base"))
+vimcompletePYSMELL(origSource, origLine, vim.current.window.cursor[0], origCol, vim.eval("a:base"))
 
 eopython
         return g:pysmell_completions
@@ -45,11 +45,12 @@ eopython
 endfunction
 
 python << eopython
-def vimcompletePYSMELL(origSource, origLine, origCol, base):
+def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     PYSMELLDICT = idehelper.findPYSMELLDICT(filename)
-    completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'), origSource, origLine, int(origCol), base, PYSMELLDICT)
+    completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'),
+                                origSource, origLineText, origLineNo, int(origCol), base, PYSMELLDICT)
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
 

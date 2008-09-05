@@ -1,5 +1,6 @@
 import os
 import re
+from codefinder import infer
 
 try:
     all
@@ -86,7 +87,7 @@ def matchFuzzyCI(base):
     regex = re.compile('.*'.join([] + list(base) + []), re.IGNORECASE)
     return lambda comp: bool(regex.match(comp))
 
-def findCompletions(matcher, origSource, origLine, origCol, base, PYSMELLDICT):
+def findCompletions(matcher, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     doesMatch = {
         'case-sensitive': matchCaseSensitively,
         'case-insensitive': matchCaseInsetively,
@@ -96,8 +97,10 @@ def findCompletions(matcher, origSource, origLine, origCol, base, PYSMELLDICT):
         'fuzzy-ci': matchFuzzyCI,
         'fuzzy-cs': matchFuzzyCS,
     }.get(matcher, matchCaseInsetively)(base)
-    leftSide, rightSide = origLine[:origCol], origLine[origCol:]
+    leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     isAttrLookup = '.' in leftSide
+    isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
+        
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
         lindex = 0
@@ -113,6 +116,10 @@ def findCompletions(matcher, origSource, origLine, origCol, base, PYSMELLDICT):
         filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
     else:
         filteredCompletions = completions
+
+    if isClassLookup and isAttrLookup:
+        klass = ":%s" % infer(origSource, origLineNo)
+        filteredCompletions = [comp for comp in filteredCompletions if comp['menu'].endswith(klass)]
     filteredCompletions.sort(sortCompletions)
 
     if filteredCompletions and isArgCompletion:

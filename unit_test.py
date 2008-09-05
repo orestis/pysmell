@@ -255,6 +255,7 @@ class CompletionTest(unittest.TestCase):
                         'properties': ['cprop', 'dprop'],
                         'methods': [('cm', [], ''), ('dm', [], ())]
                     }
+                    
                 }
             }}
         import vimhelper
@@ -309,35 +310,35 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(word, 'hehe.bb')
 
     def testCompletions(self):
-        compls = findCompletions(None, '', 'b', 1, 'b', self.pysmelldict)
+        compls = findCompletions(None, '', 'b', 1, 1, 'b', self.pysmelldict)
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
-        compls = findCompletions(None, '', 'somethign.a', 11, 'a', self.pysmelldict)
+        compls = findCompletions(None, '', 'somethign.a', 1, 11, 'a', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
 
     def testCompleteArgumentListsPropRightParen(self):
-        compls = findCompletions(None, '', 'self.bm()', 8, 'bm(', self.pysmelldict)
+        compls = findCompletions(None, '', 'salf.bm()', 1, 8, 'bm(', self.pysmelldict)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsProp(self):
-        compls = findCompletions(None, '', 'self.bm(', 8, 'bm(', self.pysmelldict)
+        compls = findCompletions(None, '', 'salf.bm(', 1, 8, 'bm(', self.pysmelldict)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsRightParen(self):
-        compls = findCompletions(None, '', '   b()', 5, 'b(', self.pysmelldict)
+        compls = findCompletions(None, '', '   b()', 1, 5, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
 
     def testCompleteArgumentLists(self):
-        compls = findCompletions(None, '', '  b(', 4, 'b(', self.pysmelldict)
+        compls = findCompletions(None, '', '  b(', 1, 4, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
@@ -409,6 +410,19 @@ class CompletionTest(unittest.TestCase):
         for line in range(17, 51):
             klass = infer(source, line)
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
+
+
+    def testCompleteWithSelfInder(self):
+        source = dedent("""\
+            class aClass(object):
+                def sth(self):
+                    self.
+        
+        """)
+        compls = findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'), compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
+        self.assertEquals(compls, expected)
+
 
     def testCamelGroups(self):
         from idehelper import camelGroups

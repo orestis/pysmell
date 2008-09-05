@@ -97,6 +97,12 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageB
         self.assertEquals(PYSMELLDICT, expectedDict)
 
+    def testPackageDot(self):
+        self.fail('pysmelltags . should put current dir as package')
+
+    def testNoArgs(self):
+        self.fail('something weird happens when no args')
+
 
     def DONTtestTypeInferencing(self):
         'given a valid code block, try to narrow down the possible classes and return that'
