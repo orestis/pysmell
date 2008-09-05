@@ -12,7 +12,7 @@
 import os
 from compiler import ast
 
-class ModuleDict(object):
+class ModuleDict(dict):
     def __init__(self):
         self._modules = {}
 
@@ -54,16 +54,31 @@ class ModuleDict(object):
     def setConstructor(self, klass, args):
         self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
 
-    def __repr__(self):
-        nonEmptyModules = dict((k, v) for (k, v) in self._modules.items() if
-                                        not self.isModuleEmpty(k))
-        if nonEmptyModules:
-            return repr(nonEmptyModules)
-        return ''
+#    def __repr__(self):
+#        nonEmptyModules = dict((k, v) for (k, v) in self._modules.items() if
+#                                        not self.isModuleEmpty(k))
+#        if nonEmptyModules:
+#            return repr(nonEmptyModules)
+#        return ''
 
     def update(self, other):
         if other:
             self._modules.update(other._modules)
+
+    def keys(self):
+        return [k for k in self._modules.keys() if not self.isModuleEmpty(k)]
+
+    def values(self):
+        return [self._modules[k] for k in self.keys()]
+
+    def items(self):
+        return [(k, self._modules[k]) for k in self.keys()]
+
+    def __getitem__(self, item):
+        return self._modules[item]
+
+    def __len__(self):
+        return len(self.keys())
 
 
 def VisitChildren(fun):
