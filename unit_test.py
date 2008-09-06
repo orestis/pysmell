@@ -4,7 +4,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 
 from pprint import pformat
-from codefinder import CodeFinder, infer, ModuleDict
+from codefinder import CodeFinder, infer, ModuleDict, findPackage
 from vimhelper import findWord, findBase
 from idehelper import findCompletions
 
@@ -35,7 +35,18 @@ class ModuleDictTest(unittest.TestCase):
         md3.update(None)
         self.assertEquals(pformat(md3), pformat(total))
 
+
+
+class VariousUtilsTest(unittest.TestCase):
+    def testPackageFromPath(self):
+        self.assertEquals(findPackage('.', 'package'), 'package')
+        self.assertEquals(findPackage('./onemore', 'package'), 'package.onemore')
+        self.assertEquals(findPackage('A/B/C/D', 'A'), 'A.B.C.D')
+        self.assertEquals(findPackage('A/B/C/D', 'C'), 'C.D')
+
+
 class CodeFinderTest(unittest.TestCase):
+
     def getModule(self, source):
         tree = compiler.parse(dedent(source))
         codeFinder = CodeFinder()
@@ -49,6 +60,7 @@ class CodeFinderTest(unittest.TestCase):
             print pformat(codeFinder.modules)
             print '=-' * 20
             raise
+
 
     def testEmpty(self):
         tree = compiler.parse("")
@@ -76,8 +88,10 @@ class CodeFinderTest(unittest.TestCase):
         actual = eval(pformat(codeFinder.modules))
         self.assertEquals(actual, expected)
 
+
     def assertClasses(self, moduleDict, expected):
         self.assertEquals(moduleDict['CLASSES'], expected)
+
 
     def testSimpleClass(self):
         out = self.getModule("""
@@ -87,6 +101,7 @@ class CodeFinderTest(unittest.TestCase):
         expected = {'A': dict(bases=['object'], properties=[], methods=[], constructor=[], docstring='')}
         self.assertClasses(out, expected)
 
+
     def testAdvancedDefaultArguments(self):
         out = self.getModule("""
         def function(a=1, b=2, c=None, d=4, e='string', f=Name, g={}):
@@ -94,6 +109,7 @@ class CodeFinderTest(unittest.TestCase):
         """)
         expected = ('function', ['a=1', 'b=2', 'c=None', 'd=4', "e='string'", 'f=Name', 'g={}'], '')
         self.assertEquals(out['FUNCTIONS'], [expected])
+
 
     def testOldStyleDecoratorProperties(self):
         out = self.getModule("""
@@ -112,6 +128,7 @@ class CodeFinderTest(unittest.TestCase):
             pass
         """ % name)
         self.assertEquals(out['FUNCTIONS'], [('f', ['a=%s' % name], '')])
+
 
     def testNames(self):
         self.assertNamesIsHandled('A.B.C(1)')
@@ -141,6 +158,7 @@ class CodeFinderTest(unittest.TestCase):
         """)
         expectedProps = ['classprop', 'plainprop', 'methodProp']
         self.assertEquals(out['CLASSES']['A']['properties'], expectedProps)
+
 
     def testClassMethods(self):
         out = self.getModule("""
@@ -174,6 +192,7 @@ class CodeFinderTest(unittest.TestCase):
                            ]
         self.assertEquals(out['CLASSES']['A']['methods'], expectedMethods)
 
+
     def testTopLevelFunctions(self):
         out = self.getModule("""
         def TopFunction1(arg1, arg2=True, **spinach):
@@ -184,6 +203,7 @@ class CodeFinderTest(unittest.TestCase):
         expectedFunctions = [('TopFunction1', ['arg1', 'arg2=True', '**spinach'], 'random docstring'),
                              ('TopFunction2', ['arg1', 'arg2=False'], 'random docstring2')]
         self.assertEquals(out['FUNCTIONS'], expectedFunctions)
+
 
     def testNestedStuff(self):
         out = self.getModule("""
@@ -202,11 +222,13 @@ class CodeFinderTest(unittest.TestCase):
         self.assertEquals(out['CLASSES']['A']['methods'], [('level1', [], '')])
         self.assertEquals(out['FUNCTIONS'], [])
 
+
     def testModuleConstants(self):
         out = self.getModule("""
         CONSTANT = 1
         """)
         self.assertEquals(out['CONSTANTS'], ['CONSTANT'])
+
 
     def testArgToStr(self):
         from codefinder import argToStr
@@ -214,6 +236,7 @@ class CodeFinderTest(unittest.TestCase):
         self.assertEquals(argToStr(('ala', 'ma', 'kota')), '(ala, ma, kota)')
         self.assertEquals(argToStr((('x1', 'y1'), ('x2', 'y2'))), '((x1, y1), (x2, y2))')
         self.assertEquals(argToStr(('ala',)), '(ala,)')
+
 
 def compMeth(name, klass):
     return dict(word=name, abbr='%s()' % name, kind='m', menu='Module:%s' % klass, dup='1')
