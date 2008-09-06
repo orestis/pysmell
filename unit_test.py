@@ -447,6 +447,10 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(compls, expected)
 
 
+    def testKnowAboutClassHierarchies(self):
+        self.fail('so that when self.completing, you will give more useful results.')
+
+
     def testCamelGroups(self):
         from idehelper import camelGroups
         def assertCamelGroups(word, groups):
