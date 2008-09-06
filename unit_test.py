@@ -268,13 +268,13 @@ class CompletionTest(unittest.TestCase):
                 'CLASSES' : {
                     'aClass': {
                         'constructor': [],
-                        'bases': ['object'],
+                        'bases': ['object', 'alien'],
                         'properties': ['aprop', 'bprop'],
                         'methods': [('am', [], ''), ('bm', [], ())]
                     },
                     'bClass': {
                         'constructor': [],
-                        'bases': ['AClass'],
+                        'bases': ['aClass'],
                         'properties': ['cprop', 'dprop'],
                         'methods': [('cm', [], ''), ('dm', [], ())]
                     }
@@ -435,7 +435,7 @@ class CompletionTest(unittest.TestCase):
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
 
 
-    def testCompleteWithSelfInder(self):
+    def testCompleteWithSelfInfer(self):
         source = dedent("""\
             class aClass(object):
                 def sth(self):
@@ -448,7 +448,26 @@ class CompletionTest(unittest.TestCase):
 
 
     def testKnowAboutClassHierarchies(self):
-        self.fail('so that when self.completing, you will give more useful results.')
+        source = dedent("""\
+            class bClass(aClass):
+                def sth(self):
+                    self.
+        
+        """)
+        compls = findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
+                    compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
+                    compMeth('cm', 'bClass'), compProp('cprop', 'bClass'),
+                    compMeth('dm', 'bClass'), compProp('dprop', 'bClass')]
+        self.assertEquals(compls, expected)
+        source = dedent("""\
+            class cClass(object):
+                def sth(self):
+                    self.
+        
+        """)
+        self.assertEquals(findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
+
 
 
     def testCamelGroups(self):
