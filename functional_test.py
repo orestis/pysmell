@@ -8,59 +8,50 @@ import pysmelltags
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
         self.packageA = {
-            'PackageA.ModuleA': {
-                'FUNCTIONS': [('TopLevelFunction', ['arg1', 'arg2'], "")],
-                'CONSTANTS': ['CONSTANT',],
-                'CLASSES':
-                    {'ClassA': {
-                            'bases': ['object'],
-                            'docstring': '',
-                            'constructor': [],
-                            'properties': ['classPropertyA', 'classPropertyB', 'propertyA', 'propertyB', 'propertyC', 'propertyD'],
-                            'methods': [('methodA', ['argA', 'argB', '*args', '**kwargs'], '')]
-                        },
-                     'ChildClassA': {
-                            'bases': ['ClassA', 'object'],
-                            'docstring': 'a class docstring, imagine that',
-                            'constructor': ['conArg'],
-                            'properties': ['extraProperty'],
-                            'methods': [('extraMethod', [], 'i have a docstring')],
-                        }
-                    },
-            },
-            'PackageA.NestedPackage.EvenMore.ModuleC': {
-                'FUNCTIONS': [],
-                'CONSTANTS': ['NESTED'],
-                'CLASSES':{}
-            },
-
-            'PackageA': {
-                'FUNCTIONS': [('SneakyFunction', [], "")],
-                'CONSTANTS': ['SneakyConstant'],
-                'CLASSES':{
-                    'SneakyClass': {
-                            'bases': [],
-                            'docstring': '',
-                            'constructor': [],
-                            'properties': [],
-                            'methods': []
-                            }
-                        }
+            'CONSTANTS': [
+                'PackageA.ModuleA.CONSTANT',
+                'PackageA.NestedPackage.EvenMore.ModuleC.NESTED',
+                'PackageA.SneakyConstant',
+            ],
+            'FUNCTIONS': [
+                ('PackageA.ModuleA.TopLevelFunction', ['arg1', 'arg2'], ""),
+                ('PackageA.SneakyFunction', [], ""),
+            ],
+            'CLASSES': {
+                'PackageA.ModuleA.ClassA': {
+                    'bases': ['object'],
+                    'docstring': '',
+                    'constructor': [],
+                    'properties': ['classPropertyA', 'classPropertyB', 'propertyA', 'propertyB', 'propertyC', 'propertyD'],
+                    'methods': [('methodA', ['argA', 'argB', '*args', '**kwargs'], '')]
+                },
+                'PackageA.ModuleA.ChildClassA': {
+                    'bases': ['ClassA', 'object'],
+                    'docstring': 'a class docstring, imagine that',
+                    'constructor': ['conArg'],
+                    'properties': ['extraProperty'],
+                    'methods': [('extraMethod', [], 'i have a docstring')],
+                },
+                'PackageA.SneakyClass': {
+                    'bases': [],
+                    'docstring': '',
+                    'constructor': [],
+                    'properties': [],
+                    'methods': []
+                },
             }
         }
         
         self.packageB = {
-            'PackageB': {
-                'FUNCTIONS': [('SneakyFunction', [], "")],
-                'CONSTANTS': ['SneakyConstant'],
-                'CLASSES':{
-                    'SneakyClass': {
-                            'bases': [],
-                            'docstring': '',
-                            'constructor': [],
-                            'properties': [],
-                            'methods': []
-                    }
+            'CONSTANTS': ['PackageB.SneakyConstant'],
+            'FUNCTIONS': [('PackageB.SneakyFunction', [], "")],
+            'CLASSES':{
+                'PackageB.SneakyClass': {
+                    'bases': [],
+                    'docstring': '',
+                    'constructor': [],
+                    'properties': [],
+                    'methods': []
                 }
             }
         }
