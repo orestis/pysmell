@@ -9,13 +9,13 @@ class FunctionalTest(unittest.TestCase):
     def setUp(self):
         self.packageA = {
             'CONSTANTS': [
+                'PackageA.SneakyConstant',
                 'PackageA.ModuleA.CONSTANT',
                 'PackageA.NestedPackage.EvenMore.ModuleC.NESTED',
-                'PackageA.SneakyConstant',
             ],
             'FUNCTIONS': [
-                ('PackageA.ModuleA.TopLevelFunction', ['arg1', 'arg2'], ""),
                 ('PackageA.SneakyFunction', [], ""),
+                ('PackageA.ModuleA.TopLevelFunction', ['arg1', 'arg2'], ""),
             ],
             'CLASSES': {
                 'PackageA.ModuleA.ClassA': {
@@ -55,6 +55,21 @@ class FunctionalTest(unittest.TestCase):
                 }
             }
         }
+
+    def assertDictsEqual(self, actualDict, expectedDict):
+        self.assertEquals(len(actualDict.keys()), len(expectedDict.keys()), "dicts don't have equal number of keys")
+        self.assertEquals(set(actualDict.keys()), set(expectedDict.keys()), "dicts don't have equal keys")
+        for key, value in actualDict.items():
+            if isinstance(value, dict):
+                self.assertTrue(isinstance(expectedDict[key], dict), "incompatible types found for key %s" % key)
+                self.assertDictsEqual(value, expectedDict[key])
+            elif isinstance(value, list):
+                self.assertTrue(isinstance(expectedDict[key], list), "incompatible types found for key %s" % key)
+                self.assertEquals(value, expectedDict[key], 'wrong set(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
+            else:
+                self.assertEquals(value, expectedDict[key], "wrong value for key %s" % key)
+
+
             
         
     def testMultiPackage(self):
@@ -65,8 +80,10 @@ class FunctionalTest(unittest.TestCase):
         PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
         expectedDict = {}
         expectedDict.update(self.packageA)
-        expectedDict.update(self.packageB)
-        self.assertEquals(PYSMELLDICT, expectedDict)
+        expectedDict['CLASSES'].update(self.packageB['CLASSES'])
+        expectedDict['CONSTANTS'].extend(self.packageB['CONSTANTS'])
+        expectedDict['FUNCTIONS'].extend(self.packageB['FUNCTIONS'])
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
     
     def testPackageA(self):
@@ -76,7 +93,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
         expectedDict = self.packageA
-        self.assertEquals(PYSMELLDICT, expectedDict)
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
     def testPackageB(self):
@@ -86,7 +103,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
         expectedDict = self.packageB
-        self.assertEquals(PYSMELLDICT, expectedDict)
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
     def testPackageDot(self):
@@ -96,7 +113,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertTrue(os.path.exists('Tests/PackageA/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('Tests/PackageA/PYSMELLTAGS').read())
         expectedDict = self.packageA
-        self.assertEquals(PYSMELLDICT, expectedDict)
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
     
     def DONTtestSingleFile(self):
@@ -111,7 +128,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertTrue(os.path.exists('Tests/OUTPUTREDIR'))
         PYSMELLDICT = eval(open('Tests/OUTPUTREDIR').read())
         expectedDict = self.packageA
-        self.assertEquals(PYSMELLDICT, expectedDict)
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
         absPath = os.path.join(os.getcwd(), 'Tests', 'OUTPUTREDIR2')
         if os.path.exists(absPath):
@@ -120,7 +137,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertTrue(os.path.exists(absPath))
         PYSMELLDICT = eval(open(absPath).read())
         expectedDict = self.packageA
-        self.assertEquals(PYSMELLDICT, expectedDict)
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
     def testNoArgs(self):

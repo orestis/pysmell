@@ -14,61 +14,64 @@ from compiler import ast
 
 class ModuleDict(dict):
     def __init__(self):
-        self._modules = {}
+        self._modules = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': []}
 
     def enterModule(self, module):
         self.currentModule = module
-        self._modules[module] = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': []}
 
     def exitModule(self):
         self.currentModule = None
 
-    def isModuleEmpty(self, module):
-        return self._modules[module] == {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': []}
-
     def currentClass(self, klass):
-        return self._modules[self.currentModule]['CLASSES'][klass]
+        fullClass = "%s.%s" % (self.currentModule, klass)
+        return self['CLASSES'][fullClass]
 
     def enterClass(self, klass, bases, docstring):
-        self._modules[self.currentModule]['CLASSES'][klass] = {}
-        self._modules[self.currentModule]['CLASSES'][klass]['methods'] = []
-        self._modules[self.currentModule]['CLASSES'][klass]['properties'] = []
-        self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = []
-        self._modules[self.currentModule]['CLASSES'][klass]['bases'] = bases
-        self._modules[self.currentModule]['CLASSES'][klass]['docstring'] = docstring
+        fullClass = "%s.%s" % (self.currentModule, klass)
+        self['CLASSES'][fullClass] = {}
+        self['CLASSES'][fullClass]['methods'] = []
+        self['CLASSES'][fullClass]['properties'] = []
+        self['CLASSES'][fullClass]['constructor'] = []
+        self['CLASSES'][fullClass]['bases'] = bases
+        self['CLASSES'][fullClass]['docstring'] = docstring
 
     def addMethod(self, klass, method, args, docstring):
         if (method, args, docstring) not in self.currentClass(klass)['methods']:
             self.currentClass(klass)['methods'].append((method, args, docstring))
 
     def addFunction(self, function, args, docstring):
-        self._modules[self.currentModule]['FUNCTIONS'].append((function, args, docstring))
+        fullFunction = "%s.%s" % (self.currentModule, function)
+        self['FUNCTIONS'].append((fullFunction, args, docstring))
 
     def addProperty(self, klass, prop):
         if klass is not None:
             if prop not in self.currentClass(klass)['properties']:
                 self.currentClass(klass)['properties'].append(prop)
         else:
-            self._modules[self.currentModule]['CONSTANTS'].append(prop)
+            fullProp = "%s.%s" % (self.currentModule, prop)
+            self['CONSTANTS'].append(fullProp)
 
     def setConstructor(self, klass, args):
-        self._modules[self.currentModule]['CLASSES'][klass]['constructor'] = args
+        fullClass = "%s.%s" % (self.currentModule, klass)
+        self['CLASSES'][fullClass]['constructor'] = args
 
     def update(self, other):
         if other:
-            self._modules.update(other._modules)
+            self['CONSTANTS'].extend(other['CONSTANTS'])
+            self['FUNCTIONS'].extend(other['FUNCTIONS'])
+            self['CLASSES'].update(other['CLASSES'])
 
     def keys(self):
-        return [k for k in self._modules.keys() if not self.isModuleEmpty(k)]
+        return self._modules.keys()
 
     def values(self):
-        return [self._modules[k] for k in self.keys()]
+        return self._modules.values()
 
     def items(self):
-        return list(self.iteritems())
+        return self._modules.items()
 
     def iteritems(self):
-        return ((k, self._modules[k]) for k in self.keys())
+        return self._modules.iteritems()
 
     def __getitem__(self, item):
         return self._modules[item]

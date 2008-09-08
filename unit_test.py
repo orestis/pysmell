@@ -54,22 +54,12 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setPackage('TestPackage')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         try:
-            return eval(pformat(codeFinder.modules))['TestPackage.TestModule']
+            return eval(pformat(codeFinder.modules))
         except:
             print 'EXCEPTION WHEN EVALING:'
             print pformat(codeFinder.modules)
             print '=-' * 20
             raise
-
-
-    def testEmpty(self):
-        tree = compiler.parse("")
-        codeFinder = CodeFinder()
-        codeFinder.setModule('TestModule')
-        codeFinder.setPackage('TestPackage')
-        compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
-        self.assertTrue(codeFinder.modules.isModuleEmpty('TestPackage.TestModule'), 'should be empty')
-        self.assertEquals(pformat(codeFinder.modules), "{}")
 
 
     def testOnlyPackage(self):
@@ -82,9 +72,8 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setPackage('TestPackage')
         codeFinder.setModule('__init__')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
-        expected = {'TestPackage': {'CLASSES': {'A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
+        expected = {'CLASSES': {'TestPackage.A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
             'FUNCTIONS': [], 'CONSTANTS': []}
-        }
         actual = eval(pformat(codeFinder.modules))
         self.assertEquals(actual, expected)
 
@@ -98,7 +87,7 @@ class CodeFinderTest(unittest.TestCase):
         class A(object):
             pass
         """)
-        expected = {'A': dict(bases=['object'], properties=[], methods=[], constructor=[], docstring='')}
+        expected = {'TestPackage.TestModule.A': dict(bases=['object'], properties=[], methods=[], constructor=[], docstring='')}
         self.assertClasses(out, expected)
 
 
@@ -107,7 +96,7 @@ class CodeFinderTest(unittest.TestCase):
         def function(a=1, b=2, c=None, d=4, e='string', f=Name, g={}):
             pass
         """)
-        expected = ('function', ['a=1', 'b=2', 'c=None', 'd=4', "e='string'", 'f=Name', 'g={}'], '')
+        expected = ('TestPackage.TestModule.function', ['a=1', 'b=2', 'c=None', 'd=4', "e='string'", 'f=Name', 'g={}'], '')
         self.assertEquals(out['FUNCTIONS'], [expected])
 
 
@@ -118,7 +107,7 @@ class CodeFinderTest(unittest.TestCase):
                 pass
             a = property(__a)
         """)
-        expected = {'A': dict(bases=[], properties=['a'], methods=[('__a', [], '')], constructor=[], docstring='')}
+        expected = {'TestPackage.TestModule.A': dict(bases=[], properties=['a'], methods=[('__a', [], '')], constructor=[], docstring='')}
         self.assertClasses(out, expected)
 
 
@@ -127,7 +116,7 @@ class CodeFinderTest(unittest.TestCase):
         def f(a=%s):
             pass
         """ % name)
-        self.assertEquals(out['FUNCTIONS'], [('f', ['a=%s' % name], '')])
+        self.assertEquals(out['FUNCTIONS'], [('TestPackage.TestModule.f', ['a=%s' % name], '')])
 
 
     def testNames(self):
@@ -157,7 +146,7 @@ class CodeFinderTest(unittest.TestCase):
                 pass
         """)
         expectedProps = ['classprop', 'plainprop', 'methodProp']
-        self.assertEquals(out['CLASSES']['A']['properties'], expectedProps)
+        self.assertEquals(out['CLASSES']['TestPackage.TestModule.A']['properties'], expectedProps)
 
 
     def testClassMethods(self):
@@ -190,7 +179,7 @@ class CodeFinderTest(unittest.TestCase):
                            ('methodAll', ['arg1', '*args', '**kwargs'], ''),
                            ('methodReallyAll', ['arg1', "arg2='a string'", '*args', '**kwargs'], ''),
                            ]
-        self.assertEquals(out['CLASSES']['A']['methods'], expectedMethods)
+        self.assertEquals(out['CLASSES']['TestPackage.TestModule.A']['methods'], expectedMethods)
 
 
     def testTopLevelFunctions(self):
@@ -200,8 +189,8 @@ class CodeFinderTest(unittest.TestCase):
         def TopFunction2(arg1, arg2=False):
             'random docstring2'
         """)
-        expectedFunctions = [('TopFunction1', ['arg1', 'arg2=True', '**spinach'], 'random docstring'),
-                             ('TopFunction2', ['arg1', 'arg2=False'], 'random docstring2')]
+        expectedFunctions = [('TestPackage.TestModule.TopFunction1', ['arg1', 'arg2=True', '**spinach'], 'random docstring'),
+                             ('TestPackage.TestModule.TopFunction2', ['arg1', 'arg2=False'], 'random docstring2')]
         self.assertEquals(out['FUNCTIONS'], expectedFunctions)
 
 
@@ -219,7 +208,7 @@ class CodeFinderTest(unittest.TestCase):
                     pass
         """)
         self.assertEquals(len(out['CLASSES'].keys()), 1, 'should not count inner classes')
-        self.assertEquals(out['CLASSES']['A']['methods'], [('level1', [], '')])
+        self.assertEquals(out['CLASSES']['TestPackage.TestModule.A']['methods'], [('level1', [], '')])
         self.assertEquals(out['FUNCTIONS'], [])
 
 
@@ -227,7 +216,7 @@ class CodeFinderTest(unittest.TestCase):
         out = self.getModule("""
         CONSTANT = 1
         """)
-        self.assertEquals(out['CONSTANTS'], ['CONSTANT'])
+        self.assertEquals(out['CONSTANTS'], ['TestPackage.TestModule.CONSTANT'])
 
 
     def testArgToStr(self):
