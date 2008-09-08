@@ -268,13 +268,13 @@ class CompletionTest(unittest.TestCase):
                 'CLASSES' : {
                     'aClass': {
                         'constructor': [],
-                        'bases': ['object'],
+                        'bases': ['object', 'alien'],
                         'properties': ['aprop', 'bprop'],
                         'methods': [('am', [], ''), ('bm', [], ())]
                     },
                     'bClass': {
                         'constructor': [],
-                        'bases': ['AClass'],
+                        'bases': ['aClass'],
                         'properties': ['cprop', 'dprop'],
                         'methods': [('cm', [], ''), ('dm', [], ())]
                     }
@@ -447,12 +447,32 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(compls, expected)
 
 
-    def testClassHierarchies(self):
-        self.fail()
-
     def testTrickyBases(self):
         self.fail("isinstance(sth, ACLASS)")
         self.fail("from Module.ACLASS import ACLASS")
+
+
+    def testKnowAboutClassHierarchies(self):
+        source = dedent("""\
+            class bClass(aClass):
+                def sth(self):
+                    self.
+        
+        """)
+        compls = findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
+                    compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
+                    compMeth('cm', 'bClass'), compProp('cprop', 'bClass'),
+                    compMeth('dm', 'bClass'), compProp('dprop', 'bClass')]
+        self.assertEquals(compls, expected)
+        source = dedent("""\
+            class cClass(object):
+                def sth(self):
+                    self.
+        
+        """)
+        self.assertEquals(findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
+
 
     def testCamelGroups(self):
         from idehelper import camelGroups
