@@ -287,26 +287,33 @@ def getClassDict(path, codeFinder=None):
     return codeFinder.modules
 
 
-def processFile(f, path, root):
-    codeFinder = CodeFinder()
+def findPackage(path, root):
     head, tail = os.path.split(path)
     packageHieararchy = [tail]
     while head:
         head, tail = os.path.split(head)
         packageHieararchy.append(tail)
     packageHieararchy.reverse()
-
+    if packageHieararchy[0] == '.':
+        packageHieararchy[0] = root
     index = packageHieararchy.index(root)
     package = '.'.join(packageHieararchy[index:])
+    return package
 
+
+def processFile(f, path, root):
+    codeFinder = CodeFinder()
+
+    package = findPackage(path, root)
     codeFinder.setPackage(package)
     codeFinder.setModule(f[:-3])
     try:
         modules = getClassDict(os.path.join(path, f), codeFinder)
         return modules
-    except:
+    except Exception, e:
         print '-=#=- '* 10
         print 'EXCEPTION in', os.path.join(path, f)
+        print e
         print '-=#=- '* 10
         return None
         

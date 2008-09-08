@@ -4,7 +4,6 @@
 # All rights reserved
 # E-mail: orestis@orestis.gr
 
-# pysmell v0.2
 # http://orestis.gr
 
 # Released subject to the BSD License 
@@ -13,6 +12,8 @@
 import sys, os
 from codefinder import ModuleDict, processFile
 from pprint import pprint
+
+__version__ = "v0.2"
 
 source = """
 class Aclass(object):
@@ -31,17 +32,20 @@ def test(aname):
 """
 
 
-def generateClassTag(modules):
-    f = open(os.path.join(os.getcwd(), 'PYSMELLTAGS'), 'w')
+def generateClassTag(modules, output):
+    p = os.path.join(os.getcwd(), output)
+    f = open(p, 'w')
     pprint(modules, f, width=100)
     f.close()
 
 
-def process(argList, excluded):
+def process(argList, excluded, output):
     modules = ModuleDict()
     for item in fileList:
         if os.path.isdir(item):
             for root, dirs, files in os.walk(item):
+                if item == '.':
+                    item = os.path.split(os.getcwd())[-1]
                 if os.path.basename(root) in excluded:
                     continue
                 for f in files:
@@ -53,20 +57,43 @@ def process(argList, excluded):
             newmodules = processFile(item, '', '')
             modules.update(newmodules)
             
-    generateClassTag(modules)
+    generateClassTag(modules, output)
 
 
 
 if __name__ == '__main__':
     fileList = sys.argv[1:]
-    if '-h' in fileList:
-        print 'Usage: python pysmelltags.py [PackageA PackageB FileA.py FileB.py] [-x ExcludedDir1 ExcludedDir2]'
+    if not fileList:
+        print """\
+PySmell %s
+
+usage: python pysmelltags.py package [package, ...] [-x excluded, ...] [options]
+
+Generate a PYSMELLTAGS file with information about the Python code contained
+in the specified packages (recursively). This file is then used to
+provide autocompletion for various IDEs and editors that support it.
+
+Options:
+
+    -x args   Will not analyze files in directories that match the argument.
+              Useful for excluding tests or version control directories.
+
+    -o FILE   Will redirect the output to FILE instead of PYSMELLTAGS
+
+    -t        Will print timing information.
+""" % __version__
         sys.exit(0)
     timing = False
+    output = 'PYSMELLTAGS'
     excluded = []
     if '-t' in fileList:
         timing = True
         fileList.remove('-t')
+
+    if '-o' in fileList:
+        fileList.remove('-o')
+        output = fileList.pop()
+
     if '-x' in fileList:
         excluded = fileList[fileList.index('-x')+1:]
         fileList = fileList[:fileList.index('-x')]
@@ -76,7 +103,7 @@ if __name__ == '__main__':
     if timing:
         import time
         start = time.clock()
-    process(fileList, excluded)
+    process(fileList, excluded, output)
     if timing:
         took = time.clock() - start
         print 'took %f seconds' % took

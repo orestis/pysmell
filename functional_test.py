@@ -97,14 +97,68 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageB
         self.assertEquals(PYSMELLDICT, expectedDict)
 
+
     def testPackageDot(self):
-        self.fail('pysmelltags . should put current dir as package')
+        if os.path.exists('Tests/PackageA/PYSMELLTAGS'):
+            os.remove('Tests/PackageA/PYSMELLTAGS')
+        subprocess.call(["python", "../../pysmelltags.py", "."], cwd='Tests/PackageA')
+        self.assertTrue(os.path.exists('Tests/PackageA/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('Tests/PackageA/PYSMELLTAGS').read())
+        expectedDict = self.packageA
+        self.assertEquals(PYSMELLDICT, expectedDict)
+
+    
+    def DONTtestSingleFile(self):
+        self.fail()
+
+
+    def testOutputRedirect(self):
+        if os.path.exists('Tests/OUTPUTREDIR'):
+            os.remove('Tests/OUTPUTREDIR')
+        subprocess.call(["python", "../pysmelltags.py", "PackageA", "-o",
+            "OUTPUTREDIR"], cwd='Tests')
+        self.assertTrue(os.path.exists('Tests/OUTPUTREDIR'))
+        PYSMELLDICT = eval(open('Tests/OUTPUTREDIR').read())
+        expectedDict = self.packageA
+        self.assertEquals(PYSMELLDICT, expectedDict)
+
+        absPath = os.path.join(os.getcwd(), 'Tests', 'OUTPUTREDIR2')
+        if os.path.exists(absPath):
+            os.remove(absPath)
+        subprocess.call(["python", "../pysmelltags.py", "PackageA", "-o", absPath], cwd='Tests')
+        self.assertTrue(os.path.exists(absPath))
+        PYSMELLDICT = eval(open(absPath).read())
+        expectedDict = self.packageA
+        self.assertEquals(PYSMELLDICT, expectedDict)
+
 
     def testNoArgs(self):
-        self.fail('something weird happens when no args')
+        proc = subprocess.Popen(["python", "pysmelltags.py"], stdout=subprocess.PIPE)
+        proc.wait()
+        stdout = proc.stdout.read()
+        expected = dedent("""\
+        PySmell v0.2
+
+        usage: python pysmelltags.py package [package, ...] [-x excluded, ...] [options]
+
+        Generate a PYSMELLTAGS file with information about the Python code contained
+        in the specified packages (recursively). This file is then used to
+        provide autocompletion for various IDEs and editors that support it.
+
+        Options:
+
+            -x args   Will not analyze files in directories that match the argument.
+                      Useful for excluding tests or version control directories.
+
+            -o FILE   Will redirect the output to FILE instead of PYSMELLTAGS
+
+            -t        Will print timing information.
+
+        """)
+        self.assertEquals(stdout, expected)
 
 
-    def DONTtestTypeInferencing(self):
+    def testTypeInferencing(self):
         'given a valid code block, try to narrow down the possible classes and return that'
         self.fail()
 
