@@ -358,7 +358,7 @@ class SelfInferer(BaseVisitor):
 import compiler
 from compiler.visitor import ExampleASTVisitor
 
-def infer(module, source, lineNo):
+def infer(source, lineNo):
     sourceLines = source.splitlines()
     try:
         tree = compiler.parse(source)
@@ -379,7 +379,7 @@ def infer(module, source, lineNo):
     
     for klass, start, end in classRanges:
         if lineNo >= start:
-            return '%s.%s' % (module, klass)
+            return klass
     return None
 
 def sortClassRanges(a, b):

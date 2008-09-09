@@ -281,6 +281,19 @@ class CompletionTest(unittest.TestCase):
                     
                 }
             }
+        self.nestedDict = {
+                'CONSTANTS' : [],
+                'FUNCTIONS' : [],
+                'CLASSES' : {
+                    'Nested.Package.Module.Class': {
+                        'constructor': [],
+                        'bases': [],
+                        'properties': ['cprop'],
+                        'methods': []
+                    }
+                    
+                }
+        }
         import vimhelper
         vimhelper.vim = self.vim = MockVim()
 
@@ -377,8 +390,8 @@ class CompletionTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass = infer('pack1.pack2.mod', source, 5)
-        self.assertEquals(klass, 'pack1.pack2.mod.AClass')
+        klass = infer(source, 5)
+        self.assertEquals(klass, 'AClass')
 
     def testInferSelfMultipleClasses(self):
         
@@ -409,30 +422,30 @@ class CompletionTest(unittest.TestCase):
                         self.ass
         """)
         
-        self.assertEquals(infer('mod', source, 1), None, 'no class yet!')
+        self.assertEquals(infer(source, 1), None, 'no class yet!')
         for line in range(2, 5):
-            klass = infer('mod', source, line)
-            self.assertEquals(klass, 'mod.AClass', 'wrong class %s in line %d' % (klass, line))
+            klass = infer(source, line)
+            self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(5, 7):
-            klass = infer('mod', source, line)
-            self.assertEquals(klass, 'mod.Sneak', 'wrong class %s in line %d' % (klass, line))
+            klass = infer(source, line)
+            self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(7, 9):
-            klass = infer('mod', source, line)
-            self.assertEquals(klass, 'mod.EvenSneakier', 'wrong class %s in line %d' % (klass, line))
+            klass = infer(source, line)
+            self.assertEquals(klass, 'EvenSneakier', 'wrong class %s in line %d' % (klass, line))
 
         line = 9
-        klass = infer('mod', source, line)
-        self.assertEquals(klass, 'mod.Sneak', 'wrong class %s in line %d' % (klass, line))
+        klass = infer(source, line)
+        self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(10, 17):
-            klass = infer('mod', source, line)
-            self.assertEquals(klass, 'mod.AClass', 'wrong class %s in line %d' % (klass, line))
+            klass = infer(source, line)
+            self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(17, 51):
-            klass = infer('mod', source, line)
-            self.assertEquals(klass, 'mod.BClass', 'wrong class %s in line %d' % (klass, line))
+            klass = infer(source, line)
+            self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
 
 
     def testCompleteWithSelfInfer(self):
@@ -442,14 +455,40 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        compls = findCompletions(None, 'Module', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        compls = findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'), compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
         self.assertEquals(compls, expected)
 
+    def testCompletionsWithFullPath(self):
+        source = dedent("""\
+            class aClass(object):
+                def sth(self):
+                    self.
+        
+        """)
+        compls = findCompletions(None,
+                            r'C:\DevFolder\BlahBlah\APackageYouDontKnowAbout\Module.py', source,
+                            "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'), compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
+        self.assertEquals(compls, expected)
+
+    def testCompletionsWithPackages(self):
+        source = dedent("""\
+            class Class(object):
+                def sth(self):
+                    self.
+        
+        """)
+        expected = [dict(word='cprop', kind='m', menu='Nested.Package.Module:Class', dup='1')]
+        compls = findCompletions(None,
+                            r'C:\DevFolder\BlahBlah\Nested\Package\Module.py', source,
+                            "%sself." % (' ' * 8), 3, 13, '', self.nestedDict)
+        self.assertEquals(compls, expected)
 
     def testTrickyBases(self):
-        self.fail("isinstance(sth, ACLASS)")
+        "understand imports and generate the correct bases"
         self.fail("from Module.ACLASS import ACLASS")
+        self.fail("isinstance(sth, ACLASS)")
 
 
     def testKnowAboutClassHierarchies(self):
@@ -459,7 +498,7 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        compls = findCompletions(None, 'Module', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        compls = findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
                     compMeth('cm', 'bClass'), compProp('cprop', 'bClass'),
@@ -471,7 +510,7 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        self.assertEquals(findCompletions(None, 'Module', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
+        self.assertEquals(findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
 
 
     def testCamelGroups(self):

@@ -87,7 +87,7 @@ def matchFuzzyCI(base):
     regex = re.compile('.*'.join([] + list(base) + []), re.IGNORECASE)
     return lambda comp: bool(regex.match(comp))
 
-def findCompletions(matcher, module, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
+def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     doesMatch = {
         'case-sensitive': matchCaseSensitively,
         'case-insensitive': matchCaseInsetively,
@@ -103,7 +103,19 @@ def findCompletions(matcher, module, origSource, origLineText, origLineNo, origC
         
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isClassLookup:
-        klass = infer(module, origSource, origLineNo)
+        pathParts = []
+        head, tail = os.path.split(fullPath[:-3])
+        pathParts.append(tail)
+        while head and tail:
+            head, tail = os.path.split(head)
+            if tail:
+                pathParts.append(tail)
+        pathParts.reverse()
+        klass = infer(origSource, origLineNo)
+        while klass not in PYSMELLDICT['CLASSES'].keys() and pathParts:
+            klass = "%s.%s" % (pathParts.pop(), klass)
+            print klass
+            
     if isArgCompletion:
         lindex = 0
         if isAttrLookup:

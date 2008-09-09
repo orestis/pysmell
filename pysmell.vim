@@ -14,6 +14,9 @@ if !has('python')
     finish
 endif
 
+let g:pysmell_debug = 0
+let g:pysmell_matcher='case-insensitive'
+
 python << eopython
 from pysmell import vimhelper, idehelper
 import vim
@@ -49,10 +52,15 @@ def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     PYSMELLDICT = idehelper.findPYSMELLDICT(filename)
+    if vim.eval('g:pysmell_debug'):
+        debBuffer = None
+        for b in vim.buffers:
+            if b.name.endswith('DEBUG'):
+                debBuffer = b
+        debBuffer.append("%s %s %s %s %s" % (filename, origLineText, origLineNo, origCol, base))
     completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'), filename,
                                 origSource, origLineText, origLineNo, int(origCol), base, PYSMELLDICT)
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
 
 eopython
-let g:pysmell_matcher='case-insensitive'
