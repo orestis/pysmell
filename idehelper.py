@@ -114,7 +114,6 @@ def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, ori
         klass = infer(origSource, origLineNo)
         while klass not in PYSMELLDICT['CLASSES'].keys() and pathParts:
             klass = "%s.%s" % (pathParts.pop(), klass)
-            print klass
             
     if isArgCompletion:
         lindex = 0

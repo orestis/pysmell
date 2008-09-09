@@ -52,7 +52,7 @@ def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     PYSMELLDICT = idehelper.findPYSMELLDICT(filename)
-    if vim.eval('g:pysmell_debug'):
+    if int(vim.eval('g:pysmell_debug')):
         debBuffer = None
         for b in vim.buffers:
             if b.name.endswith('DEBUG'):
