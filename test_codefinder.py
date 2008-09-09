@@ -235,9 +235,16 @@ class CodeFinderTest(unittest.TestCase):
 
     def testTrickyBases(self):
         "understand imports and generate the correct bases"
-        self.fail("from Module.ACLASS import ACLASS")
-        self.fail("isinstance(sth, ACLASS)")
-
+        out = self.getModule("""
+            from TestPackage.AnotherModule import AnotherClass as Nyer
+            from TestPackage.AnotherModule import AClass
+            class A(Nyer, AClass):
+                pass
+        """)
+        self.assertEquals(out['CLASSES']['TestPackage.TestModule.A'],
+                        dict(constructor=[], methods=[], properties=[], docstring='',
+                        bases=['TestPackage.AnotherModule.AnotherClass', 'TestPackage.AnotherModule.AClass'])
+        )
 
 
 if __name__ == '__main__':

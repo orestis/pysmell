@@ -116,6 +116,7 @@ class CodeFinder(BaseVisitor):
         self.modules = ModuleDict()
         self.module = '__module__'
         self.package = '__package__'
+        self.importedNames = {}
 
     @property
     def inClass(self):
@@ -178,14 +179,23 @@ class CodeFinder(BaseVisitor):
         elif len(self.scope) == 0:
             self.modules.addProperty(None, node.name)
 
+    @VisitChildren
+    def visitFrom(self, node):
+        for name in node.names:
+            asName = name[1] or name[0]
+            self.importedNames[asName] = "%s.%s" % (node.modname, name[0])
+
+    def qualify(self, name):
+        if name in __builtins__.keys():
+            return name
+        if name in self.importedNames:
+            return self.importedNames[name]
+        return '%s.%s' % (self.modules.currentModule, name)
+
     def visitClass(self, klass):
         self.enterScope(klass)
         if len(self.scope) == 1:
-            def qualify(b):
-                if b in __builtins__.keys():
-                    return b
-                return '%s.%s' % (self.modules.currentModule, b)
-            bases = [qualify(getName(b)) for b in klass.bases]
+            bases = [self.qualify(getName(b)) for b in klass.bases]
             self.modules.enterClass(klass.name, bases, klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
