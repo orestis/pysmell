@@ -79,9 +79,13 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
     return fullKlass
     
 
-def detectCompletionType(fullPath, origSource, origLineText, origCol, origLineNo, base, PYSMELLDICT):
+def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
+
     isAttrLookup = '.' in leftSide
+    klass = None
+    rindex = None
+    funcName = None
 
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
@@ -93,11 +97,10 @@ def detectCompletionType(fullPath, origSource, origLineText, origCol, origLineNo
         if isAttrLookup:
             lindex = leftSide.rindex('.') + 1
         funcName = leftSide[lindex:-1].lstrip()
-        rindex = None
         if rightSide.startswith(')'):
             rindex = -1
 
-    return (isAttrLookup, isClassLookup and klass, isArgCompletion and funcName, rindex)
+    return (isAttrLookup, klass, funcName, rindex)
 
 
 def findCompletions(base, PYSMELLDICT, options, matcher=None):

@@ -96,12 +96,6 @@ class CompletionTest(unittest.TestCase):
 
 
     def testCompleteWithSelfInfer(self):
-        source = dedent("""\
-            class aClass(object):
-                def sth(self):
-                    self.
-        
-        """)
         options = (True, 'Module.aClass', None, None)
         compls = findCompletions('', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
@@ -109,24 +103,12 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(compls, expected)
 
     def testCompletionsWithPackages(self):
-        source = dedent("""\
-            class Class(object):
-                def sth(self):
-                    self.
-        
-        """)
         expected = [dict(word='cprop', kind='m', menu='Nested.Package.Module:Class', dup='1')]
         options = (True, 'Nested.Package.Module.Class', None, None)
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
     def testKnowAboutClassHierarchies(self):
-        source = dedent("""\
-            class bClass(aClass):
-                def sth(self):
-                    self.
-        
-        """)
         options = (True, 'Module.bClass', None, None)
         compls = findCompletions('', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
@@ -135,12 +117,6 @@ class CompletionTest(unittest.TestCase):
                     compMeth('dm', 'bClass'), compProp('dprop', 'bClass')]
         self.assertEquals(compls, expected)
 
-        source = dedent("""\
-            class cClass(object):
-                def sth(self):
-                    self.
-        
-        """)
         options = (True, 'Module.cClass', None, None)
         self.assertEquals(findCompletions('', self.pysmelldict, options), [])
 
