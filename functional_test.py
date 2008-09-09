@@ -113,6 +113,8 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
+        self.fail("when the current dir is not a package, search for packages")
+
     
     def testSingleFile(self):
         "should recurse up until it doesn't find __init__.py"

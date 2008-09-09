@@ -50,16 +50,17 @@ endfunction
 python << eopython
 def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
     vim.command('let g:pysmell_completions = []')
-    filename = vim.current.buffer.name
-    PYSMELLDICT = idehelper.findPYSMELLDICT(filename)
+    fullPath = vim.current.buffer.name
+    PYSMELLDICT = idehelper.findPYSMELLDICT(fullPath)
+
     if int(vim.eval('g:pysmell_debug')):
-        debBuffer = None
         for b in vim.buffers:
-            if b.name.endswith('DEBUG'):
-                debBuffer = b
-        debBuffer.append("%s %s %s %s %s" % (filename, origLineText, origLineNo, origCol, base))
-    completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'), filename,
-                                origSource, origLineText, origLineNo, int(origCol), base, PYSMELLDICT, vim)
+            if b.name.endswith('PYSMELL_DEBUG'):
+                b.append("%s %s %s %s %s" % (fullPath, origLineText, origLineNo, origCol, base))
+                break
+
+    options = idehelper.detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT)
+    completions = idehelper.findCompletions(base, PYSMELLDICT, options, vim.eval('g:pysmell_matcher'))
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
 
