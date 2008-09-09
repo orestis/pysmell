@@ -181,8 +181,12 @@ class CodeFinder(BaseVisitor):
     def visitClass(self, klass):
         self.enterScope(klass)
         if len(self.scope) == 1:
-            self.modules.enterClass(klass.name, [getName(b) for b in
-                                        klass.bases], klass.doc or '')
+            def qualify(b):
+                if b in __builtins__.keys():
+                    return b
+                return '%s.%s' % (self.modules.currentModule, b)
+            bases = [qualify(getName(b)) for b in klass.bases]
+            self.modules.enterClass(klass.name, bases, klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
 
@@ -354,7 +358,7 @@ class SelfInferer(BaseVisitor):
 import compiler
 from compiler.visitor import ExampleASTVisitor
 
-def infer(source, lineNo):
+def infer(module, source, lineNo):
     sourceLines = source.splitlines()
     try:
         tree = compiler.parse(source)
@@ -375,7 +379,7 @@ def infer(source, lineNo):
     
     for klass, start, end in classRanges:
         if lineNo >= start:
-            return klass
+            return '%s.%s' % (module, klass)
     return None
 
 def sortClassRanges(a, b):

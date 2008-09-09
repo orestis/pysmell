@@ -26,7 +26,7 @@ class FunctionalTest(unittest.TestCase):
                     'methods': [('methodA', ['argA', 'argB', '*args', '**kwargs'], '')]
                 },
                 'PackageA.ModuleA.ChildClassA': {
-                    'bases': ['ClassA', 'object'],
+                    'bases': ['PackageA.ModuleA.ClassA', 'object'],
                     'docstring': 'a class docstring, imagine that',
                     'constructor': ['conArg'],
                     'properties': ['extraProperty'],
@@ -70,8 +70,6 @@ class FunctionalTest(unittest.TestCase):
                 self.assertEquals(value, expectedDict[key], "wrong value for key %s" % key)
 
 
-            
-        
     def testMultiPackage(self):
         if os.path.exists('Tests/PYSMELLTAGS'):
             os.remove('Tests/PYSMELLTAGS')

@@ -91,6 +91,17 @@ class CodeFinderTest(unittest.TestCase):
         self.assertClasses(out, expected)
 
 
+    def testClassParent(self):
+        out = self.getModule("""
+        class Parent(list):
+            pass
+        class A(Parent):
+            pass
+        """)
+        expected = {'TestPackage.TestModule.A': dict(bases=['TestPackage.TestModule.Parent'], properties=[], methods=[], constructor=[], docstring=''), 'TestPackage.TestModule.Parent': dict(bases=['list'], properties=[], methods=[], constructor=[], docstring='')}
+        self.assertClasses(out, expected)
+
+
     def testAdvancedDefaultArguments(self):
         out = self.getModule("""
         def function(a=1, b=2, c=None, d=4, e='string', f=Name, g={}):
@@ -251,25 +262,25 @@ class MockVim(object):
 
 class CompletionTest(unittest.TestCase):
     def setUp(self):
-        self.pysmelldict = {'Module': {
-                'CONSTANTS' : ['aconstant', 'bconst'],
-                'FUNCTIONS' : [('a', [], ''), ('arg', [], ''), ('b', ['arg1', 'arg2'], '')],
+        self.pysmelldict = {
+                'CONSTANTS' : ['Module.aconstant', 'Module.bconst'],
+                'FUNCTIONS' : [('Module.a', [], ''), ('Module.arg', [], ''), ('Module.b', ['arg1', 'arg2'], '')],
                 'CLASSES' : {
-                    'aClass': {
+                    'Module.aClass': {
                         'constructor': [],
-                        'bases': ['object', 'alien'],
+                        'bases': ['object', 'ForeignModule.alien'],
                         'properties': ['aprop', 'bprop'],
                         'methods': [('am', [], ''), ('bm', [], ())]
                     },
-                    'bClass': {
+                    'Module.bClass': {
                         'constructor': [],
-                        'bases': ['aClass'],
+                        'bases': ['Module.aClass'],
                         'properties': ['cprop', 'dprop'],
                         'methods': [('cm', [], ''), ('dm', [], ())]
                     }
                     
                 }
-            }}
+            }
         import vimhelper
         vimhelper.vim = self.vim = MockVim()
 
@@ -322,35 +333,35 @@ class CompletionTest(unittest.TestCase):
         self.assertEquals(word, 'hehe.bb')
 
     def testCompletions(self):
-        compls = findCompletions(None, '', 'b', 1, 1, 'b', self.pysmelldict)
+        compls = findCompletions(None, '', '', 'b', 1, 1, 'b', self.pysmelldict)
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
-        compls = findCompletions(None, '', 'somethign.a', 1, 11, 'a', self.pysmelldict)
+        compls = findCompletions(None, '', '', 'somethign.a', 1, 11, 'a', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
 
     def testCompleteArgumentListsPropRightParen(self):
-        compls = findCompletions(None, '', 'salf.bm()', 1, 8, 'bm(', self.pysmelldict)
+        compls = findCompletions(None, '', '', 'salf.bm()', 1, 8, 'bm(', self.pysmelldict)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsProp(self):
-        compls = findCompletions(None, '', 'salf.bm(', 1, 8, 'bm(', self.pysmelldict)
+        compls = findCompletions(None, '', '', 'salf.bm(', 1, 8, 'bm(', self.pysmelldict)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsRightParen(self):
-        compls = findCompletions(None, '', '   b()', 1, 5, 'b(', self.pysmelldict)
+        compls = findCompletions(None, '', '', '   b()', 1, 5, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
 
     def testCompleteArgumentLists(self):
-        compls = findCompletions(None, '', '  b(', 1, 4, 'b(', self.pysmelldict)
+        compls = findCompletions(None, '', '', '  b(', 1, 4, 'b(', self.pysmelldict)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
@@ -366,8 +377,8 @@ class CompletionTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass = infer(source, 5)
-        self.assertEquals(klass, 'AClass')
+        klass = infer('pack1.pack2.mod', source, 5)
+        self.assertEquals(klass, 'pack1.pack2.mod.AClass')
 
     def testInferSelfMultipleClasses(self):
         
@@ -398,30 +409,30 @@ class CompletionTest(unittest.TestCase):
                         self.ass
         """)
         
-        self.assertEquals(infer(source, 1), None, 'no class yet!')
+        self.assertEquals(infer('mod', source, 1), None, 'no class yet!')
         for line in range(2, 5):
-            klass = infer(source, line)
-            self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
+            klass = infer('mod', source, line)
+            self.assertEquals(klass, 'mod.AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(5, 7):
-            klass = infer(source, line)
-            self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
+            klass = infer('mod', source, line)
+            self.assertEquals(klass, 'mod.Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(7, 9):
-            klass = infer(source, line)
-            self.assertEquals(klass, 'EvenSneakier', 'wrong class %s in line %d' % (klass, line))
+            klass = infer('mod', source, line)
+            self.assertEquals(klass, 'mod.EvenSneakier', 'wrong class %s in line %d' % (klass, line))
 
         line = 9
-        klass = infer(source, line)
-        self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
+        klass = infer('mod', source, line)
+        self.assertEquals(klass, 'mod.Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(10, 17):
-            klass = infer(source, line)
-            self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
+            klass = infer('mod', source, line)
+            self.assertEquals(klass, 'mod.AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(17, 51):
-            klass = infer(source, line)
-            self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
+            klass = infer('mod', source, line)
+            self.assertEquals(klass, 'mod.BClass', 'wrong class %s in line %d' % (klass, line))
 
 
     def testCompleteWithSelfInfer(self):
@@ -431,7 +442,7 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        compls = findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        compls = findCompletions(None, 'Module', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'), compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
         self.assertEquals(compls, expected)
 
@@ -448,7 +459,7 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        compls = findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        compls = findCompletions(None, 'Module', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
                     compMeth('cm', 'bClass'), compProp('cprop', 'bClass'),
@@ -460,7 +471,7 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        self.assertEquals(findCompletions(None, source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
+        self.assertEquals(findCompletions(None, 'Module', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
 
 
     def testCamelGroups(self):

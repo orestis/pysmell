@@ -87,7 +87,7 @@ def matchFuzzyCI(base):
     regex = re.compile('.*'.join([] + list(base) + []), re.IGNORECASE)
     return lambda comp: bool(regex.match(comp))
 
-def findCompletions(matcher, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
+def findCompletions(matcher, module, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     doesMatch = {
         'case-sensitive': matchCaseSensitively,
         'case-insensitive': matchCaseInsetively,
@@ -103,7 +103,7 @@ def findCompletions(matcher, origSource, origLineText, origLineNo, origCol, base
         
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isClassLookup:
-        klass = infer(origSource, origLineNo)
+        klass = infer(module, origSource, origLineNo)
     if isArgCompletion:
         lindex = 0
         if isAttrLookup:
@@ -119,9 +119,6 @@ def findCompletions(matcher, origSource, origLineText, origLineNo, origCol, base
     else:
         filteredCompletions = completions
 
-   # if isClassLookup:
-   #     filteredCompletions = [comp for comp in filteredCompletions if
-   #                     comp['menu'].endswith(":%s" % klass)]
     filteredCompletions.sort(sortCompletions)
 
     if filteredCompletions and isArgCompletion:
@@ -142,45 +139,52 @@ def _findAllParents(klass, classesDICT, ancList):
         ancList.append(anc)
         _findAllParents(anc, classesDICT, ancList)
 
+def _getCompForConstant(word):
+    module, const = word.rsplit('.', 1)
+    return dict(word=const, kind='d', menu=module, dup='1')
+
+def _getCompForFunction(func, kind, module=None):
+    if module is None:
+        module, funcName = func[0].rsplit('.', 1)
+    else:
+        funcName = func[0]
+    return dict(word=funcName, kind=kind, menu=module, dup='1',
+                            abbr='%s(%s)' % (funcName, _argsList(func[1])))
+
+def _getCompForConstructor(klass, klassDict):
+    module, klassName = klass.rsplit('.', 1)
+    return dict(word=klassName, kind='t', menu=module, dup='1', abbr='%s(%s)' % (klassName, _argsList(klassDict['constructor'])))
+
 def _createCompletionList(PYSMELLDICT, isAttrLookup, klass):
     completions = []
-    for module, moduleDict in PYSMELLDICT.items():
-        if not isAttrLookup:
-            completions.extend([dict(word=word, kind='d', menu=module, dup='1') for
-                                    word in moduleDict['CONSTANTS']])
-            completions.extend([_getCompForFunction(func, module, 'f') for func
-                                    in moduleDict['FUNCTIONS']])
-        if klass:
-            klassDict = moduleDict['CLASSES'].get(klass, None)
-            if klassDict is None: return completions
-            ancestorList = []
-            _findAllParents(klass, moduleDict['CLASSES'], ancestorList)
-            addCompletionsForClass(module, klass, klassDict, completions)
-            for anc in ancestorList:
-                ancDict = moduleDict['CLASSES'].get(anc, None)
-                if ancDict is None: continue
-                addCompletionsForClass(module, anc, ancDict, completions)
+    if not isAttrLookup:
+        completions.extend([_getCompForConstant(word) for word in PYSMELLDICT['CONSTANTS']])
+        completions.extend([_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS']])
+        completions.extend([_getCompForConstructor(klass, klassDict) for (klass, klassDict) in PYSMELLDICT['CLASSES'].items()])
+    elif klass:
+        klassDict = PYSMELLDICT['CLASSES'].get(klass, None)
+        if klassDict is None: return completions
+        ancestorList = []
+        _findAllParents(klass, PYSMELLDICT['CLASSES'], ancestorList)
+        addCompletionsForClass(klass, klassDict, completions)
+        for anc in ancestorList:
+            ancDict = PYSMELLDICT['CLASSES'].get(anc, None)
+            if ancDict is None: continue
+            addCompletionsForClass(anc, ancDict, completions)
 
-        else:
-            for klass, klassDict in moduleDict['CLASSES'].items():
-                if not isAttrLookup:
-                    completions.append(dict(word=klass, kind='t', menu=module,
-                                            dup='1', abbr='%s(%s)' % (klass,
-                                            _argsList(klassDict['constructor']))))
-                else:
-                    addCompletionsForClass(module, klass, klassDict, completions)
+    else: #plain attribute lookup
+        for klass, klassDict in PYSMELLDICT['CLASSES'].items():
+            addCompletionsForClass(klass, klassDict, completions)
     
     return completions
 
-def addCompletionsForClass(module, klass, klassDict, completions):
-    completions.extend([dict(word=word, kind='m', dup='1', menu='%s:%s' %
-                    (module, klass)) for word in klassDict['properties']])
-    completions.extend([_getCompForFunction(func, '%s:%s' % (module,
-                klass), 'm') for func in klassDict['methods']])
+def addCompletionsForClass(klass, klassDict, completions):
+    module, klassName = klass.rsplit('.', 1)
+    completions.extend([dict(word=prop, kind='m', dup='1', menu='%s:%s' %
+                    (module, klassName)) for prop in klassDict['properties']])
+    completions.extend([_getCompForFunction(func, 'm', module='%s:%s' % (module,
+                klassName)) for func in klassDict['methods']])
 
-def _getCompForFunction(func, menu, kind):
-    return dict(word=func[0], kind=kind, menu=menu, dup='1',
-                            abbr='%s(%s)' % (func[0], _argsList(func[1])))
 def _argsList(l):
      return ', '.join([str(arg) for arg in l])
 
