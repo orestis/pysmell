@@ -49,7 +49,7 @@ def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
     vim.command('let g:pysmell_completions = []')
     filename = vim.current.buffer.name
     PYSMELLDICT = idehelper.findPYSMELLDICT(filename)
-    completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'),
+    completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'), filename,
                                 origSource, origLineText, origLineNo, int(origCol), base, PYSMELLDICT)
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
