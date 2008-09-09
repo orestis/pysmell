@@ -94,7 +94,7 @@ def debug(vim, msg):
         for b in vim.buffers:
             if b.name.endswith('DEBUG'):
                 debBuffer = b
-    debBuffer.append(msg)
+        debBuffer.append(msg)
 
 def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT, vim=None):
     doesMatch = {
