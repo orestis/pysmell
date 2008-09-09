@@ -306,26 +306,31 @@ def getClassDict(path, codeFinder=None):
 
 def findPackage(path, root):
     head, tail = os.path.split(path)
-    packageHieararchy = [tail]
-    while head:
+    packageHierarchy = [tail]
+    while head and tail:
         head, tail = os.path.split(head)
-        packageHieararchy.append(tail)
-    packageHieararchy.reverse()
-    if packageHieararchy[0] == '.':
-        packageHieararchy[0] = root
-    index = packageHieararchy.index(root)
-    package = '.'.join(packageHieararchy[index:])
+        packageHierarchy.append(tail)
+    packageHierarchy.reverse()
+    if packageHierarchy[0] == '.':
+        packageHierarchy[0] = root
+    index = packageHierarchy.index(root)
+    package = '.'.join(packageHierarchy[index:])
     return package
 
 
 def processFile(f, path, root):
+    """f is the the filename, path is the relative path in the project, root is
+    the topmost package"""
     codeFinder = CodeFinder()
 
     package = findPackage(path, root)
     codeFinder.setPackage(package)
     codeFinder.setModule(f[:-3])
     try:
-        modules = getClassDict(os.path.join(path, f), codeFinder)
+        if os.path.isabs(path):
+            modules = getClassDict(f, codeFinder)
+        else:
+            modules = getClassDict(os.path.join(path, f), codeFinder)
         return modules
     except Exception, e:
         print '-=#=- '* 10

@@ -87,7 +87,16 @@ def matchFuzzyCI(base):
     regex = re.compile('.*'.join([] + list(base) + []), re.IGNORECASE)
     return lambda comp: bool(regex.match(comp))
 
-def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
+def debug(vim, msg):
+    if vim is None: return
+    if int(vim.eval('g:pysmell_debug')):
+        debBuffer = None
+        for b in vim.buffers:
+            if b.name.endswith('DEBUG'):
+                debBuffer = b
+    debBuffer.append(msg)
+
+def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT, vim=None):
     doesMatch = {
         'case-sensitive': matchCaseSensitively,
         'case-insensitive': matchCaseInsetively,
@@ -100,7 +109,7 @@ def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, ori
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     isAttrLookup = '.' in leftSide
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
-        
+    debug(vim, 'isClassLookup: %s' % isClassLookup)
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isClassLookup:
         pathParts = []
@@ -111,10 +120,15 @@ def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, ori
             if tail:
                 pathParts.append(tail)
         pathParts.reverse()
+        debug(vim, 'pathparts: %r' % pathParts)
         klass = infer(origSource, origLineNo)
+        debug(vim, 'klass 1: %s' % klass)
+
         while klass not in PYSMELLDICT['CLASSES'].keys() and pathParts:
             klass = "%s.%s" % (pathParts.pop(), klass)
             
+        debug(vim, 'klass 2: %s' % klass)
+
     if isArgCompletion:
         lindex = 0
         if isAttrLookup:

@@ -38,23 +38,39 @@ def generateClassTag(modules, output):
     pprint(modules, f, width=100)
     f.close()
 
+def findRootPackageList(path, filename):
+    "should walk up the tree until there is no __init__.py"
+    isPackage = lambda path: os.path.exists(os.path.join(path, '__init__.py'))
+    if not isPackage(path):
+        return filename[:-3]
+    packages = []
+    while isPackage(path):
+        path, tail = os.path.split(path)
+        if tail:
+            packages.append(tail)
+    packages.reverse()
+    return packages
+    
 
 def process(argList, excluded, output):
     modules = ModuleDict()
-    for item in fileList:
-        if os.path.isdir(item):
-            for root, dirs, files in os.walk(item):
-                if item == '.':
-                    item = os.path.split(os.getcwd())[-1]
-                if os.path.basename(root) in excluded:
+    for rootPackage in fileList:
+        if os.path.isdir(rootPackage):
+            for path, dirs, files in os.walk(rootPackage):
+                if rootPackage == '.':
+                    rootPackage = os.path.split(os.getcwd())[-1]
+                if os.path.basename(path) in excluded:
                     continue
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    newmodules = processFile(f, root, item)
+                    newmodules = processFile(f, path, rootPackage)
                     modules.update(newmodules)
         else: # single file
-            newmodules = processFile(item, '', '')
+            filename = rootPackage
+            rootPackageList = findRootPackageList(os.getcwd(), filename)
+            absPath = os.path.abspath(".")
+            newmodules = processFile(filename, absPath, rootPackageList[0])
             modules.update(newmodules)
             
     generateClassTag(modules, output)

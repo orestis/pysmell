@@ -59,7 +59,7 @@ def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
                 debBuffer = b
         debBuffer.append("%s %s %s %s %s" % (filename, origLineText, origLineNo, origCol, base))
     completions = idehelper.findCompletions(vim.eval('g:pysmell_matcher'), filename,
-                                origSource, origLineText, origLineNo, int(origCol), base, PYSMELLDICT)
+                                origSource, origLineText, origLineNo, int(origCol), base, PYSMELLDICT, vim)
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))
 

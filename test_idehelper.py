@@ -272,6 +272,23 @@ class CompletionTest(unittest.TestCase):
         """)
         self.assertEquals(findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
 
+    def testExpandClassHierarchiesEvenForUnknownClasses(self):
+        """
+        C:\Dev\git\resolver\FunctionalTests\T0528_US_ColumnRowFormulae.py         self. 31 13 
+    isClassLookup: True
+    pathparts: ['Dev', 'git', 'resolver', 'FunctionalTests', 'T0528_US_ColumnRowFormulae']
+    klass 1: T0528_US_ColumnRowFormulaeFunctionality
+    klass 2: Dev.git.resolver.FunctionalTests.T0528_US_ColumnRowFormulae.T0528_US_ColumnRowFormulaeFunctionality
+    C:\Dev\git\resolver\FormulaLanguage\FLCellReferenceParseNode.py         self. 17 13 
+    isClassLookup: True
+    pathparts: ['Dev', 'git', 'resolver', 'FormulaLanguage', 'FLCellReferenceParseNode']
+    klass 1: FLCellReferenceParseNode
+    klass 2: FormulaLanguage.FLCellReferenceParseNode.FLCellReferenceParseNode"""
+        self.fail('look above')
+
+    def testStreamlinePackageDetection(self):
+        self.fail('there are at least two ways to walk up packages. There should be only one, and tested')
+
 
     def testCamelGroups(self):
         from idehelper import camelGroups

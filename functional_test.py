@@ -65,7 +65,7 @@ class FunctionalTest(unittest.TestCase):
                 self.assertDictsEqual(value, expectedDict[key])
             elif isinstance(value, list):
                 self.assertTrue(isinstance(expectedDict[key], list), "incompatible types found for key %s" % key)
-                self.assertEquals(value, expectedDict[key], 'wrong set(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
+                self.assertEquals(sorted(value), sorted(expectedDict[key]), 'wrong sorted(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
             else:
                 self.assertEquals(value, expectedDict[key], "wrong value for key %s" % key)
 
@@ -114,8 +114,21 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
     
-    def DONTtestSingleFile(self):
-        self.fail()
+    def testSingleFile(self):
+        "should recurse up until it doesn't find __init__.py"
+        path = 'Tests/PackageA/NestedPackage/EvenMore/'
+        if os.path.exists('%sPYSMELLTAGS' % path):
+            os.remove('%sPYSMELLTAGS' % path)
+        subprocess.call(["python", "../../../../pysmelltags.py", "ModuleC.py"], cwd=path)
+        self.assertTrue(os.path.exists('%sPYSMELLTAGS' % path ))
+        PYSMELLDICT = eval(open('%sPYSMELLTAGS' % path).read())
+        expectedDict = {
+            'FUNCTIONS': [],
+            'CONSTANTS': ['PackageA.NestedPackage.EvenMore.ModuleC.NESTED'],
+            'CLASSES': {},
+                        
+        }
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
     def testOutputRedirect(self):
@@ -160,13 +173,9 @@ class FunctionalTest(unittest.TestCase):
 
             -t        Will print timing information.
 
-        """)
-        self.assertEquals(stdout, expected)
+        """).splitlines()
+        self.assertEquals(stdout.splitlines(), expected)
 
-
-    def testTypeInferencing(self):
-        'given a valid code block, try to narrow down the possible classes and return that'
-        self.fail()
 
 if __name__ == '__main__':
     unittest.main()
