@@ -1,15 +1,7 @@
 import os
-import re
 from codefinder import infer
+from matchers import MATCHERS
 
-try:
-    all
-except:
-     def all(iterable):
-         for element in iterable:
-             if not element:
-                 return False
-         return True
     
 def findPYSMELLDICT(filename):
     directory, basename = os.path.split(filename)
@@ -27,65 +19,20 @@ def findPYSMELLDICT(filename):
     PYSMELLDICT.update(partialDict)
     return PYSMELLDICT
 
-def matchCaseInsetively(base):
-    return lambda comp: comp.lower().startswith(base.lower())
 
-def matchCaseSensitively(base):
-    return lambda comp: comp.startswith(base)
-
-def camelGroups(word):
-    groups = []
-    rest = word
-    while rest:
-        i, limit = 0, len(rest)
-        while i < limit:
-            suspect = rest[1:i+1]
-            if i and not (suspect.islower() and suspect.isalnum()):
-                break
-            i += 1
-        part, rest = rest[:i], rest[i:]
-        groups.append(part)
-    return groups
-
-def matchCamelCasedPrecise(base):
-    baseGr = camelGroups(base)
-    baseLen = len(baseGr)
-    def check(comp):
-        compGr = camelGroups(comp)
-        return baseLen <= len(compGr) and all(matchCaseSensitively(bg)(cg) for bg, cg in zip(baseGr, compGr))
-    return check
-
-def matchCamelCased(base):
-    baseGr = camelGroups(base)
-    baseLen = len(baseGr)
-    def check(comp):
-        compGr = camelGroups(comp)
-        return baseLen <= len(compGr) and all(matchCaseInsetively(bg)(cg) for bg, cg in zip(baseGr, compGr))
-    return check
-
-def matchSmartass(base):
-    rev_base_letters = list(reversed(base.lower()))
-    def check(comp):
-        stack = rev_base_letters[:]
-        for group in camelGroups(comp):
-            lowered = group.lower()
-            while True:
-                if lowered and stack:
-                    if lowered.startswith(stack[-1]):
-                        stack.pop()
-                    lowered = lowered[1:]
-                else:
-                    break
-        return not stack
-    return check
-
-def matchFuzzyCS(base):
-    regex = re.compile('.*'.join([] + list(base) + []))
-    return lambda comp: bool(regex.match(comp))
-
-def matchFuzzyCI(base):
-    regex = re.compile('.*'.join([] + list(base) + []), re.IGNORECASE)
-    return lambda comp: bool(regex.match(comp))
+def findRootPackageList(directory, filename):
+    "should walk up the tree until there is no __init__.py"
+    isPackage = lambda path: os.path.exists(os.path.join(path, '__init__.py'))
+    if not isPackage(directory):
+        return [filename[:-3]]
+    packages = []
+    while directory and isPackage(directory):
+        directory, tail = os.path.split(directory)
+        if tail:
+            packages.append(tail)
+    packages.reverse()
+    return packages
+    
 
 def debug(vim, msg):
     if vim is None: return
@@ -96,38 +43,41 @@ def debug(vim, msg):
                 debBuffer = b
         debBuffer.append(msg)
 
+
+def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim):
+    pathParts = []
+    fullPath = fullPath
+    head, tail = os.path.split(fullPath[:-3])
+    pathParts.append(tail)
+    while head and tail:
+        head, tail = os.path.split(head)
+        if tail:
+            pathParts.append(tail)
+    pathParts.reverse()
+    klass = infer(origSource, origLineNo)
+
+    fullKlass = klass
+    while pathParts:
+        fullKlass = "%s.%s" % (pathParts.pop(), fullKlass)
+        if fullKlass in PYSMELLDICT['CLASSES'].keys():
+            break
+    else:
+        # we don't know about this class, look in the file system
+        path, filename = os.path.split(fullPath)
+        packages = findRootPackageList(path, filename)
+        fullKlass = "%s.%s.%s" % (".".join(packages), filename[:-3], klass)
+        
+    return fullKlass
+
 def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT, vim=None):
-    doesMatch = {
-        'case-sensitive': matchCaseSensitively,
-        'case-insensitive': matchCaseInsetively,
-        'camel-case': matchCamelCased,
-        'camel-case-sensitive': matchCamelCasedPrecise,
-        'smartass': matchSmartass,
-        'fuzzy-ci': matchFuzzyCI,
-        'fuzzy-cs': matchFuzzyCS,
-    }.get(matcher, matchCaseInsetively)(base)
+    doesMatch = MATCHERS[matcher](base)
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     isAttrLookup = '.' in leftSide
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     debug(vim, 'isClassLookup: %s' % isClassLookup)
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isClassLookup:
-        pathParts = []
-        head, tail = os.path.split(fullPath[:-3])
-        pathParts.append(tail)
-        while head and tail:
-            head, tail = os.path.split(head)
-            if tail:
-                pathParts.append(tail)
-        pathParts.reverse()
-        debug(vim, 'pathparts: %r' % pathParts)
-        klass = infer(origSource, origLineNo)
-        debug(vim, 'klass 1: %s' % klass)
-
-        while klass not in PYSMELLDICT['CLASSES'].keys() and pathParts:
-            klass = "%s.%s" % (pathParts.pop(), klass)
-            
-        debug(vim, 'klass 2: %s' % klass)
+        klass = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim)
 
     if isArgCompletion:
         lindex = 0

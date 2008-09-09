@@ -11,6 +11,7 @@
 
 import sys, os
 from codefinder import ModuleDict, processFile
+from idehelper import findRootPackageList
 from pprint import pprint
 
 __version__ = "v0.2"
@@ -38,19 +39,6 @@ def generateClassTag(modules, output):
     pprint(modules, f, width=100)
     f.close()
 
-def findRootPackageList(path, filename):
-    "should walk up the tree until there is no __init__.py"
-    isPackage = lambda path: os.path.exists(os.path.join(path, '__init__.py'))
-    if not isPackage(path):
-        return filename[:-3]
-    packages = []
-    while isPackage(path):
-        path, tail = os.path.split(path)
-        if tail:
-            packages.append(tail)
-    packages.reverse()
-    return packages
-    
 
 def process(argList, excluded, output):
     modules = ModuleDict()
@@ -64,12 +52,15 @@ def process(argList, excluded, output):
                 for f in files:
                     if not f.endswith(".py"):
                         continue
-                    newmodules = processFile(f, path, rootPackage)
+                    #path here is relative, make it absolute
+                    absPath = os.path.abspath(path)
+                    newmodules = processFile(f, absPath, rootPackage)
                     modules.update(newmodules)
         else: # single file
             filename = rootPackage
             rootPackageList = findRootPackageList(os.getcwd(), filename)
             absPath = os.path.abspath(".")
+            #path here is absolute
             newmodules = processFile(filename, absPath, rootPackageList[0])
             modules.update(newmodules)
             

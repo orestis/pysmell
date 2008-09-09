@@ -328,9 +328,9 @@ def processFile(f, path, root):
     codeFinder.setModule(f[:-3])
     try:
         if os.path.isabs(path):
-            modules = getClassDict(f, codeFinder)
-        else:
             modules = getClassDict(os.path.join(path, f), codeFinder)
+        else:
+            raise Exception("path should be absolute")
         return modules
     except Exception, e:
         print '-=#=- '* 10
