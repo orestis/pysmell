@@ -53,37 +53,43 @@ class CompletionTest(unittest.TestCase):
 
 
     def testCompletions(self):
-        compls = findCompletions(None, '', '', 'b', 1, 1, 'b', self.pysmelldict)
+        options = (False, None, None, None)
+        compls = findCompletions('b', self.pysmelldict, options)
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
     def testCompleteMembers(self):
-        compls = findCompletions(None, '', '', 'somethign.a', 1, 11, 'a', self.pysmelldict)
+        options = (True, None, None, None)
+        compls = findCompletions('a', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
 
     def testCompleteArgumentListsPropRightParen(self):
-        compls = findCompletions(None, '', '', 'salf.bm()', 1, 8, 'bm(', self.pysmelldict)
+        options = (True, None, 'bm', -1)
+        compls = findCompletions('bm(', self.pysmelldict, options)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
         
     def testCompleteArgumentListsProp(self):
-        compls = findCompletions(None, '', '', 'salf.bm(', 1, 8, 'bm(', self.pysmelldict)
+        options = (True, None, 'bm', None)
+        compls = findCompletions('bm(', self.pysmelldict, options)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
         
 
     def testCompleteArgumentListsRightParen(self):
-        compls = findCompletions(None, '', '', '   b()', 1, 5, 'b(', self.pysmelldict)
+        options = (False, None, 'b', -1)
+        compls = findCompletions('b(', self.pysmelldict, options)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
 
 
     def testCompleteArgumentLists(self):
-        compls = findCompletions(None, '', '', '  b(', 1, 4, 'b(', self.pysmelldict)
+        options = (False, None, 'b', None)
+        compls = findCompletions('b(', self.pysmelldict, options)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
         self.assertEquals(compls, [orig])
@@ -96,8 +102,10 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        compls = findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
-        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'), compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
+        options = (True, 'Module.aClass', None, None)
+        compls = findCompletions('', self.pysmelldict, options)
+        expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
+                    compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
         self.assertEquals(compls, expected)
 
     def testCompletionsWithPackages(self):
@@ -108,9 +116,8 @@ class CompletionTest(unittest.TestCase):
         
         """)
         expected = [dict(word='cprop', kind='m', menu='Nested.Package.Module:Class', dup='1')]
-        compls = findCompletions(None,
-                            os.path.join('Nested', 'Package', 'Module.py'), source,
-                            "%sself." % (' ' * 8), 3, 13, '', self.nestedDict)
+        options = (True, 'Nested.Package.Module.Class', None, None)
+        compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
     def testKnowAboutClassHierarchies(self):
@@ -120,19 +127,22 @@ class CompletionTest(unittest.TestCase):
                     self.
         
         """)
-        compls = findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
+        options = (True, 'Module.bClass', None, None)
+        compls = findCompletions('', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
                     compMeth('cm', 'bClass'), compProp('cprop', 'bClass'),
                     compMeth('dm', 'bClass'), compProp('dprop', 'bClass')]
         self.assertEquals(compls, expected)
+
         source = dedent("""\
             class cClass(object):
                 def sth(self):
                     self.
         
         """)
-        self.assertEquals(findCompletions(None, 'Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict), [])
+        options = (True, 'Module.cClass', None, None)
+        self.assertEquals(findCompletions('', self.pysmelldict, options), [])
 
 
 

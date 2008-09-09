@@ -1,3 +1,12 @@
+# idehelper.py
+# Copyright (C) 2008 Orestis Markou
+# All rights reserved
+# E-mail: orestis@orestis.gr
+
+# http://orestis.gr
+
+# Released subject to the BSD License 
+
 import os
 from codefinder import infer
 from matchers import MATCHERS
@@ -44,7 +53,7 @@ def debug(vim, msg):
         debBuffer.append(msg)
 
 
-def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim):
+def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
     pathParts = []
     fullPath = fullPath
     head, tail = os.path.split(fullPath[:-3])
@@ -68,43 +77,52 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim):
         fullKlass = "%s.%s.%s" % (".".join(packages), filename[:-3], klass)
         
     return fullKlass
+    
 
-def findCompletions(matcher, fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT, vim=None):
-    doesMatch = MATCHERS[matcher](base)
+def detectCompletionType(fullPath, origSource, origLineText, origCol, origLineNo, base, PYSMELLDICT):
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     isAttrLookup = '.' in leftSide
-    isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
-    debug(vim, 'isClassLookup: %s' % isClassLookup)
-    isArgCompletion = base.endswith('(') and leftSide.endswith(base)
-    if isClassLookup:
-        klass = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim)
 
+    isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
+    if isClassLookup:
+        klass = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
+
+    isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
         lindex = 0
         if isAttrLookup:
             lindex = leftSide.rindex('.') + 1
         funcName = leftSide[lindex:-1].lstrip()
+        rindex = None
+        if rightSide.startswith(')'):
+            rindex = -1
 
-    completions = _createCompletionList(PYSMELLDICT, isAttrLookup, isClassLookup and klass)
+    return (isAttrLookup, isClassLookup and klass, isArgCompletion and funcName, rindex)
 
-    if base and not isArgCompletion:
+
+def findCompletions(base, PYSMELLDICT, options, matcher=None):
+    doesMatch = MATCHERS[matcher](base)
+
+    isAttrLookup, klass, funcName, rindex = options
+
+    completions = _createCompletionList(PYSMELLDICT, isAttrLookup, klass)
+
+    if base and not funcName:
         filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
-    elif isArgCompletion:
+    elif funcName:
         filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
     else:
         filteredCompletions = completions
 
     filteredCompletions.sort(sortCompletions)
 
-    if filteredCompletions and isArgCompletion:
+    if filteredCompletions and funcName:
         #return the arg list instead
         oldComp = filteredCompletions[0]
         if oldComp['word'] == funcName:
-            rindex = None
-            if rightSide.startswith(')'):
-                rindex = -1
             oldComp['word'] = oldComp['abbr'][:rindex]
     return filteredCompletions
+
 
 def _findAllParents(klass, classesDICT, ancList):
     klassDict = classesDICT.get(klass, None)
@@ -114,9 +132,11 @@ def _findAllParents(klass, classesDICT, ancList):
         ancList.append(anc)
         _findAllParents(anc, classesDICT, ancList)
 
+
 def _getCompForConstant(word):
     module, const = word.rsplit('.', 1)
     return dict(word=const, kind='d', menu=module, dup='1')
+
 
 def _getCompForFunction(func, kind, module=None):
     if module is None:
