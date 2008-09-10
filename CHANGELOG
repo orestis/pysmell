@@ -1,3 +1,16 @@
+PySmell v0.3
+
+Added simple type-inferencing when inside classes, hardcoded to "self". It will present methods and properties
+of current and parent classes (but not built-in types). It only works with relative imports for now.
+When you auto-complete right after a function/method call's opening parenthesis, the arguments will be filled in.
+You can select out of seven matching behaviours - look in pysmell.vim for possible options.
+Big improvements on correctness of PYSMELLTAGS files.
+
+
+Bugfix: Set Vim to display duplicate arguments
+Bugfix: change name of omnifunc so to not clash with built-in python omnicompletion
+
+
 PySmell v0.2
 
 Added support for nested packages

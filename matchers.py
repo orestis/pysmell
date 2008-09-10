@@ -1,3 +1,13 @@
+# matchers.py
+# Original author: Krzysiek Goj
+# Copyright (C) 2008 Orestis Markou
+# All rights reserved
+# E-mail: orestis@orestis.gr
+
+# http://orestis.gr
+
+# Released subject to the BSD License 
+
 import re
 try:
     all

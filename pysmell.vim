@@ -4,10 +4,22 @@
 " All rights reserved
 " E-mail: orestis@orestis.gr
 
-" pysmell v0.2
+" pysmell v0.3
 " http://orestis.gr
 
 " Released subject to the BSD License 
+
+" Options:
+"   g:pysmell_debug : set to 1 and create a PYSMELL_DEBUG buffer. Info will get appended there.
+"   g:pysmell_matcher : one of the following, listed from stricter to fuzzier:
+"        'case-sensitive'
+"        'case-insensitive'     "default
+"        'camel-case'
+"        'camel-case-sensitive'
+"        'smartass'
+"        'fuzzy-ci'
+"        'fuzzy-cs'
+                
 
 if !has('python')
     echo "Error: Required vim compiled with +python"

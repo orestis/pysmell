@@ -6,7 +6,7 @@ The first target is Vim, because that's what I'm using and because its completio
 
 ##Download and Installation
 
-PySmell's code is available at [GitHub](http://github.com/orestis/pysmell/tree/v0.2). You can click 'Download' to get it as a zip/tar if you don't have git installed.
+PySmell's code is available at [GitHub](http://github.com/orestis/pysmell/tree/v0.3). You can click 'Download' to get it as a zip/tar if you don't have git installed.
 
 Extract and drop the pysmell package somewhere in your PYTHONPATH. Distutils coming soon!
 
@@ -15,7 +15,7 @@ Extract and drop the pysmell package somewhere in your PYTHONPATH. Distutils com
 To generate a PYSMELLTAGS file, use:
 
     cd /root/of/project
-    python /dir/of/pysmelltags.py
+    python /dir/of/pysmelltags.py .
 
 If you want to specifically include or exclude some files or directories (eg. tests), you can use:
     python /dir/of/pysmelltags.py [Package Package File File ...] [-x Excluded Excluded ...]
@@ -39,6 +39,9 @@ To use PySmell omnicompletion from inside Vim, you have to have:
 1. Python support
 2. The pysmell package in your PYTHONPATH (sometimes Vim is silly about this)
 3. Source pysmell/pysmell.vim
+4. :set omnifunc=pysmell#Complete
+Note: If you want to always use pysmell for python, do:
+    autocmd FileType python set omnifunc=pysmell#Complete
 
 You can then use ^X^O to invoke Vim's omnicompletion.
 

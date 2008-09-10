@@ -1,5 +1,4 @@
 # vimhelper.py
-# Companion to pysmell.vim
 # Copyright (C) 2008 Orestis Markou
 # All rights reserved
 # E-mail: orestis@orestis.gr
