@@ -89,13 +89,15 @@ def VisitChildren(fun):
 class BaseVisitor(object):
     def __init__(self):
         self.scope = []
+        self.importedNames = {}
+        self.imports = {}
 
 
     OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple',
                 'AugAssign', 'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc',
                 'Compare', 'Const', 'Continue', 'Dict', 'Discard', 'Div', 'Exec',
-                'FloorDiv', 'For', 'From', 'Function', 'GenExpr', 'GenExprIf',
-                'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 'Import',
+                'FloorDiv', 'For', 'Function', 'GenExpr', 'GenExprIf',
+                'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 
                 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
                 'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift',
@@ -110,14 +112,33 @@ class BaseVisitor(object):
         for c in node.getChildNodes():
             self.visit(c)
 
+    def visitFrom(self, node):
+        for name in node.names:
+            asName = name[1] or name[0]
+            self.importedNames[asName] = "%s.%s" % (node.modname, name[0])
+
+    def visitImport(self, node):
+        for name in node.names:
+            asName = name[1] or name[0]
+            self.imports[asName] = name[0]
+
+    def qualify(self, name):
+        if name in __builtins__:
+            return name
+        if name in self.importedNames:
+            return self.importedNames[name]
+        for imp in self.imports:
+            if name.startswith(imp):
+                actual = self.imports[imp]
+                return "%s%s" % (actual, name[len(imp):])
+        return '%s.%s' % (self.modules.currentModule, name)
+
 class CodeFinder(BaseVisitor):
     def __init__(self):
         BaseVisitor.__init__(self)
         self.modules = ModuleDict()
         self.module = '__module__'
         self.package = '__package__'
-        self.importedNames = {}
-        self.imports = {}
 
     @property
     def inClass(self):
@@ -180,27 +201,6 @@ class CodeFinder(BaseVisitor):
         elif len(self.scope) == 0:
             self.modules.addProperty(None, node.name)
 
-    @VisitChildren
-    def visitFrom(self, node):
-        for name in node.names:
-            asName = name[1] or name[0]
-            self.importedNames[asName] = "%s.%s" % (node.modname, name[0])
-
-    def visitImport(self, node):
-        for name in node.names:
-            asName = name[1] or name[0]
-            self.imports[asName] = name[0]
-
-    def qualify(self, name):
-        if name in __builtins__.keys():
-            return name
-        if name in self.importedNames:
-            return self.importedNames[name]
-        for imp in self.imports:
-            if name.startswith(imp):
-                actual = self.imports[imp]
-                return "%s%s" % (actual, name[len(imp):])
-        return '%s.%s' % (self.modules.currentModule, name)
 
     def visitClass(self, klass):
         self.enterScope(klass)
@@ -363,17 +363,18 @@ class SelfInferer(BaseVisitor):
     def visitClass(self, klassNode):
         self.visit(klassNode.code)
         nestedStart, nestedEnd = None, None
-        for klass, start, end in self.classRanges:
+        for klass, _, start, end in self.classRanges:
             if start > klassNode.lineno and end < self.lastlineno:
                 nestedStart, nestedEnd = start, end
                 
             
+        bases = [self.qualify(getName(b)) for b in klassNode.bases]
         if nestedStart == nestedEnd == None:
-            self.classRanges.append((klassNode.name, klassNode.lineno, self.lastlineno))
+            self.classRanges.append((klassNode.name, bases, klassNode.lineno, self.lastlineno))
         else:
             start, end = klassNode.lineno, self.lastlineno
-            self.classRanges.append((klassNode.name, start, nestedStart-1))
-            self.classRanges.append((klassNode.name, nestedEnd+1, end))
+            self.classRanges.append((klassNode.name, bases, start, nestedStart-1))
+            self.classRanges.append((klassNode.name, bases, nestedEnd+1, end))
         self.lastlineno = klassNode.lineno
             
 
@@ -402,11 +403,11 @@ def infer(source, lineNo):
     classRanges = inferer.classRanges
     classRanges.sort(sortClassRanges)
     
-    for klass, start, end in classRanges:
+    for klass, parents, start, end in classRanges:
         if lineNo >= start:
-            return klass
-    return None
+            return klass, parents
+    return None, None
 
 def sortClassRanges(a, b):
-    return b[1] - a[1]
+    return b[2] - a[2]
 

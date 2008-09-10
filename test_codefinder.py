@@ -272,8 +272,25 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass = infer(source, 5)
+        klass, parents = infer(source, 5)
         self.assertEquals(klass, 'AClass')
+        self.assertEquals(parents, ['object'])
+
+    def testInferParents(self):
+        source = dedent("""\
+            import something
+            from something import father as stepfather
+            class AClass(something.mother, stepfather):
+                def amethod(self, other):
+                    other.do_something()
+                    self.
+
+                def another(self):
+                    pass
+        """)
+        klass, parents = infer(source, 6)
+        self.assertEquals(klass, 'AClass')
+        self.assertEquals(parents, ['something.mother', 'something.father'])
 
     def testInferSelfMultipleClasses(self):
         
@@ -304,29 +321,29 @@ class InferencingTest(unittest.TestCase):
                         self.ass
         """)
         
-        self.assertEquals(infer(source, 1), None, 'no class yet!')
+        self.assertEquals(infer(source, 1)[0], None, 'no class yet!')
         for line in range(2, 5):
-            klass = infer(source, line)
+            klass, _ = infer(source, line)
             self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(5, 7):
-            klass = infer(source, line)
+            klass, _ = infer(source, line)
             self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(7, 9):
-            klass = infer(source, line)
+            klass, _ = infer(source, line)
             self.assertEquals(klass, 'EvenSneakier', 'wrong class %s in line %d' % (klass, line))
 
         line = 9
-        klass = infer(source, line)
+        klass, _ = infer(source, line)
         self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(10, 17):
-            klass = infer(source, line)
+            klass, _ = infer(source, line)
             self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(17, 51):
-            klass = infer(source, line)
+            klass, _ = infer(source, line)
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
     
 

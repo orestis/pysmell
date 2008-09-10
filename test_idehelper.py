@@ -56,7 +56,7 @@ class IDEHelperTest(unittest.TestCase):
         else:
             pathParts.insert(0, "C:")
         absPath = os.path.join(*pathParts)
-        inferred = inferClass(absPath, source, 3, self.nestedDict, None)
+        inferred, _ = inferClass(absPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'Nested.Package.Module.Class')
 
 
@@ -69,7 +69,7 @@ class IDEHelperTest(unittest.TestCase):
         """)
         pathParts = ["Nested", "Package", "Module.py"]
         relPath = os.path.join(*pathParts)
-        inferred = inferClass(relPath, source, 3, self.nestedDict, None)
+        inferred, _ = inferClass(relPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'Nested.Package.Module.Class')
 
 
@@ -82,48 +82,64 @@ class IDEHelperTest(unittest.TestCase):
         """)
         pathParts = ['Tests', 'PackageB', 'NewModule.py'] # Tests/PackageB contains an __init__.py file
         relPath = os.path.join(*pathParts)
-        inferred = inferClass(relPath, source, 3, self.nestedDict, None)
+        inferred, parents = inferClass(relPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
+        self.assertEquals(parents, ['object'])
 
         cwd = os.getcwd()
         pathParts = [cwd, 'Tests', 'PackageB', 'NewModule.py'] # Tests/PackageB contains an __init__.py file
         absPath = os.path.join(*pathParts)
-        inferred = inferClass(absPath, source, 3, self.nestedDict, None)
+        inferred, parents = inferClass(absPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
+        self.assertEquals(parents, ['object'])
+
+    def testInferUnknownClassParents(self):
+        source = dedent("""\
+            from Nested.Package.Module import Class
+            class Other(Class):
+                def sth(self):
+                    self.
+        
+        """)
+        klass, parents = inferClass(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                            4, self.nestedDict)
+        self.assertEquals(klass, 'PackageA.Module.Other')
+        self.assertEquals(parents, ['Nested.Package.Module.Class'])
+        
 
     def testDetectGlobalLookup(self):
         options = detectCompletionType('', '', 'b', 1, 1, 'b', self.pysmelldict)
-        expected = (False, None, None, None)
+        expected = (False, None, None, None, None)
         self.assertEquals(options, expected)
 
 
     def testDetectAttrLookup(self):
         options = detectCompletionType('', '', 'somethign.a', 1, 11, 'a', self.pysmelldict)
-        expected = (True, None, None, None)
+        expected = (True, None, None, None, None)
         self.assertEquals(options, expected)
 
 
     def testDetectCompleteArgumentListMethodClosingParen(self):
         options = detectCompletionType('', '', 'salf.bm()', 1, 8, 'bm(', self.pysmelldict)
-        expected = (True, None, 'bm', -1)
+        expected = (True, None, None, 'bm', -1)
         self.assertEquals(options, expected)
 
 
     def testDetectCompleteArgumentListMethod(self):
         options = detectCompletionType('', '', 'salf.bm(', 1, 8, 'bm(', self.pysmelldict)
-        expected = (True, None, 'bm', None)
+        expected = (True, None, None, 'bm', None)
         self.assertEquals(options, expected)
 
 
     def testDetectCompleteArgumentListFunctionClosingParen(self):
         options = detectCompletionType('', '', '   b()', 1, 5, 'b(', self.pysmelldict)
-        expected = (False, None, 'b', -1)
+        expected = (False, None, None, 'b', -1)
         self.assertEquals(options, expected)
 
     
     def testDetectCompleteArgumentListFunction(self):
         options = detectCompletionType('', '', '  b(', 1, 4, 'b(', self.pysmelldict)
-        expected = (False, None, 'b', None)
+        expected = (False, None, None, 'b', None)
         self.assertEquals(options, expected)
 
 
@@ -135,7 +151,7 @@ class IDEHelperTest(unittest.TestCase):
         
         """)
         options = detectCompletionType('Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
-        expected = (True, 'Module.aClass', None, None)
+        expected = (True, 'Module.aClass', ['object'], None, None)
         self.assertEquals(options, expected)
 
 
@@ -148,8 +164,23 @@ class IDEHelperTest(unittest.TestCase):
         """)
         options = detectCompletionType(os.path.join('Nested', 'Package', 'Module.py'), source,
                             "%sself." % (' ' * 8), 3, 13, '', self.nestedDict)
-        expected = (True, 'Nested.Package.Module.Class', None, None)
+        expected = (True, 'Nested.Package.Module.Class', ['object'], None, None)
         self.assertEquals(options, expected)
+
+
+    def testDetectParentsOfUnknownClass(self):
+        source = dedent("""\
+            from Nested.Package.Module import Class
+            class Other(Class):
+                def sth(self):
+                    self.
+        
+        """)
+        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                            "%sself." % (' ' * 8), 4, 13, '', self.nestedDict)
+        expected = (True, 'PackageA.Module.Other', ['Nested.Package.Module.Class'], None, None)
+        self.assertEquals(options, expected)
+        
 
 
 

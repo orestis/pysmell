@@ -63,7 +63,7 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         if tail:
             pathParts.append(tail)
     pathParts.reverse()
-    klass = infer(origSource, origLineNo)
+    klass, parents = infer(origSource, origLineNo)
 
     fullKlass = klass
     while pathParts:
@@ -76,7 +76,7 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         packages = findRootPackageList(path, filename)
         fullKlass = "%s.%s.%s" % (".".join(packages), filename[:-3], klass)
         
-    return fullKlass
+    return fullKlass, parents
     
 
 def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
@@ -86,10 +86,11 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
     klass = None
     rindex = None
     funcName = None
+    parents = None
 
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
-        klass = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
+        klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
 
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
@@ -100,15 +101,15 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
         if rightSide.startswith(')'):
             rindex = -1
 
-    return (isAttrLookup, klass, funcName, rindex)
+    return (isAttrLookup, klass, parents, funcName, rindex)
 
 
 def findCompletions(base, PYSMELLDICT, options, matcher=None):
     doesMatch = MATCHERS[matcher](base)
 
-    isAttrLookup, klass, funcName, rindex = options
+    isAttrLookup, klass, parents, funcName, rindex = options
 
-    completions = _createCompletionList(PYSMELLDICT, isAttrLookup, klass)
+    completions = _createCompletionList(PYSMELLDICT, isAttrLookup, klass, parents)
 
     if base and not funcName:
         filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
@@ -131,7 +132,7 @@ def _findAllParents(klass, classesDICT, ancList):
     klassDict = classesDICT.get(klass, None)
     if klassDict is None: return
     for anc in klassDict['bases']:
-        if anc == 'object': continue
+        if anc in __builtins__: continue
         ancList.append(anc)
         _findAllParents(anc, classesDICT, ancList)
 
@@ -153,25 +154,39 @@ def _getCompForConstructor(klass, klassDict):
     module, klassName = klass.rsplit('.', 1)
     return dict(word=klassName, kind='t', menu=module, dup='1', abbr='%s(%s)' % (klassName, _argsList(klassDict['constructor'])))
 
-def _createCompletionList(PYSMELLDICT, isAttrLookup, klass):
+def _createCompletionList(PYSMELLDICT, isAttrLookup, klass, parents):
     completions = []
     if not isAttrLookup:
         completions.extend([_getCompForConstant(word) for word in PYSMELLDICT['CONSTANTS']])
         completions.extend([_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS']])
         completions.extend([_getCompForConstructor(klass, klassDict) for (klass, klassDict) in PYSMELLDICT['CLASSES'].items()])
     elif klass:
-        klassDict = PYSMELLDICT['CLASSES'].get(klass, None)
-        if klassDict is not None:
-            completions.extend(getCompletionsForClass(klass, klassDict, PYSMELLDICT))
+        completions.extend(getCompletionsForClass(klass, parents, PYSMELLDICT))
     else: #plain attribute lookup
         for klass, klassDict in PYSMELLDICT['CLASSES'].items():
             addCompletionsForClass(klass, klassDict, completions)
     
     return completions
 
-def getCompletionsForClass(klass, klassDict, PYSMELLDICT):
+def getCompletionsForClass(klass, parents, PYSMELLDICT):
+        klassDict = PYSMELLDICT['CLASSES'].get(klass, None)
         completions = []
         ancestorList = []
+        nonBuiltinParents = [p for p in parents if p not in __builtins__]
+        if klassDict is None and not nonBuiltinParents:
+            return completions
+        elif klassDict is None and nonBuiltinParents:
+            for anc in nonBuiltinParents:
+                _findAllParents(anc, PYSMELLDICT['CLASSES'], ancestorList)
+                ancDict = PYSMELLDICT['CLASSES'].get(anc, None)
+                if ancDict is None: continue
+                addCompletionsForClass(anc, ancDict, completions)
+            for anc in ancestorList:
+                ancDict = PYSMELLDICT['CLASSES'].get(anc, None)
+                if ancDict is None: continue
+                addCompletionsForClass(anc, ancDict, completions)
+            return completions
+            
         _findAllParents(klass, PYSMELLDICT['CLASSES'], ancestorList)
         addCompletionsForClass(klass, klassDict, completions)
         for anc in ancestorList:
