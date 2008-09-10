@@ -65,13 +65,14 @@ def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
     fullPath = vim.current.buffer.name
     PYSMELLDICT = idehelper.findPYSMELLDICT(fullPath)
 
+    options = idehelper.detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT)
     if int(vim.eval('g:pysmell_debug')):
         for b in vim.buffers:
             if b.name.endswith('PYSMELL_DEBUG'):
                 b.append("%s %s %s %s %s" % (fullPath, origLineText, origLineNo, origCol, base))
+                b.append("%r" % (options,))
                 break
 
-    options = idehelper.detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT)
     completions = idehelper.findCompletions(base, PYSMELLDICT, options, vim.eval('g:pysmell_matcher'))
     output = repr(completions)
     vim.command('let g:pysmell_completions = %s' % (output, ))

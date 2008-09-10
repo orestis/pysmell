@@ -102,11 +102,13 @@ class CompletionTest(unittest.TestCase):
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
         self.assertEquals(compls, expected)
 
+
     def testCompletionsWithPackages(self):
         expected = [dict(word='cprop', kind='m', menu='Nested.Package.Module:Class', dup='1')]
         options = (True, 'Nested.Package.Module.Class', None, None)
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
+
 
     def testKnowAboutClassHierarchies(self):
         options = (True, 'Module.bClass', None, None)

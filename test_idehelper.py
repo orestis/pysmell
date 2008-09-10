@@ -85,6 +85,11 @@ class IDEHelperTest(unittest.TestCase):
         inferred = inferClass(relPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
 
+        cwd = os.getcwd()
+        pathParts = [cwd, 'Tests', 'PackageB', 'NewModule.py'] # Tests/PackageB contains an __init__.py file
+        absPath = os.path.join(*pathParts)
+        inferred = inferClass(absPath, source, 3, self.nestedDict, None)
+        self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
 
     def testDetectGlobalLookup(self):
         options = detectCompletionType('', '', 'b', 1, 1, 'b', self.pysmelldict)

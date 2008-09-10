@@ -161,7 +161,16 @@ def _createCompletionList(PYSMELLDICT, isAttrLookup, klass):
         completions.extend([_getCompForConstructor(klass, klassDict) for (klass, klassDict) in PYSMELLDICT['CLASSES'].items()])
     elif klass:
         klassDict = PYSMELLDICT['CLASSES'].get(klass, None)
-        if klassDict is None: return completions
+        if klassDict is not None:
+            completions.extend(getCompletionsForClass(klass, klassDict, PYSMELLDICT))
+    else: #plain attribute lookup
+        for klass, klassDict in PYSMELLDICT['CLASSES'].items():
+            addCompletionsForClass(klass, klassDict, completions)
+    
+    return completions
+
+def getCompletionsForClass(klass, klassDict, PYSMELLDICT):
+        completions = []
         ancestorList = []
         _findAllParents(klass, PYSMELLDICT['CLASSES'], ancestorList)
         addCompletionsForClass(klass, klassDict, completions)
@@ -169,12 +178,8 @@ def _createCompletionList(PYSMELLDICT, isAttrLookup, klass):
             ancDict = PYSMELLDICT['CLASSES'].get(anc, None)
             if ancDict is None: continue
             addCompletionsForClass(anc, ancDict, completions)
+        return completions
 
-    else: #plain attribute lookup
-        for klass, klassDict in PYSMELLDICT['CLASSES'].items():
-            addCompletionsForClass(klass, klassDict, completions)
-    
-    return completions
 
 def addCompletionsForClass(klass, klassDict, completions):
     module, klassName = klass.rsplit('.', 1)
