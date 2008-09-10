@@ -250,8 +250,8 @@ class CodeFinderTest(unittest.TestCase):
         "understand imports and generate the correct bases"
         out = self.getModule("""
             import TestPackage.AnotherModule
-            import TestPackage
-            class A(TestPackage.AnotherModule.AClass, TestPackage.AnotherModule.AnotherClass):
+            import TestPackage as Hmer
+            class A(TestPackage.AnotherModule.AClass, Hmer.AnotherModule.AnotherClass):
                 pass
         """)
         self.assertEquals(out['CLASSES']['TestPackage.TestModule.A'],

@@ -117,6 +117,7 @@ class CodeFinder(BaseVisitor):
         self.module = '__module__'
         self.package = '__package__'
         self.importedNames = {}
+        self.imports = {}
 
     @property
     def inClass(self):
@@ -185,11 +186,20 @@ class CodeFinder(BaseVisitor):
             asName = name[1] or name[0]
             self.importedNames[asName] = "%s.%s" % (node.modname, name[0])
 
+    def visitImport(self, node):
+        for name in node.names:
+            asName = name[1] or name[0]
+            self.imports[asName] = name[0]
+
     def qualify(self, name):
         if name in __builtins__.keys():
             return name
         if name in self.importedNames:
             return self.importedNames[name]
+        for imp in self.imports:
+            if name.startswith(imp):
+                actual = self.imports[imp]
+                return "%s%s" % (actual, name[len(imp):])
         return '%s.%s' % (self.modules.currentModule, name)
 
     def visitClass(self, klass):
