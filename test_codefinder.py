@@ -246,6 +246,20 @@ class CodeFinderTest(unittest.TestCase):
                         bases=['TestPackage.AnotherModule.AnotherClass', 'TestPackage.AnotherModule.AClass'])
         )
 
+    def testAbsoluteImports(self):
+        "understand imports and generate the correct bases"
+        out = self.getModule("""
+            import TestPackage.AnotherModule
+            import TestPackage
+            class A(TestPackage.AnotherModule.AClass, TestPackage.AnotherModule.AnotherClass):
+                pass
+        """)
+        self.assertEquals(out['CLASSES']['TestPackage.TestModule.A'],
+                        dict(constructor=[], methods=[], properties=[], docstring='',
+                        bases=['TestPackage.AnotherModule.AClass', 'TestPackage.AnotherModule.AnotherClass'])
+        )
+        
+
 class InferencingTest(unittest.TestCase):
     def testInferSelfSimple(self):
         source = dedent("""\
