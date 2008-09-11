@@ -83,6 +83,15 @@ class FunctionalTest(unittest.TestCase):
         expectedDict['FUNCTIONS'].extend(self.packageB['FUNCTIONS'])
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
+
+    def testNamespacesAndShortcuts(self):
+        self.fail("""Django does tricksy stuff - look at django.db.models.__init__.py - 
+            it pulls in a lot of other stuff in there, without defining them.
+
+            This probably means that there needs to be a POINTERS mapping or sth like that
+            in PYSMELLDICT that will say, hey, this name here is actually that class there.
+        """)
+
     
     def testPackageA(self):
         if os.path.exists('Tests/PYSMELLTAGS'):

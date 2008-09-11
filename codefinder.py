@@ -4,7 +4,6 @@
 # All rights reserved
 # E-mail: orestis@orestis.gr
 
-# pysmell v0.2
 # http://orestis.gr
 
 # Released subject to the BSD License 
@@ -112,26 +111,35 @@ class BaseVisitor(object):
         for c in node.getChildNodes():
             self.visit(c)
 
+    @VisitChildren
     def visitFrom(self, node):
         for name in node.names:
             asName = name[1] or name[0]
             self.importedNames[asName] = "%s.%s" % (node.modname, name[0])
 
+    @VisitChildren
     def visitImport(self, node):
         for name in node.names:
             asName = name[1] or name[0]
             self.imports[asName] = name[0]
 
-    def qualify(self, name):
+    def qualify(self, name, curModule):
         if name in __builtins__:
             return name
         if name in self.importedNames:
             return self.importedNames[name]
+        for imp in self.importedNames:
+            if name.startswith(imp):
+                actual = self.importedNames[imp]
+                return "%s%s" % (actual, name[len(imp):])
         for imp in self.imports:
             if name.startswith(imp):
                 actual = self.imports[imp]
                 return "%s%s" % (actual, name[len(imp):])
-        return '%s.%s' % (self.modules.currentModule, name)
+        if curModule:
+            return '%s.%s' % (curModule, name)
+        else:
+            return name
 
 class CodeFinder(BaseVisitor):
     def __init__(self):
@@ -205,7 +213,7 @@ class CodeFinder(BaseVisitor):
     def visitClass(self, klass):
         self.enterScope(klass)
         if len(self.scope) == 1:
-            bases = [self.qualify(getName(b)) for b in klass.bases]
+            bases = [self.qualify(getName(b), self.modules.currentModule) for b in klass.bases]
             self.modules.enterClass(klass.name, bases, klass.doc or '')
         self.visit(klass.code)
         self.exitScope()
@@ -314,17 +322,24 @@ def getClassDict(path, codeFinder=None):
     return codeFinder.modules
 
 
+def findRootPackageList(directory, filename):
+    "should walk up the tree until there is no __init__.py"
+    isPackage = lambda path: os.path.exists(os.path.join(path, '__init__.py'))
+    if not isPackage(directory):
+        return [filename[:-3]]
+    packages = []
+    while directory and isPackage(directory):
+        directory, tail = os.path.split(directory)
+        if tail:
+            packages.append(tail)
+    packages.reverse()
+    return packages
+    
+
+
 def findPackage(path, root):
-    head, tail = os.path.split(path)
-    packageHierarchy = [tail]
-    while head and tail:
-        head, tail = os.path.split(head)
-        packageHierarchy.append(tail)
-    packageHierarchy.reverse()
-    if packageHierarchy[0] == '.':
-        packageHierarchy[0] = root
-    index = packageHierarchy.index(root)
-    package = '.'.join(packageHierarchy[index:])
+    packages = findRootPackageList(path, "")
+    package = '.'.join(packages)
     return package
 
 
@@ -366,9 +381,8 @@ class SelfInferer(BaseVisitor):
         for klass, _, start, end in self.classRanges:
             if start > klassNode.lineno and end < self.lastlineno:
                 nestedStart, nestedEnd = start, end
-                
             
-        bases = [self.qualify(getName(b)) for b in klassNode.bases]
+        bases = [self.qualify(getName(b), None) for b in klassNode.bases]
         if nestedStart == nestedEnd == None:
             self.classRanges.append((klassNode.name, bases, klassNode.lineno, self.lastlineno))
         else:
@@ -376,8 +390,6 @@ class SelfInferer(BaseVisitor):
             self.classRanges.append((klassNode.name, bases, start, nestedStart-1))
             self.classRanges.append((klassNode.name, bases, nestedEnd+1, end))
         self.lastlineno = klassNode.lineno
-            
-
 
 
 

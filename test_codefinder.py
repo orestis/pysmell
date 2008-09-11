@@ -276,6 +276,7 @@ class InferencingTest(unittest.TestCase):
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['object'])
 
+
     def testInferParents(self):
         source = dedent("""\
             import something
@@ -291,6 +292,23 @@ class InferencingTest(unittest.TestCase):
         klass, parents = infer(source, 6)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['something.mother', 'something.father'])
+
+
+    def testInferParentsTricky(self):
+        source = dedent("""\
+            from something.this import other as another
+            class AClass(another.bother):
+                def amethod(self, other):
+                    other.do_something()
+                    self.
+
+                def another(self):
+                    pass
+        """)
+        klass, parents = infer(source, 5)
+        self.assertEquals(klass, 'AClass')
+        self.assertEquals(parents, ['something.this.other.bother'])
+
 
     def testInferSelfMultipleClasses(self):
         

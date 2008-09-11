@@ -8,7 +8,7 @@
 # Released subject to the BSD License 
 
 import os
-from codefinder import infer
+from codefinder import infer, findRootPackageList
 from matchers import MATCHERS
 
     
@@ -28,20 +28,6 @@ def findPYSMELLDICT(filename):
     PYSMELLDICT.update(partialDict)
     return PYSMELLDICT
 
-
-def findRootPackageList(directory, filename):
-    "should walk up the tree until there is no __init__.py"
-    isPackage = lambda path: os.path.exists(os.path.join(path, '__init__.py'))
-    if not isPackage(directory):
-        return [filename[:-3]]
-    packages = []
-    while directory and isPackage(directory):
-        directory, tail = os.path.split(directory)
-        if tail:
-            packages.append(tail)
-    packages.reverse()
-    return packages
-    
 
 def debug(vim, msg):
     if vim is None: return
