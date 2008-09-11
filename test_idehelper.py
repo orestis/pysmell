@@ -21,9 +21,9 @@ class IDEHelperTest(unittest.TestCase):
                         'bases': ['Module.aClass'],
                         'properties': ['cprop', 'dprop'],
                         'methods': [('cm', [], ''), ('dm', [], ())]
-                    }
-                    
-                }
+                    },
+                },
+                'POINTERS' : {},
             }
         self.nestedDict = {
                 'CONSTANTS' : [],
@@ -36,7 +36,12 @@ class IDEHelperTest(unittest.TestCase):
                         'methods': []
                     }
                     
-                }
+                },
+                'POINTERS' : {
+                    'Another.Thing': 'Nested.Package.Module.Class',
+                    'Star.*': 'Nested.Package.Module.*',
+                
+                },
         }
 
     
@@ -105,6 +110,34 @@ class IDEHelperTest(unittest.TestCase):
                             4, self.nestedDict)
         self.assertEquals(klass, 'PackageA.Module.Other')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
+
+    def testInferClassParentsWithPointers(self):
+        source = dedent("""\
+            from Another import Thing
+            class Bother(Thing):
+                def sth(self):
+                    self.
+        
+        """)
+        klass, parents = inferClass(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                            4, self.nestedDict)
+        self.assertEquals(klass, 'PackageA.Module.Bother')
+        self.assertEquals(parents, ['Nested.Package.Module.Class'])
+        
+        
+    def testInferClassParentsWithPointersToStar(self):
+        source = dedent("""\
+            from Star import Class
+            class Bother(Class):
+                def sth(self):
+                    self.
+        
+        """)
+        klass, parents = inferClass(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                            4, self.nestedDict)
+        self.assertEquals(klass, 'PackageA.Module.Bother')
+        self.assertEquals(parents, ['Nested.Package.Module.Class'])
+        
         
 
     def testDetectGlobalLookup(self):

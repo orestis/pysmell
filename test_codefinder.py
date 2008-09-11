@@ -31,13 +31,10 @@ class ModuleDictTest(unittest.TestCase):
         md3.update(None)
         self.assertEquals(pformat(md3), pformat(total))
 
-
-class VariousUtilsTest(unittest.TestCase):
-    def testPackageFromPath(self):
-        self.assertEquals(findPackage('.', 'package'), 'package')
-        self.assertEquals(findPackage('./onemore', 'package'), 'package.onemore')
-        self.assertEquals(findPackage('A/B/C/D', 'A'), 'A.B.C.D')
-        self.assertEquals(findPackage('A/B/C/D', 'C'), 'C.D')
+    def testAddPointer(self):
+        md = ModuleDict()
+        md.addPointer('something', 'other')
+        self.assertEquals(md['POINTERS'], {'something': 'other'})
 
 
 class CodeFinderTest(unittest.TestCase):
@@ -68,7 +65,7 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setModule('__init__')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         expected = {'CLASSES': {'TestPackage.A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
-            'FUNCTIONS': [], 'CONSTANTS': []}
+            'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}}
         actual = eval(pformat(codeFinder.modules))
         self.assertEquals(actual, expected)
 
@@ -258,6 +255,19 @@ class CodeFinderTest(unittest.TestCase):
                         dict(constructor=[], methods=[], properties=[], docstring='',
                         bases=['TestPackage.AnotherModule.AClass', 'TestPackage.AnotherModule.AnotherClass'])
         )
+
+    def testImportedNames(self):
+        out = self.getModule("""
+            from somewhere.something import other as mother
+            import somewhere.something as thing
+        """)
+        self.assertEquals(out['POINTERS'],
+            {
+                'TestPackage.TestModule.mother': 'somewhere.something.other',
+                'TestPackage.TestModule.thing': 'somewhere.something',
+            }
+        )
+
         
 
 class InferencingTest(unittest.TestCase):

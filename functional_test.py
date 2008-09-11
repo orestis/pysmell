@@ -39,7 +39,12 @@ class FunctionalTest(unittest.TestCase):
                     'properties': [],
                     'methods': []
                 },
-            }
+            },
+            'POINTERS': {
+                'PackageA.NESTED': 'PackageA.NestedPackage.EvenMore.ModuleC.NESTED',
+                'PackageA.MC': 'PackageA.NestedPackage.EvenMore.ModuleC',
+            
+            },
         }
         
         self.packageB = {
@@ -53,11 +58,13 @@ class FunctionalTest(unittest.TestCase):
                     'properties': [],
                     'methods': []
                 }
-            }
+            },
+            'POINTERS': {}
         }
 
     def assertDictsEqual(self, actualDict, expectedDict):
-        self.assertEquals(len(actualDict.keys()), len(expectedDict.keys()), "dicts don't have equal number of keys")
+        self.assertEquals(len(actualDict.keys()), len(expectedDict.keys()),
+            "dicts don't have equal number of keys: %r != %r" % (actualDict.keys(), expectedDict.keys()))
         self.assertEquals(set(actualDict.keys()), set(expectedDict.keys()), "dicts don't have equal keys")
         for key, value in actualDict.items():
             if isinstance(value, dict):
@@ -84,15 +91,6 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
-    def testNamespacesAndShortcuts(self):
-        self.fail("""Django does tricksy stuff - look at django.db.models.__init__.py - 
-            it pulls in a lot of other stuff in there, without defining them.
-
-            This probably means that there needs to be a POINTERS mapping or sth like that
-            in PYSMELLDICT that will say, hey, this name here is actually that class there.
-        """)
-
-    
     def testPackageA(self):
         if os.path.exists('Tests/PYSMELLTAGS'):
             os.remove('Tests/PYSMELLTAGS')
@@ -137,6 +135,7 @@ class FunctionalTest(unittest.TestCase):
             'FUNCTIONS': [],
             'CONSTANTS': ['PackageA.NestedPackage.EvenMore.ModuleC.NESTED'],
             'CLASSES': {},
+            'POINTERS': {},
                         
         }
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
@@ -186,6 +185,16 @@ class FunctionalTest(unittest.TestCase):
 
         """).splitlines()
         self.assertEquals(stdout.splitlines(), expected)
+
+
+    def testCompleteModuleMembers(self):
+        self.fail("""
+        from django.db import models
+
+        models.
+
+        should return all top-level members of django.db.models
+        """)
 
 
 if __name__ == '__main__':

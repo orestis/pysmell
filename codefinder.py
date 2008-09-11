@@ -13,7 +13,7 @@ from compiler import ast
 
 class ModuleDict(dict):
     def __init__(self):
-        self._modules = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': []}
+        self._modules = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}}
 
     def enterModule(self, module):
         self.currentModule = module
@@ -38,6 +38,9 @@ class ModuleDict(dict):
         if (method, args, docstring) not in self.currentClass(klass)['methods']:
             self.currentClass(klass)['methods'].append((method, args, docstring))
 
+    def addPointer(self, name, pointer):
+        self['POINTERS'][name] = pointer
+
     def addFunction(self, function, args, docstring):
         fullFunction = "%s.%s" % (self.currentModule, function)
         self['FUNCTIONS'].append((fullFunction, args, docstring))
@@ -59,6 +62,7 @@ class ModuleDict(dict):
             self['CONSTANTS'].extend(other['CONSTANTS'])
             self['FUNCTIONS'].extend(other['FUNCTIONS'])
             self['CLASSES'].update(other['CLASSES'])
+            self['POINTERS'].update(other['POINTERS'])
 
     def keys(self):
         return self._modules.keys()
@@ -172,6 +176,7 @@ class CodeFinder(BaseVisitor):
         elif self.inClass:
             return self.scope[-1].name
         return None
+
     def setModule(self, module):
         self.module = module
 
@@ -208,6 +213,18 @@ class CodeFinder(BaseVisitor):
             self.modules.addProperty(self.currentClass, node.name)
         elif len(self.scope) == 0:
             self.modules.addProperty(None, node.name)
+
+    def visitFrom(self, node):
+        BaseVisitor.visitFrom(self, node)
+        for name in node.names:
+            asName = name[1] or name[0]
+            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), "%s.%s" % (node.modname, name[0]))
+
+    def visitImport(self, node):
+        BaseVisitor.visitImport(self, node)
+        for name in node.names:
+            asName = name[1] or name[0]
+            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), name[0])
 
 
     def visitClass(self, klass):
@@ -407,7 +424,12 @@ def infer(source, lineNo):
         sourceLines[lineNo-1] = '%spass' % (' ' * indentation)
 
         replacedSource = '\n'.join(sourceLines)
-        tree = compiler.parse(replacedSource)
+        try:
+            tree = compiler.parse(replacedSource)
+        except SyntaxError, e:
+            import sys
+            print >> sys.stderr, e.args
+            return None, []
             
 
     inferer = SelfInferer()
@@ -418,7 +440,7 @@ def infer(source, lineNo):
     for klass, parents, start, end in classRanges:
         if lineNo >= start:
             return klass, parents
-    return None, None
+    return None, []
 
 def sortClassRanges(a, b):
     return b[2] - a[2]

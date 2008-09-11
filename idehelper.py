@@ -50,6 +50,15 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
             pathParts.append(tail)
     pathParts.reverse()
     klass, parents = infer(origSource, origLineNo)
+    # replace POINTERS with their full reference
+    for index, parent in enumerate(parents):
+        if parent in PYSMELLDICT['POINTERS']:
+            parents[index] = PYSMELLDICT['POINTERS'][parent]
+        else:
+            for pointer in PYSMELLDICT['POINTERS']:
+                if pointer.endswith('*') and parent.startswith(pointer[:-2]):
+                    parents[index] = '%s.%s' % (PYSMELLDICT['POINTERS'][pointer][:-2], parent.split('.', 1)[-1])
+
 
     fullKlass = klass
     while pathParts:
@@ -77,6 +86,8 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
         klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
+
+                
 
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
