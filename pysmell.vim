@@ -4,7 +4,7 @@
 " All rights reserved
 " E-mail: orestis@orestis.gr
 
-" pysmell v0.3
+" pysmell v0.4
 " http://orestis.gr
 
 " Released subject to the BSD License 

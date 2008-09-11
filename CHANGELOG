@@ -1,3 +1,10 @@
+PySmell v0.4
+
+Improved class detection: Now works even for classes which are not present in PYSMELLDICT
+Improved import handling: "absolute" imports work, as well as imported name detection.
+This version sort-of correctly handles Django (not the dynamic part of course!)
+
+
 PySmell v0.3
 
 Added simple type-inferencing when inside classes, hardcoded to "self". It will present methods and properties
@@ -5,7 +12,6 @@ of current and parent classes (but not built-in types). It only works with relat
 When you auto-complete right after a function/method call's opening parenthesis, the arguments will be filled in.
 You can select out of seven matching behaviours - look in pysmell.vim for possible options.
 Big improvements on correctness of PYSMELLTAGS files.
-
 
 Bugfix: Set Vim to display duplicate arguments
 Bugfix: change name of omnifunc so to not clash with built-in python omnicompletion
@@ -16,6 +22,7 @@ PySmell v0.2
 Added support for nested packages
 Exceptions in files are not blocking the process
 Switched to parseFile, shouldn't have to worry about line endings
+
 
 PySmell v0.1 
 
