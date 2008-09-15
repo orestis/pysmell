@@ -166,7 +166,7 @@ class FunctionalTest(unittest.TestCase):
         proc.wait()
         stdout = proc.stdout.read()
         expected = dedent("""\
-        PySmell v0.4
+        PySmell v0.5
 
         usage: python pysmelltags.py package [package, ...] [-x excluded, ...] [options]
 
