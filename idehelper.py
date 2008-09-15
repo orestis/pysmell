@@ -15,11 +15,11 @@ from matchers import MATCHERS
 def findPYSMELLDICT(filename):
     directory, basename = os.path.split(filename)
     partialDict = {}
-    while not os.path.exists(os.path.join(directory, 'PYSMELLTAGS')):
+    while not os.path.exists(os.path.join(directory, 'PYSMELLTAGS')) and basename:
         if os.path.exists(os.path.join(directory, 'PYSMELLTAGS.partial')):
             tagsFile = os.path.join(directory, 'PYSMELLTAGS.partial')
             partialDict.update(eval(file(tagsFile).read()))
-        directory, _ = os.path.split(directory)
+        directory, basename = os.path.split(directory)
     tagsFile = os.path.join(directory, 'PYSMELLTAGS')
     if not os.path.exists(tagsFile):
         print 'Could not file PYSMELLTAGS for omnicompletion'
