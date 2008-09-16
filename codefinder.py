@@ -13,10 +13,11 @@ from compiler import ast
 
 class ModuleDict(dict):
     def __init__(self):
-        self._modules = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}}
+        self._modules = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}, 'HIERARCHY': []}
 
     def enterModule(self, module):
         self.currentModule = module
+        self['HIERARCHY'].append(module)
 
     def exitModule(self):
         self.currentModule = None
@@ -61,6 +62,7 @@ class ModuleDict(dict):
         if other:
             self['CONSTANTS'].extend(other['CONSTANTS'])
             self['FUNCTIONS'].extend(other['FUNCTIONS'])
+            self['HIERARCHY'].extend(other['HIERARCHY'])
             self['CLASSES'].update(other['CLASSES'])
             self['POINTERS'].update(other['POINTERS'])
 

@@ -24,6 +24,7 @@ class IDEHelperTest(unittest.TestCase):
                     },
                 },
                 'POINTERS' : {},
+                'HIERARCHY' : ['Module'],
             }
         self.nestedDict = {
                 'CONSTANTS' : [],
@@ -42,6 +43,7 @@ class IDEHelperTest(unittest.TestCase):
                     'Star.*': 'Nested.Package.Module.*',
                 
                 },
+                'HIERARCHY' : ['Nested.Package.Module'],
         }
 
     
@@ -220,14 +222,25 @@ class IDEHelperTest(unittest.TestCase):
 
     def testDetectModuleCompletion(self):
         source = dedent("""\
-            from Nested.Package.
+            from Nested.Package.Mo
             
         """)
         options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
-                            "from Nested.Package.", 1, 20, '', self.nestedDict)
+                            "from Nested.Package.Mo", 1, 22, '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested.Package.")
+                            funcName=None, rindex=None, module="Nested.Package")
+
+        self.assertEquals(options, expected)
+        
+        source = dedent("""\
+            from Module.
+            
+        """)
+        options = detectCompletionType('Module.py', source, "from Module.", 1, 12, '', self.pysmelldict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Module")
 
         self.assertEquals(options, expected)
         

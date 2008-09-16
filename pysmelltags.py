@@ -14,7 +14,7 @@ from codefinder import ModuleDict, processFile
 from idehelper import findRootPackageList
 from pprint import pprint
 
-__version__ = "v0.5"
+__version__ = "v0.6a"
 
 source = """
 class Aclass(object):

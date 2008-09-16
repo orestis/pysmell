@@ -34,8 +34,8 @@ class CompletionTest(unittest.TestCase):
                         'properties': ['cprop', 'dprop'],
                         'methods': [('cm', [], ''), ('dm', [], ())]
                     }
-                    
-                }
+                },
+                'HIERARCHY' : ['Module'],
             }
         self.nestedDict = {
                 'CONSTANTS' : [],
@@ -49,6 +49,7 @@ class CompletionTest(unittest.TestCase):
                     }
                     
                 },
+                'HIERARCHY' : ['Nested.Package.Module'],
         }
 
 
@@ -129,13 +130,20 @@ class CompletionTest(unittest.TestCase):
 
 
     def testModuleCompletion(self):
-        options = CompletionOptions(module="Nested.P")
+        options = CompletionOptions(module="Nested")
         expected = [dict(word='Package', kind='t', dup='1')]
         compls = findCompletions('P', self.nestedDict, options)
         self.assertEquals(compls, expected)
         
+        options = CompletionOptions(module="Nested.Package")
+        expected = [dict(word='Module', kind='t', dup='1')]
+        compls = findCompletions('', self.nestedDict, options)
+        self.assertEquals(compls, expected)
 
-
+        options = CompletionOptions(module="Module")
+        expected = []
+        compls = findCompletions('', self.pysmelldict, options)
+        self.assertEquals(compls, expected)
 
 
 

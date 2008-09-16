@@ -45,6 +45,13 @@ class FunctionalTest(unittest.TestCase):
                 'PackageA.MC': 'PackageA.NestedPackage.EvenMore.ModuleC',
             
             },
+            'HIERARCHY': [
+                'PackageA',
+                'PackageA.ModuleA',
+                'PackageA.NestedPackage',
+                'PackageA.NestedPackage.EvenMore',
+                'PackageA.NestedPackage.EvenMore.ModuleC',
+            ]
         }
         
         self.packageB = {
@@ -59,7 +66,8 @@ class FunctionalTest(unittest.TestCase):
                     'methods': []
                 }
             },
-            'POINTERS': {}
+            'POINTERS': {},
+            'HIERARCHY': ['PackageB']
         }
 
     def assertDictsEqual(self, actualDict, expectedDict):
@@ -88,6 +96,7 @@ class FunctionalTest(unittest.TestCase):
         expectedDict['CLASSES'].update(self.packageB['CLASSES'])
         expectedDict['CONSTANTS'].extend(self.packageB['CONSTANTS'])
         expectedDict['FUNCTIONS'].extend(self.packageB['FUNCTIONS'])
+        expectedDict['HIERARCHY'].extend(self.packageB['HIERARCHY'])
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
@@ -136,6 +145,7 @@ class FunctionalTest(unittest.TestCase):
             'CONSTANTS': ['PackageA.NestedPackage.EvenMore.ModuleC.NESTED'],
             'CLASSES': {},
             'POINTERS': {},
+            'HIERARCHY': ['PackageA.NestedPackage.EvenMore.ModuleC'],
                         
         }
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
@@ -166,7 +176,7 @@ class FunctionalTest(unittest.TestCase):
         proc.wait()
         stdout = proc.stdout.read()
         expected = dedent("""\
-        PySmell v0.5
+        PySmell v0.6a
 
         usage: python pysmelltags.py package [package, ...] [-x excluded, ...] [options]
 

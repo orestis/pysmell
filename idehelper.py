@@ -102,14 +102,14 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
     isModCompletion = (leftSide.lstrip().startswith("from") or leftSide.lstrip().startswith("import")) and "." in leftSide
     if isModCompletion:
         module = leftSide.split(" ")[1]
+        if "." in module:
+            module, _ = module.rsplit(".", 1)
+
     
     isAttrLookup = "." in leftSide and not isModCompletion
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
         klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
-
-                
-
 
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
@@ -131,10 +131,7 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
 
     completions = _createCompletionList(PYSMELLDICT, options.module, options.isAttrLookup, options.klass, options.parents)
 
-    if options.module is not None:
-        filteredCompletions = completions
-
-    elif base and not funcName:
+    if base and not funcName:
         filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
     elif funcName:
         filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
@@ -151,47 +148,19 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
     return filteredCompletions
 
 
-def _findAllParents(klass, classesDICT, ancList):
-    klassDict = classesDICT.get(klass, None)
-    if klassDict is None: return
-    for anc in klassDict['bases']:
-        if anc in __builtins__: continue
-        ancList.append(anc)
-        _findAllParents(anc, classesDICT, ancList)
-
-
-def _getCompForConstant(word):
-    module, const = word.rsplit('.', 1)
-    return dict(word=const, kind='d', menu=module, dup='1')
-
-
-def _getCompForFunction(func, kind, module=None):
-    if module is None:
-        module, funcName = func[0].rsplit('.', 1)
-    else:
-        funcName = func[0]
-    return dict(word=funcName, kind=kind, menu=module, dup='1',
-                            abbr='%s(%s)' % (funcName, _argsList(func[1])))
-
-def _getCompForConstructor(klass, klassDict):
-    module, klassName = klass.rsplit('.', 1)
-    return dict(word=klassName, kind='t', menu=module, dup='1', abbr='%s(%s)' % (klassName, _argsList(klassDict['constructor'])))
 
 def _createCompletionList(PYSMELLDICT, module, isAttrLookup, klass, parents):
     completions = []
     if module is not None:
         splitModules = set()
-        for kind in PYSMELLDICT.itervalues():
-            for thing in kind:
-                if not thing.startswith(module): continue
-                splitModules.add(thing)
-                thing = thing.rsplit(".", 1)
-                while len(thing) == 2:
-                    if thing[0].startswith(module):
-                        splitModules.add(thing[0])
-                    thing = thing[0].rsplit(".", 1)
-        print splitModules
-        return [dict(word=name, type="t", dup="1") for name in splitModules]
+        for reference in PYSMELLDICT['HIERARCHY']:
+            if not reference.startswith(module): continue
+            rest = reference[len(module)+1:]
+            if '.' in rest:
+                rest = rest.split(".", 1)[0]
+            if rest:
+                splitModules.add(rest)
+        return [dict(word=name, kind="t", dup="1") for name in splitModules]
     if not isAttrLookup:
         completions.extend([_getCompForConstant(word) for word in PYSMELLDICT['CONSTANTS']])
         completions.extend([_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS']])
@@ -238,6 +207,33 @@ def addCompletionsForClass(klass, klassDict, completions):
                     (module, klassName)) for prop in klassDict['properties']])
     completions.extend([_getCompForFunction(func, 'm', module='%s:%s' % (module,
                 klassName)) for func in klassDict['methods']])
+
+
+def _findAllParents(klass, classesDICT, ancList):
+    klassDict = classesDICT.get(klass, None)
+    if klassDict is None: return
+    for anc in klassDict['bases']:
+        if anc in __builtins__: continue
+        ancList.append(anc)
+        _findAllParents(anc, classesDICT, ancList)
+
+
+def _getCompForConstant(word):
+    module, const = word.rsplit('.', 1)
+    return dict(word=const, kind='d', menu=module, dup='1')
+
+
+def _getCompForFunction(func, kind, module=None):
+    if module is None:
+        module, funcName = func[0].rsplit('.', 1)
+    else:
+        funcName = func[0]
+    return dict(word=funcName, kind=kind, menu=module, dup='1',
+                            abbr='%s(%s)' % (funcName, _argsList(func[1])))
+
+def _getCompForConstructor(klass, klassDict):
+    module, klassName = klass.rsplit('.', 1)
+    return dict(word=klassName, kind='t', menu=module, dup='1', abbr='%s(%s)' % (klassName, _argsList(klassDict['constructor'])))
 
 def _argsList(l):
      return ', '.join([str(arg) for arg in l])

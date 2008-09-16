@@ -65,7 +65,7 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder.setModule('__init__')
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         expected = {'CLASSES': {'TestPackage.A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
-            'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}}
+            'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}, 'HIERARCHY': ['TestPackage']}
         actual = eval(pformat(codeFinder.modules))
         self.assertEquals(actual, expected)
 
@@ -267,6 +267,36 @@ class CodeFinderTest(unittest.TestCase):
                 'TestPackage.TestModule.thing': 'somewhere.something',
             }
         )
+
+    def testHierarchy(self):
+        class MockNode(object):
+            node = 1
+        node = MockNode()
+        codeFinder = CodeFinder()
+        codeFinder.visit = lambda _: None
+
+        codeFinder.setPackage('TestPackage')
+        codeFinder.setModule('__init__')
+        codeFinder.visitModule(node)
+
+        codeFinder.setModule('Modulo')
+        codeFinder.visitModule(node)
+
+        codeFinder.setPackage('TestPackage.Another')
+        codeFinder.setModule('__init__')
+        codeFinder.visitModule(node)
+
+        codeFinder.setModule('Moduli')
+        codeFinder.visitModule(node)
+
+        expected = [
+            'TestPackage',
+            'TestPackage.Modulo',
+            'TestPackage.Another',
+            'TestPackage.Another.Moduli',
+        ]
+        self.assertEquals(codeFinder.modules['HIERARCHY'], expected)
+        
 
         
 
