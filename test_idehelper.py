@@ -220,13 +220,14 @@ class IDEHelperTest(unittest.TestCase):
         self.assertEquals(options, expected)
         
 
-    def testDetectModuleCompletion(self):
+    def testDetectModuleCompletionInitial(self):
         source = dedent("""\
             from Nested.Package.Mo
             
         """)
+        line = "from Nested.Package.Mo"
         options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
-                            "from Nested.Package.Mo", 1, 22, '', self.nestedDict)
+                                        line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Nested.Package")
@@ -245,6 +246,60 @@ class IDEHelperTest(unittest.TestCase):
         self.assertEquals(options, expected)
         
 
+    def testDetectModuleCompletionTwo(self):
+        source = dedent("""\
+            from Nested.Package import 
+            
+        """)
+        line = "from Nested.Package import "
+        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                                            line, 1, len(line), '', self.nestedDict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Nested.Package", completeModule=True)
+
+        self.assertEquals(options, expected)
+
+        source = dedent("""\
+            from Nested import 
+            
+        """)
+        line = "from Nested import "
+        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                                            line, 1, len(line), '', self.nestedDict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Nested", completeModule=True)
+
+        self.assertEquals(options, expected)
+
+        source = dedent("""\
+            from Nested import Pack
+            
+        """)
+        line = "from Nested import Pack"
+        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                                            line, 1, len(line), '', self.nestedDict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Nested", completeModule=True)
+
+        self.assertEquals(options, expected)
+
+    def testModuleCompletionThree(self):
+        
+        source = dedent("""\
+            import Nested.Package.
+            
+        """)
+        line = "import Nested.Package."
+        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+                                            line, 1, len(line), '', self.nestedDict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Nested.Package", completeModule=True)
+
+        self.assertEquals(options, expected)
 
 
 

@@ -36,6 +36,7 @@ class CompletionTest(unittest.TestCase):
                     }
                 },
                 'HIERARCHY' : ['Module'],
+                'POINTERS': {}
             }
         self.nestedDict = {
                 'CONSTANTS' : [],
@@ -50,6 +51,17 @@ class CompletionTest(unittest.TestCase):
                     
                 },
                 'HIERARCHY' : ['Nested.Package.Module'],
+                'POINTERS' : {'Nested.Package.Module.Something': 'dontcare'},
+        }
+        self.complicatedDict = {
+                'CONSTANTS' : ['A.CONST_A', 'B.CONST_B', 'C.CONST_C'],
+                'FUNCTIONS' : [],
+                'CLASSES' : {},
+                'HIERARCHY' : ['A', 'B', 'C'],
+                'POINTERS' : {
+                    'A.*': 'B.*',
+                    'A.THING': 'C.CONST_C',
+                },
         }
 
 
@@ -144,6 +156,29 @@ class CompletionTest(unittest.TestCase):
         expected = []
         compls = findCompletions('', self.pysmelldict, options)
         self.assertEquals(compls, expected)
+
+        options = CompletionOptions(module="Nested.Package", completeModule=True)
+        expected = [dict(word='Module', kind='t', dup='1')]
+        compls = findCompletions('', self.nestedDict, options)
+        self.assertEquals(compls, expected)
+
+        options = CompletionOptions(module="Nested.Package.Module", completeModule=True)
+        expected = [
+            dict(word='Class', dup="1", kind="t", menu="Nested.Package.Module", abbr="Class()"),
+            dict(word='Something', dup="1", kind="t"),
+        ]
+        compls = findCompletions('', self.nestedDict, options)
+        self.assertEquals(compls, expected)
+
+        options = CompletionOptions(module="A", completeModule=True)
+        expected = [
+            dict(word='CONST_A', kind='d', dup='1', menu='A'),
+            dict(word='CONST_B', kind='d', dup='1', menu='B'),
+            dict(word='THING', kind='t', dup='1')
+        ]
+        compls = findCompletions('', self.complicatedDict, options)
+        self.assertEquals(compls, expected)
+
 
 
 
