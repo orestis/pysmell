@@ -1,3 +1,16 @@
+PySmell v0.6
+
+*UNRELEASED*
+
+Added module completion. Please regenerate your TAGS. Completing import
+statements works, but the messages may look a bit wonky.
+
+
+PySmell v0.5
+
+Bug fix: infinite loop when no PYSMELLTAGS is found.
+
+
 PySmell v0.4
 
 Improved class detection: Now works even for classes which are not present in PYSMELLDICT

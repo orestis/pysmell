@@ -47,4 +47,6 @@ You can then use ^X^O to invoke Vim's omnicompletion.
 
 ##Reporting issues
 
+Look in the [TODO](http://github.com/orestis/pysmell/wikis/todo) first. Vote up!
+
 Send me an email at orestis@orestis.gr. If you can create a unit test that exposes that behaviour, it'd be great!
