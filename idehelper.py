@@ -72,22 +72,44 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         fullKlass = "%s.%s.%s" % (".".join(packages), filename[:-3], klass)
         
     return fullKlass, parents
-    
+
+
+class CompletionOptions(object):
+    def __init__(self, **kwargs):
+        self._dict = dict(isAttrLookup=False, klass=None, parents=[],
+                        funcName=None, rindex=None, module=None)
+        self._dict.update(kwargs)
+
+    def __getattr__(self, item):
+        return self._dict[item]
+        
+    def __eq__(self, other):
+        return self._dict == other._dict
+
+    def __repr__(self):
+        return repr(self._dict)
+        
 
 def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
 
-    isAttrLookup = '.' in leftSide
     klass = None
     rindex = None
     funcName = None
     parents = None
+    module = None
 
+    isModCompletion = (leftSide.lstrip().startswith("from") or leftSide.lstrip().startswith("import")) and "." in leftSide
+    if isModCompletion:
+        module = leftSide.split(" ")[1]
+    
+    isAttrLookup = "." in leftSide and not isModCompletion
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
         klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
 
                 
+
 
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
     if isArgCompletion:
@@ -98,17 +120,21 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
         if rightSide.startswith(')'):
             rindex = -1
 
-    return (isAttrLookup, klass, parents, funcName, rindex)
+    return CompletionOptions(isAttrLookup=isAttrLookup, klass=klass,
+                            parents=parents, funcName=funcName, rindex=rindex, module=module)
 
 
 def findCompletions(base, PYSMELLDICT, options, matcher=None):
     doesMatch = MATCHERS[matcher](base)
 
-    isAttrLookup, klass, parents, funcName, rindex = options
+    funcName = options.funcName
 
-    completions = _createCompletionList(PYSMELLDICT, isAttrLookup, klass, parents)
+    completions = _createCompletionList(PYSMELLDICT, options.module, options.isAttrLookup, options.klass, options.parents)
 
-    if base and not funcName:
+    if options.module is not None:
+        filteredCompletions = completions
+
+    elif base and not funcName:
         filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
     elif funcName:
         filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
@@ -121,7 +147,7 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
         #return the arg list instead
         oldComp = filteredCompletions[0]
         if oldComp['word'] == funcName:
-            oldComp['word'] = oldComp['abbr'][:rindex]
+            oldComp['word'] = oldComp['abbr'][:options.rindex]
     return filteredCompletions
 
 
@@ -151,8 +177,21 @@ def _getCompForConstructor(klass, klassDict):
     module, klassName = klass.rsplit('.', 1)
     return dict(word=klassName, kind='t', menu=module, dup='1', abbr='%s(%s)' % (klassName, _argsList(klassDict['constructor'])))
 
-def _createCompletionList(PYSMELLDICT, isAttrLookup, klass, parents):
+def _createCompletionList(PYSMELLDICT, module, isAttrLookup, klass, parents):
     completions = []
+    if module is not None:
+        splitModules = set()
+        for kind in PYSMELLDICT.itervalues():
+            for thing in kind:
+                if not thing.startswith(module): continue
+                splitModules.add(thing)
+                thing = thing.rsplit(".", 1)
+                while len(thing) == 2:
+                    if thing[0].startswith(module):
+                        splitModules.add(thing[0])
+                    thing = thing[0].rsplit(".", 1)
+        print splitModules
+        return [dict(word=name, type="t", dup="1") for name in splitModules]
     if not isAttrLookup:
         completions.extend([_getCompForConstant(word) for word in PYSMELLDICT['CONSTANTS']])
         completions.extend([_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS']])
