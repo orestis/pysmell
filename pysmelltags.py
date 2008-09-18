@@ -58,8 +58,13 @@ def process(argList, excluded, output):
                     modules.update(newmodules)
         else: # single file
             filename = rootPackage
+            absPath, filename = os.path.split(filename)
             rootPackageList = findRootPackageList(os.getcwd(), filename)
-            absPath = os.path.abspath(".")
+            if not absPath:
+                absPath = os.path.abspath(".")
+            else:
+                absPath = os.path.abspath(absPath)
+                
             #path here is absolute
             newmodules = processFile(filename, absPath, rootPackageList[0])
             modules.update(newmodules)

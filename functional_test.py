@@ -3,8 +3,6 @@ from textwrap import dedent
 import subprocess
 import os
 
-import pysmelltags
-
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
         self.packageA = {
@@ -149,6 +147,26 @@ class FunctionalTest(unittest.TestCase):
                         
         }
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
+
+
+    def testSingleFilesWithPaths(self):
+        path = 'Tests'
+        pysmell = os.path.join(path, 'PYSMELLTAGS')
+        if os.path.exists(pysmell):
+            os.remove(pysmell)
+        subprocess.call(["python", "../pysmelltags.py", os.path.join("PackageA", "NestedPackage", "EvenMore", "ModuleC.py")], cwd=path)
+        self.assertTrue(os.path.exists(pysmell))
+        PYSMELLDICT = eval(open(pysmell).read())
+        expectedDict = {
+            'FUNCTIONS': [],
+            'CONSTANTS': ['PackageA.NestedPackage.EvenMore.ModuleC.NESTED'],
+            'CLASSES': {},
+            'POINTERS': {},
+            'HIERARCHY': ['PackageA.NestedPackage.EvenMore.ModuleC'],
+                        
+        }
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
+        
 
 
     def testOutputRedirect(self):
