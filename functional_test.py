@@ -127,7 +127,10 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
-        self.fail("when the current dir is not a package, search for packages")
+
+    def testAllPackages(self):
+        self.fail("when the a dir is not a package, search for packages")
+        subprocess.call(["python", "pysmelltags.py", "Tests"]) # should generate equivalent to PackageA, PackageB
 
     
     def testSingleFile(self):
@@ -227,6 +230,13 @@ class FunctionalTest(unittest.TestCase):
 
     def testRelativeImports(self):
         self.fail('when generating tags, check for relative imports and add them as absolute')
+
+
+    def testDunderAll(self):
+        self.fail("when doing 'from place import *', do not bring in everything in the pointers but look for __all__ in the package/module and add only these.")
+
+    def testStaticTags(self):
+        self.fail("finally unit test the findPYSMELLDICT function and implement static libraries as well")
 
 
 if __name__ == '__main__':
