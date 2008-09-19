@@ -225,5 +225,9 @@ class FunctionalTest(unittest.TestCase):
         """)
 
 
+    def testRelativeImports(self):
+        self.fail('when generating tags, check for relative imports and add them as absolute')
+
+
 if __name__ == '__main__':
     unittest.main()
