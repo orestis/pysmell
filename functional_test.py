@@ -41,6 +41,7 @@ class FunctionalTest(unittest.TestCase):
             'POINTERS': {
                 'PackageA.NESTED': 'PackageA.NestedPackage.EvenMore.ModuleC.NESTED',
                 'PackageA.MC': 'PackageA.NestedPackage.EvenMore.ModuleC',
+                'PackageA.RelImport': 'PackageA.NestedPackage',
             
             },
             'HIERARCHY': [
@@ -80,7 +81,7 @@ class FunctionalTest(unittest.TestCase):
                 self.assertTrue(isinstance(expectedDict[key], list), "incompatible types found for key %s" % key)
                 self.assertEquals(sorted(value), sorted(expectedDict[key]), 'wrong sorted(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
             else:
-                self.assertEquals(value, expectedDict[key], "wrong value for key %s" % key)
+                self.assertEquals(value, expectedDict[key], "wrong value for key %s: %s" % (key, value)) 
 
 
     def testMultiPackage(self):
@@ -226,10 +227,6 @@ class FunctionalTest(unittest.TestCase):
 
         should return all top-level members of django.db.models
         """)
-
-
-    def testRelativeImports(self):
-        self.fail('when generating tags, check for relative imports and add them as absolute')
 
 
     def testDunderAll(self):
