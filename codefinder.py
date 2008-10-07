@@ -153,6 +153,7 @@ class CodeFinder(BaseVisitor):
         self.modules = ModuleDict()
         self.module = '__module__'
         self.package = '__package__'
+        self.path = '__path__'
 
     @property
     def inClass(self):
@@ -178,12 +179,6 @@ class CodeFinder(BaseVisitor):
         elif self.inClass:
             return self.scope[-1].name
         return None
-
-    def setModule(self, module):
-        self.module = module
-
-    def setPackage(self, package):
-        self.package = package
 
     def visitModule(self, node):
         if self.module == '__init__':
@@ -220,15 +215,27 @@ class CodeFinder(BaseVisitor):
         BaseVisitor.visitFrom(self, node)
         for name in node.names:
             asName = name[1] or name[0]
-            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), "%s.%s" % (node.modname, name[0]))
+            imported = name[0]
+            if self.isRelativeImport(node.modname):
+                imported = "%s.%s.%s" % (self.package, node.modname, imported)
+            else:
+                imported = "%s.%s" % (node.modname, imported)
+            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), imported)
 
     def visitImport(self, node):
         BaseVisitor.visitImport(self, node)
         for name in node.names:
             asName = name[1] or name[0]
-            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), name[0])
+            imported = name[0]
+            if self.isRelativeImport(imported):
+                imported = "%s.%s" % (self.package, imported)
+            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), imported)
 
+    def isRelativeImport(self, imported):
 
+        pathToImport = os.path.join(self.path, *imported.split('.'))
+        return os.path.exists(pathToImport) or os.path.exists(pathToImport + '.py')
+        
     def visitClass(self, klass):
         self.enterScope(klass)
         if len(self.scope) == 1:
@@ -368,8 +375,9 @@ def processFile(f, path, root):
     codeFinder = CodeFinder()
 
     package = findPackage(path, root)
-    codeFinder.setPackage(package)
-    codeFinder.setModule(f[:-3])
+    codeFinder.package = package
+    codeFinder.module = f[:-3]
+    codeFinder.path = path
     try:
         if os.path.isabs(path):
             modules = getClassDict(os.path.join(path, f), codeFinder)

@@ -42,6 +42,7 @@ class FunctionalTest(unittest.TestCase):
                 'PackageA.NESTED': 'PackageA.NestedPackage.EvenMore.ModuleC.NESTED',
                 'PackageA.MC': 'PackageA.NestedPackage.EvenMore.ModuleC',
                 'PackageA.RelImport': 'PackageA.NestedPackage',
+                'PackageA.RelMC': 'PackageA.NestedPackage.EvenMore.ModuleC',
             
             },
             'HIERARCHY': [
@@ -230,7 +231,7 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testDunderAll(self):
-        self.fail("when doing 'from place import *', do not bring in everything in the pointers but look for __all__ in the package/module and add only these.")
+        self.fail("when doing 'from place import *', do not bring in everything in the pointers but look for __all__ in the package/module and add only these. Also, when no __all__ is present, don't bring stuff that starts with an underscore")
 
     def testStaticTags(self):
         self.fail("finally unit test the findPYSMELLDICT function and implement static libraries as well")
