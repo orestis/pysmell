@@ -11,21 +11,30 @@ import os
 from codefinder import infer, findRootPackageList
 from matchers import MATCHERS
 
+def updatePySmellDict(master, partial):
+    for key, value in master:
+        if isinstance(value, dict):
+            value.update(partial[key])
+        elif isinstance(value, list):
+            value.extend(partial[key])
+        
     
 def findPYSMELLDICT(filename):
     directory, basename = os.path.split(filename)
     partialDict = {}
     while not os.path.exists(os.path.join(directory, 'PYSMELLTAGS')) and basename:
         if os.path.exists(os.path.join(directory, 'PYSMELLTAGS.partial')):
-            tagsFile = os.path.join(directory, 'PYSMELLTAGS.partial')
-            partialDict.update(eval(file(tagsFile).read()))
+            tagsFile = file(os.path.join(directory, 'PYSMELLTAGS.partial'))
+            updatePySmellDict(partialDict, eval(tagsFile.read()))
+            tagsFile.close()
         directory, basename = os.path.split(directory)
-    tagsFile = os.path.join(directory, 'PYSMELLTAGS')
+    tagsFile = file(os.path.join(directory, 'PYSMELLTAGS'))
     if not os.path.exists(tagsFile):
         print 'Could not file PYSMELLTAGS for omnicompletion'
         return
-    PYSMELLDICT = eval(file(tagsFile).read())
-    PYSMELLDICT.update(partialDict)
+    PYSMELLDICT = eval(tagsFile.read())
+    updatePySmellDict(PYSMELLDICT, partialDict)
+    tagsFile.close()
     return PYSMELLDICT
 
 
