@@ -232,7 +232,6 @@ class CodeFinder(BaseVisitor):
             self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), imported)
 
     def isRelativeImport(self, imported):
-
         pathToImport = os.path.join(self.path, *imported.split('.'))
         return os.path.exists(pathToImport) or os.path.exists(pathToImport + '.py')
         
