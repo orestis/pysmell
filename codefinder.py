@@ -153,6 +153,7 @@ class CodeFinder(BaseVisitor):
         self.modules = ModuleDict()
         self.module = '__module__'
         self.package = '__package__'
+        self.path = '__path__'
 
     @property
     def inClass(self):
@@ -178,12 +179,6 @@ class CodeFinder(BaseVisitor):
         elif self.inClass:
             return self.scope[-1].name
         return None
-
-    def setModule(self, module):
-        self.module = module
-
-    def setPackage(self, package):
-        self.package = package
 
     def visitModule(self, node):
         if self.module == '__init__':
@@ -226,7 +221,11 @@ class CodeFinder(BaseVisitor):
         BaseVisitor.visitImport(self, node)
         for name in node.names:
             asName = name[1] or name[0]
-            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), name[0])
+            imported = name[0]
+            pathToImport = os.path.join(self.path, imported)
+            if os.path.exists(pathToImport) or os.path.exists(pathToImport + '.py'):
+                imported = "%s.%s" % (self.package, imported)
+            self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), imported)
 
 
     def visitClass(self, klass):
@@ -368,8 +367,9 @@ def processFile(f, path, root):
     codeFinder = CodeFinder()
 
     package = findPackage(path, root)
-    codeFinder.setPackage(package)
-    codeFinder.setModule(f[:-3])
+    codeFinder.package = package
+    codeFinder.module = f[:-3]
+    codeFinder.path = path
     try:
         if os.path.isabs(path):
             modules = getClassDict(os.path.join(path, f), codeFinder)

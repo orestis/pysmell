@@ -42,8 +42,8 @@ class CodeFinderTest(unittest.TestCase):
     def getModule(self, source):
         tree = compiler.parse(dedent(source))
         codeFinder = CodeFinder()
-        codeFinder.setModule('TestModule')
-        codeFinder.setPackage('TestPackage')
+        codeFinder.module = 'TestModule'
+        codeFinder.package = 'TestPackage'
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         try:
             return eval(pformat(codeFinder.modules))
@@ -61,8 +61,8 @@ class CodeFinderTest(unittest.TestCase):
         """
         tree = compiler.parse(dedent(source))
         codeFinder = CodeFinder()
-        codeFinder.setPackage('TestPackage')
-        codeFinder.setModule('__init__')
+        codeFinder.package = 'TestPackage'
+        codeFinder.module = '__init__'
         compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
         expected = {'CLASSES': {'TestPackage.A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
             'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}, 'HIERARCHY': ['TestPackage']}
@@ -268,6 +268,25 @@ class CodeFinderTest(unittest.TestCase):
             }
         )
 
+    
+    def testRelativeImports(self):
+        import codefinder
+        oldExists = codefinder.os.path.exists
+        # monkeypatch relative.py into the path somewhere
+        codefinder.os.path.exists = lambda _: True
+        try:
+            out = self.getModule("""
+                import relative    
+            """)
+            self.assertEquals(out['POINTERS'],
+                {
+                    'TestPackage.TestModule.relative': 'TestPackage.relative'
+                }
+            )
+        finally:
+            codefinder.os.path.exists = oldExists
+
+
     def testHierarchy(self):
         class MockNode(object):
             node = 1
@@ -275,18 +294,18 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder = CodeFinder()
         codeFinder.visit = lambda _: None
 
-        codeFinder.setPackage('TestPackage')
-        codeFinder.setModule('__init__')
+        codeFinder.package = 'TestPackage'
+        codeFinder.module = '__init__'
         codeFinder.visitModule(node)
 
-        codeFinder.setModule('Modulo')
+        codeFinder.module = 'Modulo'
         codeFinder.visitModule(node)
 
-        codeFinder.setPackage('TestPackage.Another')
-        codeFinder.setModule('__init__')
+        codeFinder.package = 'TestPackage.Another'
+        codeFinder.module = '__init__'
         codeFinder.visitModule(node)
 
-        codeFinder.setModule('Moduli')
+        codeFinder.module = 'Moduli'
         codeFinder.visitModule(node)
 
         expected = [
