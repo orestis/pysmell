@@ -17,24 +17,28 @@ def updatePySmellDict(master, partial):
             value.update(partial[key])
         elif isinstance(value, list):
             value.extend(partial[key])
-        
+
+def tryReadPYSMELLDICT(directory, filename, dictToUpdate):
+    if os.path.exists(os.path.join(directory, filename)):
+        tagsFile = file(os.path.join(directory, filename))
+        updatePySmellDict(dictToUpdate, eval(tagsFile.read()))
+        tagsFile.close()
     
+
 def findPYSMELLDICT(filename):
     directory, basename = os.path.split(filename)
-    partialDict = {}
+    PYSMELLDICT = {}
     while not os.path.exists(os.path.join(directory, 'PYSMELLTAGS')) and basename:
-        if os.path.exists(os.path.join(directory, 'PYSMELLTAGS.partial')):
-            tagsFile = file(os.path.join(directory, 'PYSMELLTAGS.partial'))
-            updatePySmellDict(partialDict, eval(tagsFile.read()))
-            tagsFile.close()
+        tryReadPYSMELLDICT(directory, 'PYSMELLTAGS.partial', PYSMELLDICT)
         directory, basename = os.path.split(directory)
-    tagsFile = file(os.path.join(directory, 'PYSMELLTAGS'))
-    if not os.path.exists(tagsFile):
+
+    tagsPath = os.path.join(directory, 'PYSMELLTAGS')
+    if not os.path.exists(tagsPath):
         print 'Could not file PYSMELLTAGS for omnicompletion'
         return
-    PYSMELLDICT = eval(tagsFile.read())
-    updatePySmellDict(PYSMELLDICT, partialDict)
-    tagsFile.close()
+    else:
+        print tagsPath, 'EXISTS?'
+    tryReadPYSMELLDICT(directory, 'PYSMELLTAGS', PYSMELLDICT)
     return PYSMELLDICT
 
 

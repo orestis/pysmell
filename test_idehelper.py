@@ -2,7 +2,7 @@ import unittest
 import os
 from textwrap import dedent
 
-from idehelper import inferClass, detectCompletionType, CompletionOptions
+from idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT
 
 class IDEHelperTest(unittest.TestCase):
     def setUp(self):
@@ -47,8 +47,23 @@ class IDEHelperTest(unittest.TestCase):
         }
 
     
-    def DONTtestFindPYSMELLDICT(self):
-        self.fail('write test')
+    def testFindPYSMELLDICT(self):
+        # include everything that starts with PYSMELLTAGS
+        if os.path.exists('PYSMELLTAGS'):
+            os.remove('PYSMELLTAGS')
+        import idehelper
+        oldTryReadPSD = idehelper.tryReadPYSMELLDICT
+        def p(*args):
+            print args
+        idehelper.tryReadPYSMELLDICT = lambda a, b, c: p(a, b, c)
+        try:
+            self.assertEquals(findPYSMELLDICT(os.path.join('a', 'b', 'c', 'd')), None, 'should not find PYSMELLTAGS')
+            self.fail('write test')
+        finally:
+            idehelper.tryReadPYSMELLDICT = oldTryReadPSD
+
+    def testUpdatePYSMELLDICT(self):
+        self.fail()
 
     def testInferClassAbsolute(self):
         source = dedent("""\
