@@ -137,6 +137,7 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled("10*180")
         self.assertNamesIsHandled("10>>180")
         self.assertNamesIsHandled("10<<180")
+        self.assertNamesIsHandled("not x.ishidden()")
         
 
     def testClassProperties(self):

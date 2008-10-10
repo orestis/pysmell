@@ -53,17 +53,46 @@ class IDEHelperTest(unittest.TestCase):
             os.remove('PYSMELLTAGS')
         import idehelper
         oldTryReadPSD = idehelper.tryReadPYSMELLDICT
-        def p(*args):
-            print args
-        idehelper.tryReadPYSMELLDICT = lambda a, b, c: p(a, b, c)
+        oldListDir = idehelper.listdir
+        TRPArgs = []
+        def mockTRP(direct, fname, dictToUpdate):
+            TRPArgs.append((direct, fname))
+            dictToUpdate.update({'PYSMELLTAGS.django': {'django': True}}.get(fname, {}))
+
+        listdirs = []
+        def mockListDir(dirname):
+            listdirs.append(dirname)
+            return {'random': ['something'],
+                    os.path.join('random', 'dirA'): ['PYSMELLTAGS.django'],
+                }.get(dirname, [])
+
+        idehelper.tryReadPYSMELLDICT = mockTRP
+        idehelper.listdir = mockListDir
         try:
-            self.assertEquals(findPYSMELLDICT(os.path.join('a', 'b', 'c', 'd')), None, 'should not find PYSMELLTAGS')
-            self.fail('write test')
+            self.assertEquals(findPYSMELLDICT(os.path.join('a', 'random', 'path', 'andfile')), None, 'should not find PYSMELLTAGS')
+            self.assertEquals(listdirs,
+                [os.path.join('a', 'random', 'path'),
+                 os.path.join('a', 'random'),
+                 'a', '', ''], # two '' because of root again
+                'did not list dirs correctly: %s' % listdirs)
+            self.assertEquals(TRPArgs, [], 'did not read tags correctly')
+
+            listdirs = []
+            TRPArgs = []
+
+            tags = findPYSMELLDICT(os.path.join('random', 'dirA', 'file'))
+            self.assertEquals(tags, None, 'should not find pysmelltags')
+            self.assertEquals(listdirs,
+                [os.path.join('random', 'dirA'),
+                 'random', '', ''],
+                'did not list dirs correctly: %s' % listdirs)
+            self.assertEquals(TRPArgs,
+                [(os.path.join('random', 'dirA'), 'PYSMELLTAGS.django')],
+                'did not read tags correctly: %s' % TRPArgs)
+
         finally:
             idehelper.tryReadPYSMELLDICT = oldTryReadPSD
-
-    def testUpdatePYSMELLDICT(self):
-        self.fail()
+            idehelper.listdir = oldListDir
 
     def testInferClassAbsolute(self):
         source = dedent("""\

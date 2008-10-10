@@ -2,6 +2,7 @@ import unittest
 from textwrap import dedent
 import subprocess
 import os
+import idehelper
 
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
@@ -108,6 +109,9 @@ class FunctionalTest(unittest.TestCase):
         PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
+
+        foundDict = idehelper.findPYSMELLDICT(os.path.join('Tests', 'PackageA', 'something'))
+        self.assertDictsEqual(foundDict, expectedDict)
 
 
     def testPackageB(self):
@@ -232,9 +236,6 @@ class FunctionalTest(unittest.TestCase):
 
     def testDunderAll(self):
         self.fail("when doing 'from place import *', do not bring in everything in the pointers but look for __all__ in the package/module and add only these. Also, when no __all__ is present, don't bring stuff that starts with an underscore")
-
-    def testStaticTags(self):
-        self.fail("finally unit test the findPYSMELLDICT function and implement static libraries as well")
 
 
 if __name__ == '__main__':

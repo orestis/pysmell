@@ -304,7 +304,9 @@ def getName(node):
     if isinstance(node, ast.Slice):
         children = node.getChildren()
         return '%s[%s%s]' % (getName(children[0]), ':', children[-1].value)
-    raise 'Unknown node: %r %r' % (node, dir(node))
+    if isinstance(node, ast.Not):
+        return "not %s" % ''.join(map(getName, ast.flatten(node)))
+    raise Exception('Unknown node: %r %r' % (node, dir(node)))
 
 
 def argToStr(arg):
