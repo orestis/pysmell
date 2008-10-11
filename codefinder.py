@@ -9,7 +9,12 @@
 # Released subject to the BSD License 
 
 import os
+import sys
+import compiler
+
 from compiler import ast
+from compiler.visitor import ExampleASTVisitor
+
 
 class ModuleDict(dict):
     def __init__(self):
@@ -421,8 +426,6 @@ class SelfInferer(BaseVisitor):
 
 
 
-import compiler
-from compiler.visitor import ExampleASTVisitor
 
 def infer(source, lineNo):
     sourceLines = source.splitlines()
@@ -438,7 +441,6 @@ def infer(source, lineNo):
         try:
             tree = compiler.parse(replacedSource)
         except SyntaxError, e:
-            import sys
             print >> sys.stderr, e.args
             return None, []
             
