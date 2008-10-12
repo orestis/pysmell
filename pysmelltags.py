@@ -42,7 +42,7 @@ def generateClassTag(modules, output):
 
 def process(argList, excluded, output):
     modules = ModuleDict()
-    for rootPackage in fileList:
+    for rootPackage in argList:
         if os.path.isdir(rootPackage):
             for path, dirs, files in os.walk(rootPackage):
                 if rootPackage == '.':
