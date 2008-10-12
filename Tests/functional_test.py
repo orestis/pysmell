@@ -87,11 +87,11 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testMultiPackage(self):
-        if os.path.exists('Tests/PYSMELLTAGS'):
-            os.remove('Tests/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmelltags.py", "PackageA", "PackageB"], cwd='Tests')
-        self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
-        PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
+        if os.path.exists('TestData/PYSMELLTAGS'):
+            os.remove('TestData/PYSMELLTAGS')
+        subprocess.call(["python", "../pysmelltags.py", "PackageA", "PackageB"], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = {}
         expectedDict.update(self.packageA)
         expectedDict['CLASSES'].update(self.packageB['CLASSES'])
@@ -102,46 +102,58 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testPackageA(self):
-        if os.path.exists('Tests/PYSMELLTAGS'):
-            os.remove('Tests/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmelltags.py", "PackageA"], cwd='Tests')
-        self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
-        PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
+        if os.path.exists('TestData/PYSMELLTAGS'):
+            os.remove('TestData/PYSMELLTAGS')
+        subprocess.call(["python", "../pysmelltags.py", "PackageA"], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
-        foundDict = idehelper.findPYSMELLDICT(os.path.join('Tests', 'PackageA', 'something'))
+        foundDict = idehelper.findPYSMELLDICT(os.path.join('TestData', 'PackageA', 'something'))
         self.assertDictsEqual(foundDict, expectedDict)
 
 
     def testPackageB(self):
-        if os.path.exists('Tests/PYSMELLTAGS'):
-            os.remove('Tests/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmelltags.py", "PackageB"], cwd='Tests')
-        self.assertTrue(os.path.exists('Tests/PYSMELLTAGS'))
-        PYSMELLDICT = eval(open('Tests/PYSMELLTAGS').read())
+        if os.path.exists('TestData/PYSMELLTAGS'):
+            os.remove('TestData/PYSMELLTAGS')
+        subprocess.call(["python", "../pysmelltags.py", "PackageB"], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = self.packageB
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
     def testPackageDot(self):
-        if os.path.exists('Tests/PackageA/PYSMELLTAGS'):
-            os.remove('Tests/PackageA/PYSMELLTAGS')
-        subprocess.call(["python", "../../pysmelltags.py", "."], cwd='Tests/PackageA')
-        self.assertTrue(os.path.exists('Tests/PackageA/PYSMELLTAGS'))
-        PYSMELLDICT = eval(open('Tests/PackageA/PYSMELLTAGS').read())
+        if os.path.exists('TestData/PackageA/PYSMELLTAGS'):
+            os.remove('TestData/PackageA/PYSMELLTAGS')
+        subprocess.call(["python", "../../pysmelltags.py", "."], cwd='TestData/PackageA')
+        self.assertTrue(os.path.exists('TestData/PackageA/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('TestData/PackageA/PYSMELLTAGS').read())
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
     def testAllPackages(self):
-        self.fail("when the a dir is not a package, search for packages")
-        subprocess.call(["python", "pysmelltags.py", "Tests"]) # should generate equivalent to PackageA, PackageB
+        if os.path.exists('TestData/PYSMELLTAGS'):
+            os.remove('TestData/PYSMELLTAGS')
+        subprocess.call(["python", "../pysmelltags.py", "."], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
+        expectedDict = {}
+        expectedDict.update(self.packageA)
+        expectedDict['CLASSES'].update(self.packageB['CLASSES'])
+        expectedDict['CONSTANTS'].extend(self.packageB['CONSTANTS'])
+        expectedDict['CONSTANTS'].append('standalone.NOPACKAGE')
+        expectedDict['FUNCTIONS'].extend(self.packageB['FUNCTIONS'])
+        expectedDict['HIERARCHY'].extend(self.packageB['HIERARCHY'])
+        expectedDict['HIERARCHY'].append('standalone')
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
     
     def testSingleFile(self):
         "should recurse up until it doesn't find __init__.py"
-        path = 'Tests/PackageA/NestedPackage/EvenMore/'
+        path = 'TestData/PackageA/NestedPackage/EvenMore/'
         if os.path.exists('%sPYSMELLTAGS' % path):
             os.remove('%sPYSMELLTAGS' % path)
         subprocess.call(["python", "../../../../pysmelltags.py", "ModuleC.py"], cwd=path)
@@ -159,7 +171,7 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testSingleFilesWithPaths(self):
-        path = 'Tests'
+        path = 'TestData'
         pysmell = os.path.join(path, 'PYSMELLTAGS')
         if os.path.exists(pysmell):
             os.remove(pysmell)
@@ -179,19 +191,19 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testOutputRedirect(self):
-        if os.path.exists('Tests/OUTPUTREDIR'):
-            os.remove('Tests/OUTPUTREDIR')
+        if os.path.exists('TestData/OUTPUTREDIR'):
+            os.remove('TestData/OUTPUTREDIR')
         subprocess.call(["python", "../pysmelltags.py", "PackageA", "-o",
-            "OUTPUTREDIR"], cwd='Tests')
-        self.assertTrue(os.path.exists('Tests/OUTPUTREDIR'))
-        PYSMELLDICT = eval(open('Tests/OUTPUTREDIR').read())
+            "OUTPUTREDIR"], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/OUTPUTREDIR'))
+        PYSMELLDICT = eval(open('TestData/OUTPUTREDIR').read())
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
-        absPath = os.path.join(os.getcwd(), 'Tests', 'OUTPUTREDIR2')
+        absPath = os.path.join(os.getcwd(), 'TestData', 'OUTPUTREDIR2')
         if os.path.exists(absPath):
             os.remove(absPath)
-        subprocess.call(["python", "../pysmelltags.py", "PackageA", "-o", absPath], cwd='Tests')
+        subprocess.call(["python", "../pysmelltags.py", "PackageA", "-o", absPath], cwd='TestData')
         self.assertTrue(os.path.exists(absPath))
         PYSMELLDICT = eval(open(absPath).read())
         expectedDict = self.packageA
@@ -219,6 +231,8 @@ class FunctionalTest(unittest.TestCase):
             -o FILE   Will redirect the output to FILE instead of PYSMELLTAGS
 
             -t        Will print timing information.
+
+            -v        Verbose mode; useful for debugging
 
         """).splitlines()
         self.assertEquals(stdout.splitlines(), expected)

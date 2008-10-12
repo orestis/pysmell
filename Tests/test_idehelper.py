@@ -131,14 +131,14 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        pathParts = ['Tests', 'PackageB', 'NewModule.py'] # Tests/PackageB contains an __init__.py file
+        pathParts = ['TestData', 'PackageB', 'NewModule.py'] # TestData/PackageB contains an __init__.py file
         relPath = os.path.join(*pathParts)
         inferred, parents = inferClass(relPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
         self.assertEquals(parents, ['object'])
 
         cwd = os.getcwd()
-        pathParts = [cwd, 'Tests', 'PackageB', 'NewModule.py'] # Tests/PackageB contains an __init__.py file
+        pathParts = [cwd, 'TestData', 'PackageB', 'NewModule.py'] # TestData/PackageB contains an __init__.py file
         absPath = os.path.join(*pathParts)
         inferred, parents = inferClass(absPath, source, 3, self.nestedDict, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
@@ -152,7 +152,7 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        klass, parents = inferClass(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                             4, self.nestedDict)
         self.assertEquals(klass, 'PackageA.Module.Other')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
@@ -165,7 +165,7 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        klass, parents = inferClass(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                             4, self.nestedDict)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
@@ -179,7 +179,7 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        klass, parents = inferClass(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                             4, self.nestedDict)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
@@ -256,7 +256,7 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                             "%sself." % (' ' * 8), 4, 13, '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=True,
                             klass='PackageA.Module.Other', parents=['Nested.Package.Module.Class'],
@@ -270,7 +270,7 @@ class IDEHelperTest(unittest.TestCase):
             
         """)
         line = "from Nested.Package.Mo"
-        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                         line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
@@ -296,7 +296,7 @@ class IDEHelperTest(unittest.TestCase):
             
         """)
         line = "from Nested.Package import "
-        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
@@ -309,7 +309,7 @@ class IDEHelperTest(unittest.TestCase):
             
         """)
         line = "from Nested import "
-        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
@@ -322,7 +322,7 @@ class IDEHelperTest(unittest.TestCase):
             
         """)
         line = "from Nested import Pack"
-        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
@@ -337,7 +337,7 @@ class IDEHelperTest(unittest.TestCase):
             
         """)
         line = "import Nested.Package."
-        options = detectCompletionType(os.path.join('Tests', 'PackageA', 'Module.py'), source,
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,

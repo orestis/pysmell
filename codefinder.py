@@ -157,8 +157,17 @@ class CodeFinder(BaseVisitor):
         BaseVisitor.__init__(self)
         self.modules = ModuleDict()
         self.module = '__module__'
-        self.package = '__package__'
+        self.__package = '__package__'
         self.path = '__path__'
+
+    
+    def __setPackage(self, package):
+        if package:
+            self.__package = package + '.'
+        else:
+            self.__package = ''
+
+    package = property(lambda s: s.__package, __setPackage)
 
     @property
     def inClass(self):
@@ -187,9 +196,9 @@ class CodeFinder(BaseVisitor):
 
     def visitModule(self, node):
         if self.module == '__init__':
-            self.modules.enterModule('%s' % self.package)
+            self.modules.enterModule('%s' % self.package[:-1]) # remove dot
         else:
-            self.modules.enterModule('%s.%s' % (self.package, self.module))
+            self.modules.enterModule('%s%s' % (self.package, self.module))
         self.visit(node.node)
         self.modules.exitModule()
 
@@ -222,7 +231,7 @@ class CodeFinder(BaseVisitor):
             asName = name[1] or name[0]
             imported = name[0]
             if self.isRelativeImport(node.modname):
-                imported = "%s.%s.%s" % (self.package, node.modname, imported)
+                imported = "%s%s.%s" % (self.package, node.modname, imported)
             else:
                 imported = "%s.%s" % (node.modname, imported)
             self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), imported)
@@ -233,7 +242,7 @@ class CodeFinder(BaseVisitor):
             asName = name[1] or name[0]
             imported = name[0]
             if self.isRelativeImport(imported):
-                imported = "%s.%s" % (self.package, imported)
+                imported = "%s%s" % (self.package, imported)
             self.modules.addPointer("%s.%s" % (self.modules.currentModule, asName), imported)
 
     def isRelativeImport(self, imported):

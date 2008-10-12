@@ -1,0 +1,1 @@
+NOPACKAGE = 'Cool'
