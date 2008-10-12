@@ -282,10 +282,23 @@ class IDEHelperTest(unittest.TestCase):
             from Module.
             
         """)
-        options = detectCompletionType('Module.py', source, "from Module.", 1, 12, '', self.pysmelldict)
+        line = "from Module."
+        options = detectCompletionType('Module.py', source, line, 1, len(line), '', self.pysmelldict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Module")
+
+        self.assertEquals(options, expected)
+        
+        source = dedent("""\
+            from Mo
+            
+        """)
+        line = "from Mo"
+        options = detectCompletionType('Module.py', source, line, 1, len(line), '', self.pysmelldict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Mo")
 
         self.assertEquals(options, expected)
         
@@ -300,7 +313,7 @@ class IDEHelperTest(unittest.TestCase):
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested.Package", completeModule=True)
+                            funcName=None, rindex=None, module="Nested.Package", completeModuleMembers=True)
 
         self.assertEquals(options, expected)
 
@@ -313,7 +326,7 @@ class IDEHelperTest(unittest.TestCase):
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested", completeModule=True)
+                            funcName=None, rindex=None, module="Nested", completeModuleMembers=True)
 
         self.assertEquals(options, expected)
 
@@ -326,7 +339,7 @@ class IDEHelperTest(unittest.TestCase):
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested", completeModule=True)
+                            funcName=None, rindex=None, module="Nested", completeModuleMembers=True)
 
         self.assertEquals(options, expected)
 
@@ -341,7 +354,20 @@ class IDEHelperTest(unittest.TestCase):
                                             line, 1, len(line), '', self.nestedDict)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested.Package", completeModule=True)
+                            funcName=None, rindex=None, module="Nested.Package", completeModuleMembers=False)
+
+        self.assertEquals(options, expected)
+
+        source = dedent("""\
+            import Ne
+            
+        """)
+        line = "import Ne"
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
+                                            line, 1, len(line), '', self.nestedDict)
+        expected = CompletionOptions(isAttrLookup=False,
+                            klass=None, parents=None,
+                            funcName=None, rindex=None, module="Ne")
 
         self.assertEquals(options, expected)
 

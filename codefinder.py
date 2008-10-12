@@ -15,7 +15,6 @@ import compiler
 from compiler import ast
 from compiler.visitor import ExampleASTVisitor
 
-
 class ModuleDict(dict):
     def __init__(self):
         self._modules = {'CLASSES': {}, 'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}, 'HIERARCHY': []}

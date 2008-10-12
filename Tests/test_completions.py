@@ -145,6 +145,11 @@ class CompletionTest(unittest.TestCase):
 
 
     def testModuleCompletion(self):
+        options = CompletionOptions(module="Ne")
+        expected = [dict(word='Nested', kind='t', dup='1')]
+        compls = findCompletions('Ne', self.nestedDict, options)
+        self.assertEquals(compls, expected)
+        
         options = CompletionOptions(module="Nested")
         expected = [dict(word='Package', kind='t', dup='1')]
         compls = findCompletions('P', self.nestedDict, options)
@@ -155,17 +160,22 @@ class CompletionTest(unittest.TestCase):
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
+        options = CompletionOptions(module="Mo")
+        expected = [dict(word='Module', kind='t', dup='1')]
+        compls = findCompletions('Mo', self.pysmelldict, options)
+        self.assertEquals(compls, expected)
+
         options = CompletionOptions(module="Module")
         expected = []
         compls = findCompletions('', self.pysmelldict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="Nested.Package", completeModule=True)
+        options = CompletionOptions(module="Nested.Package", completeModuleMembers=True)
         expected = [dict(word='Module', kind='t', dup='1')]
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="Nested.Package.Module", completeModule=True)
+        options = CompletionOptions(module="Nested.Package.Module", completeModuleMembers=True)
         expected = [
             dict(word='Class', dup="1", kind="t", menu="Nested.Package.Module", abbr="Class()"),
             dict(word='Something', dup="1", kind="t"),
@@ -173,7 +183,7 @@ class CompletionTest(unittest.TestCase):
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="A", completeModule=True)
+        options = CompletionOptions(module="A", completeModuleMembers=True)
         expected = [
             dict(word='CONST_A', kind='d', dup='1', menu='A'),
             dict(word='CONST_B', kind='d', dup='1', menu='B'),

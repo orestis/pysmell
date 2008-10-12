@@ -96,7 +96,7 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
 class CompletionOptions(object):
     def __init__(self, **kwargs):
         self._dict = dict(isAttrLookup=False, klass=None, parents=[],
-                        funcName=None, rindex=None, module=None, completeModule=False)
+                        funcName=None, rindex=None, module=None, completeModuleMembers=False)
         self._dict.update(kwargs)
 
     def __getattr__(self, item):
@@ -111,23 +111,24 @@ class CompletionOptions(object):
 
 def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
+    leftSideStripped = leftSide.lstrip()
 
     klass = None
     rindex = None
     funcName = None
     parents = None
     module = None
-    completeModule = False
+    completeModuleMembers = False
 
-    isModCompletion = (leftSide.lstrip().startswith("from") or leftSide.lstrip().startswith("import"))
-    if isModCompletion:
-        module = leftSide.split(" ")[1]
-        if "." in module and " import " not in leftSide:
+    isImportCompletion = (leftSideStripped.startswith("from ") or leftSideStripped.startswith("import "))
+    if isImportCompletion:
+        module = leftSideStripped.split(" ")[1]
+        if "." in module and " import " not in leftSideStripped:
             module, _ = module.rsplit(".", 1)
-        if "import " in leftSide:
-            completeModule = True
+        if " import " in leftSide:
+            completeModuleMembers = True
 
-    isAttrLookup = "." in leftSide and not isModCompletion
+    isAttrLookup = "." in leftSide and not isImportCompletion
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
         klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
@@ -142,7 +143,7 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
             rindex = -1
 
     return CompletionOptions(isAttrLookup=isAttrLookup, klass=klass,
-                            parents=parents, funcName=funcName, rindex=rindex, module=module, completeModule=completeModule)
+                            parents=parents, funcName=funcName, rindex=rindex, module=module, completeModuleMembers=completeModuleMembers)
 
 
 def findCompletions(base, PYSMELLDICT, options, matcher=None):
@@ -151,7 +152,7 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
     funcName = options.funcName
 
     if options.module is not None:
-        completions = _createModuleCompletions(PYSMELLDICT, options.module, options.completeModule)
+        completions = _createModuleCompletions(PYSMELLDICT, options.module, options.completeModuleMembers)
     else:
         completions = _createCompletionList(PYSMELLDICT, options.isAttrLookup, options.klass, options.parents)
 
@@ -172,19 +173,22 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
     return filteredCompletions
 
 
-def _createModuleCompletions(PYSMELLDICT, module, completeModule):
+def _createModuleCompletions(PYSMELLDICT, module, completeModuleMembers):
     completions = []
     splitModules = set()
     for reference in PYSMELLDICT['HIERARCHY']:
         if not reference.startswith(module): continue
         if reference == module: continue
-        rest = reference[len(module)+1:]
-        if '.' in rest:
-            rest = rest.split(".", 1)[0]
-        if rest:
-            splitModules.add(rest)
 
-    if completeModule:
+        # like zip, but pad with None
+        for mod, ref in map(None, module.split('.'), reference.split('.')):
+            if mod != ref:
+                splitModules.add(ref)
+                break
+                
+                    
+
+    if completeModuleMembers:
         members = _createCompletionList(PYSMELLDICT, False, False, False)
         completions.extend(comp for comp in members if comp["menu"] == module and not comp["word"].startswith("_"))
         pointers = []
