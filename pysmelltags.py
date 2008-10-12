@@ -40,20 +40,25 @@ def generateClassTag(modules, output):
     f.close()
 
 
-def process(argList, excluded, output):
+def process(argList, excluded, output, verbose=False):
     modules = ModuleDict()
     for rootPackage in argList:
         if os.path.isdir(rootPackage):
             for path, dirs, files in os.walk(rootPackage):
+                for exc in excluded:
+                    if exc in dirs:
+                        if verbose:
+                            print 'removing', exc, 'in', path
+                        dirs.remove(exc)
                 if rootPackage == '.':
                     rootPackage = os.path.split(os.getcwd())[-1]
-                if os.path.basename(path) in excluded:
-                    continue
                 for f in files:
                     if not f.endswith(".py"):
                         continue
                     #path here is relative, make it absolute
                     absPath = os.path.abspath(path)
+                    if verbose:
+                        print 'processing', absPath, f
                     newmodules = processFile(f, absPath, rootPackage)
                     modules.update(newmodules)
         else: # single file
@@ -66,6 +71,8 @@ def process(argList, excluded, output):
                 absPath = os.path.abspath(absPath)
                 
             #path here is absolute
+            if verbose:
+                print 'processing', absPath, filename
             newmodules = processFile(filename, absPath, rootPackageList[0])
             modules.update(newmodules)
             
@@ -96,11 +103,16 @@ Options:
 """ % __version__
         sys.exit(0)
     timing = False
+    verbose = False
     output = 'PYSMELLTAGS'
     excluded = []
     if '-t' in fileList:
         timing = True
         fileList.remove('-t')
+
+    if '-v' in fileList:
+        verbose = True
+        fileList.remove('-v')
 
     if '-o' in fileList:
         fileList.remove('-o')
@@ -115,7 +127,10 @@ Options:
     if timing:
         import time
         start = time.clock()
-    process(fileList, excluded, output)
+    if verbose:
+        print 'processing', fileList
+        print 'ignoring', excluded
+    process(fileList, excluded, output, verbose)
     if timing:
         took = time.clock() - start
         print 'took %f seconds' % took

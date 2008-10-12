@@ -135,9 +135,17 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled("lambda name: name[:1] != '_'")
         self.assertNamesIsHandled("-180")
         self.assertNamesIsHandled("10*180")
+        self.assertNamesIsHandled("10/180")
+        self.assertNamesIsHandled("10**180")
         self.assertNamesIsHandled("10>>180")
         self.assertNamesIsHandled("10<<180")
         self.assertNamesIsHandled("not x.ishidden()")
+        self.assertNamesIsHandled("'='+repr(v)")
+        self.assertNamesIsHandled("1L")
+        self.assertNamesIsHandled("Some(opts=None)")
+        self.assertNamesIsHandled("s%s")
+        self.assertNamesIsHandled("s|s|b")
+        self.assertNamesIsHandled("s-s")
         
 
     def testClassProperties(self):

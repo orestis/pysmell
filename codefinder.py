@@ -103,16 +103,16 @@ class BaseVisitor(object):
         self.imports = {}
 
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple',
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple', 'AssList',
                 'AugAssign', 'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc',
                 'Compare', 'Const', 'Continue', 'Dict', 'Discard', 'Div', 'Exec',
                 'FloorDiv', 'For', 'Function', 'GenExpr', 'GenExprIf',
-                'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 
+                'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 'IfExp',
                 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',
                 'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
                 'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift',
                 'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript', 'Tuple', 'TryExcept',
-                'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield'])
+                'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield', 'With'])
 
     def __getattr__(self, attr):
         if attr[5:] in self.OTHER:
@@ -268,13 +268,25 @@ class CodeFinder(BaseVisitor):
 
 
 def getNameTwo(template, left, right, leftJ='', rightJ=''):
-    return template % (leftJ.join(map(getName, ast.flatten(left))),
-                        rightJ.join(map(getName, ast.flatten(right))))
-    
+    return template % (leftJ.join(map(getName, left)),
+                        rightJ.join(map(getName, right)))
+
+MATHNODES = {
+    ast.Add: '+',
+    ast.Sub: '-',
+    ast.Mul: '*',
+    ast.Power: '**',
+    ast.Div: '/',
+    ast.Mod: '%',
+}
+
+def getNameMath(node):
+    return '%s%s%s' % (getName(node.left), MATHNODES[node.__class__], getName(node.right))
+
 
 def getName(node):
     if node is None: return ''
-    if isinstance(node, (basestring, int, float)):
+    if isinstance(node, (basestring, int, long, float)):
         return str(node)
     if isinstance(node, (ast.Class, ast.Name, ast.Function)):
         return node.name
@@ -286,13 +298,19 @@ def getName(node):
         notArgs = [n for n in node.getChildNodes() if n not in node.args]
         return getNameTwo('%s(%s)', notArgs, node.args, rightJ=', ')
     if isinstance(node, ast.Const):
-        return str(node.value)
+        try:
+            float(node.value)
+            return str(node.value)
+        except:
+            return repr(str(node.value))
     if isinstance(node, ast.LeftShift):
         return getNameTwo('%s<<%s', node.left, node.right)
     if isinstance(node, ast.RightShift):
         return getNameTwo('%s>>%s', node.left, node.right)
-    if isinstance(node, ast.Mul):
-        return getNameTwo('%s*%s', node.left, node.right)
+    if isinstance(node, (ast.Mul, ast.Add, ast.Sub, ast.Power, ast.Div, ast.Mod)):
+        return getNameMath(node)
+    if isinstance(node, ast.Bitor):
+        return '|'.join(map(getName, node.nodes))
     if isinstance(node, ast.UnarySub):
         return '-%s' % ''.join(map(getName, ast.flatten(node)))
     if isinstance(node, ast.List):
@@ -311,6 +329,8 @@ def getName(node):
         return '%s[%s%s]' % (getName(children[0]), ':', children[-1].value)
     if isinstance(node, ast.Not):
         return "not %s" % ''.join(map(getName, ast.flatten(node)))
+    if isinstance(node, ast.Keyword):
+        return "%s=%s" % (node.name, getName(node.expr))
     raise Exception('Unknown node: %r %r' % (node, dir(node)))
 
 
