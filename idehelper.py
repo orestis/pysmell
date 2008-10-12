@@ -127,8 +127,6 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
         if "import " in leftSide:
             completeModule = True
 
-
-    
     isAttrLookup = "." in leftSide and not isModCompletion
     isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
     if isClassLookup:
@@ -185,16 +183,17 @@ def _createModuleCompletions(PYSMELLDICT, module, completeModule):
             rest = rest.split(".", 1)[0]
         if rest:
             splitModules.add(rest)
+
     if completeModule:
         members = _createCompletionList(PYSMELLDICT, False, False, False)
-        completions.extend(comp for comp in members if comp["menu"] == module)
+        completions.extend(comp for comp in members if comp["menu"] == module and not comp["word"].startswith("_"))
         pointers = []
-        for p in PYSMELLDICT['POINTERS']:
-            if p.startswith(module) and '.' not in p[len(module)+1:]:
-                basename = p[len(module)+1:]
-                if p.endswith("*"):
-                    v = PYSMELLDICT['POINTERS'][p][:-2] # remove .*
-                    completions.extend(_createModuleCompletions(PYSMELLDICT, v, True))
+        for pointer in PYSMELLDICT['POINTERS']:
+            if pointer.startswith(module) and '.' not in pointer[len(module)+1:]:
+                basename = pointer[len(module)+1:]
+                if pointer.endswith(".*"):
+                    otherModule = PYSMELLDICT['POINTERS'][pointer][:-2] # remove .*
+                    completions.extend(_createModuleCompletions(PYSMELLDICT, otherModule, True))
                 else:
                     splitModules.add(basename)
                 

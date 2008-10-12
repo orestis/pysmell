@@ -235,7 +235,9 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testDunderAll(self):
-        self.fail("when doing 'from place import *', do not bring in everything in the pointers but look for __all__ in the package/module and add only these. Also, when no __all__ is present, don't bring stuff that starts with an underscore")
+        self.fail("when doing 'from place import *', do not bring in everything"
+        "in the pointers but look for __all__ in the module and add only"
+        "these.")
 
 
 if __name__ == '__main__':

@@ -54,7 +54,7 @@ class CompletionTest(unittest.TestCase):
                 'POINTERS' : {'Nested.Package.Module.Something': 'dontcare'},
         }
         self.complicatedDict = {
-                'CONSTANTS' : ['A.CONST_A', 'B.CONST_B', 'C.CONST_C'],
+                'CONSTANTS' : ['A.CONST_A', 'B.CONST_B', 'B._HIDDEN', 'C.CONST_C'],
                 'FUNCTIONS' : [],
                 'CLASSES' : {},
                 'HIERARCHY' : ['A', 'B', 'C'],
@@ -71,11 +71,13 @@ class CompletionTest(unittest.TestCase):
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
+
     def testCompleteMembers(self):
         options = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName=None, rindex=None)
         compls = findCompletions('a', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
+
 
     def testCompleteArgumentListsPropRightParen(self):
         options = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName='bm', rindex=-1)
@@ -83,6 +85,7 @@ class CompletionTest(unittest.TestCase):
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr'][:-1]
         self.assertEquals(compls, [orig])
+
         
     def testCompleteArgumentListsProp(self):
         options = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName='bm', rindex=None)
