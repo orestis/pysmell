@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # pysmelltags.py
 # Statically analyze python code and generate PYSMELLTAGS file
 # Copyright (C) 2008 Orestis Markou
@@ -100,6 +101,8 @@ Options:
     -o FILE   Will redirect the output to FILE instead of PYSMELLTAGS
 
     -t        Will print timing information.
+
+    -v        Verbose mode; useful for debugging
 """ % __version__
         sys.exit(0)
     timing = False
