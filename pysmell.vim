@@ -32,6 +32,8 @@ let g:pysmell_matcher='case-insensitive'
 python << eopython
 from pysmell import vimhelper, idehelper
 import vim
+import string
+TRANSLATEQUOTES = string.maketrans("\'\"", "\"\'")
 eopython
 
 function! pysmell#Complete(findstart, base)
@@ -77,6 +79,7 @@ def vimcompletePYSMELL(origSource, origLineText, origLineNo, origCol, base):
 
     completions = idehelper.findCompletions(base, PYSMELLDICT, options, vim.eval('g:pysmell_matcher'))
     output = repr(completions)
-    vim.command('let g:pysmell_completions = %s' % (output, ))
+    translated = output.translate(TRANSLATEQUOTES)
+    vim.command('let g:pysmell_completions = %s' % (translated, ))
 
 eopython

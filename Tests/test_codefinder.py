@@ -146,6 +146,8 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled("s%s")
         self.assertNamesIsHandled("s|s|b")
         self.assertNamesIsHandled("s-s")
+        self.assertNamesIsHandled("''")
+        self.assertNamesIsHandled('""')
         
 
     def testClassProperties(self):
