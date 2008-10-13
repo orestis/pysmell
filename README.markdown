@@ -22,14 +22,14 @@ Distutils support coming soon - patches welcome!
 
 To generate a PYSMELLTAGS file, use:
 
-    cd /root/of/project /dir/of/pysmelltags.py .
+    cd /root/of/project /dir/of/pysmell.py .
 
 If you want to specifically include or exclude some files or directories
 (eg. tests), you can use: 
 
-    /dir/of/pysmelltags.py [Package Package File File ...] [-x Excluded Excluded ...]
+    /dir/of/pysmell.py [Package Package File File ...] [-x Excluded Excluded ...]
 
-Check for more options by invoking `pysmelltags.py` without any arguments
+Check for more options by invoking `pysmell.py` without any arguments
 
 ##Using external libraries
 
@@ -39,7 +39,7 @@ Library and Django.
 To use external libraries, you have to first analyze the libraries you
 want, eg. for stdlib:
 
-    pysmelltags.py . -x site-packages test -o ~/PYSMELLTAGS.stdlib
+    pysmell.py . -x site-packages test -o ~/PYSMELLTAGS.stdlib
 
 This will create PYSMELLTAGS.stdlib in your HOME. Copy that in the root
 of your project, and repeat for other libraries by changing the
@@ -57,7 +57,7 @@ To accomplish that, you can put PYSMELLTAGS.* files inside
 subdirectories, and they will be used only when you're working on a file
 somewhere in that directory or its children.
 
-    /dir/of/pysmelltags.py Tests/FunctionalTest.py Tests/UndoTestCase.py -o Tests/PYSMELLTAGS.Tests
+    /dir/of/pysmell.py Tests/FunctionalTest.py Tests/UndoTestCase.py -o Tests/PYSMELLTAGS.Tests
 
 The information in FunctionalTest and UndoTestCase will only be
 accessible when editing a file inside the Tests package.

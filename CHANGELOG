@@ -1,7 +1,5 @@
 PySmell v0.6
 
-*UNRELEASED*
-
 Added module completion, including absolute and relative imports. Completing import
 statements works, but the messages may look a bit wonky - please report oddities.
 
@@ -10,8 +8,9 @@ used, but you still have to have a root PYSMELLTAGS file. Look at README for
 more information.
 
 Improved handling of single files and package detection
-Python 2.5 can now be analyzed with no errors.
-Added shebang to pysmelltags.py
+Python 2.4-2.5 can now be analyzed with no errors.
+Renamed pysmelltags.py to pysmell.py
+Added shebang to pysmell.py
 
 
 PySmell v0.5

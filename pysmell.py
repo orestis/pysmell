@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pysmelltags.py
+# pysmell.py
 # Statically analyze python code and generate PYSMELLTAGS file
 # Copyright (C) 2008 Orestis Markou
 # All rights reserved
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         print """\
 PySmell %s
 
-usage: python pysmelltags.py package [package, ...] [-x excluded, ...] [options]
+usage: python pysmell.py package [package, ...] [-x excluded, ...] [options]
 
 Generate a PYSMELLTAGS file with information about the Python code contained
 in the specified packages (recursively). This file is then used to
