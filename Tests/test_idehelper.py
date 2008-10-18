@@ -3,6 +3,26 @@ import os
 from textwrap import dedent
 
 from idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT
+NESTEDDICT = {
+        'CONSTANTS' : [],
+        'FUNCTIONS' : [],
+        'CLASSES' : {
+            'Nested.Package.Module.Class': {
+                'constructor': [],
+                'bases': [],
+                'properties': ['cprop'],
+                'methods': []
+            }
+            
+        },
+        'POINTERS' : {
+            'Another.Thing': 'Nested.Package.Module.Class',
+            'Star.*': 'Nested.Package.Module.*',
+        
+        },
+        'HIERARCHY' : ['Nested.Package.Module'],
+}
+
 
 class IDEHelperTest(unittest.TestCase):
     def testFindPYSMELLDICT(self):
@@ -65,7 +85,7 @@ class IDEHelperTest(unittest.TestCase):
         else:
             pathParts.insert(0, "C:")
         absPath = os.path.join(*pathParts)
-        inferred, _ = inferClass(absPath, source, 3, self.nestedDict, None)
+        inferred, _ = inferClass(absPath, source, 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'Nested.Package.Module.Class')
 
 
@@ -78,7 +98,7 @@ class IDEHelperTest(unittest.TestCase):
         """)
         pathParts = ["Nested", "Package", "Module.py"]
         relPath = os.path.join(*pathParts)
-        inferred, _ = inferClass(relPath, source, 3, self.nestedDict, None)
+        inferred, _ = inferClass(relPath, source, 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'Nested.Package.Module.Class')
 
 
@@ -91,14 +111,14 @@ class IDEHelperTest(unittest.TestCase):
         """)
         pathParts = ['TestData', 'PackageB', 'NewModule.py'] # TestData/PackageB contains an __init__.py file
         relPath = os.path.join(*pathParts)
-        inferred, parents = inferClass(relPath, source, 3, self.nestedDict, None)
+        inferred, parents = inferClass(relPath, source, 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
         self.assertEquals(parents, ['object'])
 
         cwd = os.getcwd()
         pathParts = [cwd, 'TestData', 'PackageB', 'NewModule.py'] # TestData/PackageB contains an __init__.py file
         absPath = os.path.join(*pathParts)
-        inferred, parents = inferClass(absPath, source, 3, self.nestedDict, None)
+        inferred, parents = inferClass(absPath, source, 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
         self.assertEquals(parents, ['object'])
 
@@ -111,7 +131,7 @@ class IDEHelperTest(unittest.TestCase):
         
         """)
         klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            4, self.nestedDict)
+                            4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Other')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
 
@@ -124,7 +144,7 @@ class IDEHelperTest(unittest.TestCase):
         
         """)
         klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            4, self.nestedDict)
+                            4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
         
@@ -138,7 +158,7 @@ class IDEHelperTest(unittest.TestCase):
         
         """)
         klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            4, self.nestedDict)
+                            4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
 
@@ -165,26 +185,6 @@ class DetectOptionsTest(unittest.TestCase):
                 'POINTERS' : {},
                 'HIERARCHY' : ['Module'],
             }
-        self.nestedDict = {
-                'CONSTANTS' : [],
-                'FUNCTIONS' : [],
-                'CLASSES' : {
-                    'Nested.Package.Module.Class': {
-                        'constructor': [],
-                        'bases': [],
-                        'properties': ['cprop'],
-                        'methods': []
-                    }
-                    
-                },
-                'POINTERS' : {
-                    'Another.Thing': 'Nested.Package.Module.Class',
-                    'Star.*': 'Nested.Package.Module.*',
-                
-                },
-                'HIERARCHY' : ['Nested.Package.Module'],
-        }
-
     
 
     def testDetectGlobalLookup(self):
@@ -244,7 +244,7 @@ class DetectOptionsTest(unittest.TestCase):
         
         """)
         options = detectCompletionType(os.path.join('Nested', 'Package', 'Module.py'), source,
-                            "%sself." % (' ' * 8), 3, 13, '', self.nestedDict)
+                            "%sself." % (' ' * 8), 3, 13, '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=True, klass='Nested.Package.Module.Class', parents=['object'], funcName=None, rindex=None)
         self.assertEquals(options, expected)
 
@@ -258,7 +258,7 @@ class DetectOptionsTest(unittest.TestCase):
         
         """)
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            "%sself." % (' ' * 8), 4, 13, '', self.nestedDict)
+                            "%sself." % (' ' * 8), 4, 13, '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=True,
                             klass='PackageA.Module.Other', parents=['Nested.Package.Module.Class'],
                             funcName=None, rindex=None)
@@ -272,7 +272,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "from Nested.Package.Mo"
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                                        line, 1, len(line), '', self.nestedDict)
+                                        line, 1, len(line), '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Nested.Package")
@@ -311,7 +311,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "from Nested.Package import "
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                                            line, 1, len(line), '', self.nestedDict)
+                                            line, 1, len(line), '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Nested.Package", completeModuleMembers=True)
@@ -324,7 +324,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "from Nested import "
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                                            line, 1, len(line), '', self.nestedDict)
+                                            line, 1, len(line), '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Nested", completeModuleMembers=True)
@@ -337,7 +337,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "from Nested import Pack"
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                                            line, 1, len(line), '', self.nestedDict)
+                                            line, 1, len(line), '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Nested", completeModuleMembers=True)
@@ -352,7 +352,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "import Nested.Package."
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                                            line, 1, len(line), '', self.nestedDict)
+                                            line, 1, len(line), '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Nested.Package", completeModuleMembers=False)
@@ -365,7 +365,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "import Ne"
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                                            line, 1, len(line), '', self.nestedDict)
+                                            line, 1, len(line), '', NESTEDDICT)
         expected = CompletionOptions(isAttrLookup=False,
                             klass=None, parents=None,
                             funcName=None, rindex=None, module="Ne")

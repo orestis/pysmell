@@ -59,6 +59,8 @@ def debug(vim, msg):
 
 
 def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
+    klass, parents = infer(origSource, origLineNo)
+
     pathParts = []
     fullPath = fullPath
     head, tail = os.path.split(fullPath[:-3])
@@ -68,7 +70,6 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         if tail:
             pathParts.append(tail)
     pathParts.reverse()
-    klass, parents = infer(origSource, origLineNo)
     # replace POINTERS with their full reference
     for index, parent in enumerate(parents):
         if parent in PYSMELLDICT['POINTERS']:
