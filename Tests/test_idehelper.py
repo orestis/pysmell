@@ -380,6 +380,20 @@ class DetectOptionsTest(unittest.TestCase):
         self.assertEquals(options, expected)
 
 
+    def testDetectModuleAttrLookup3(self):
+        source = dedent("""\
+            from Nested import Package
+
+            Package.Module.
+        """)
+        line = "Package.Module."
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
+                                            3, len(line), '', NESTEDDICT)
+        expected = CompletionOptions(Types.MODULE, module="Nested.Package.Module", showMembers=True)
+        self.assertEquals(options, expected)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

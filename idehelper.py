@@ -58,12 +58,22 @@ def debug(vim, msg):
         debBuffer.append(msg)
 
 
-def inferModule(var, origSource, lineNo):
+def inferModule(chain, origSource, lineNo):
     names, imports = getImports(origSource, lineNo)
-    if var in names:
-        return names[var]
-    if var in imports:
-        return imports[var]
+    fullModuleParts = []
+    valid = False
+    for part in chain.split('.'):
+        if part in names:
+            fullModuleParts.append(names[part])
+            valid = True
+        elif part in imports:
+            fullModuleParts.append(imports[part])
+            valid = True
+        else:
+            fullModuleParts.append(part)
+    if valid:
+        return '.'.join(fullModuleParts)
+    return None
     
     
 
@@ -102,12 +112,25 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         
     return fullKlass, parents
 
+
+_TERMINATORS = " ()[]{}'\"<>,/-=+*:%^|"
+
+def getChain(line):
+    chain = []
+    for c in reversed(line):
+        if c in _TERMINATORS:
+            break
+        chain.append(c)
+    return ''.join(reversed(chain))
+
+
 class Types(object):
     TOPLEVEL = 'TOPLEVEL'
     FUNCTION = 'FUNCTION'
     METHOD = 'METHOD'
     MODULE = 'MODULE'
     INSTANCE = 'INSTANCE'
+
 
 class CompletionOptions(object):
     def __init__(self, compType, **kwargs):
@@ -171,12 +194,12 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
     if isAttrLookup:
         klass = None
         parents = []
-        var = leftSideStripped[:leftSideStripped.rindex('.')]
-        isClassLookup = var == 'self'
+        isClassLookup = leftSideStripped[:leftSideStripped.rindex('.')] == 'self'
         if isClassLookup:
             klass, parents = inferClass(fullPath, origSource, lineNo, PYSMELLDICT)
         else:
-            possibleModule = inferModule(var, origSource, lineNo)
+            chain = getChain(leftSideStripped)[:-1] # strip dot
+            possibleModule = inferModule(chain, origSource, lineNo)
             if possibleModule is not None:
                 return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)
         return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
