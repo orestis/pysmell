@@ -2,7 +2,7 @@ import unittest
 import os
 from textwrap import dedent
 
-from idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT
+from idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT, Types
 NESTEDDICT = {
         'CONSTANTS' : [],
         'FUNCTIONS' : [],
@@ -189,37 +189,42 @@ class DetectOptionsTest(unittest.TestCase):
 
     def testDetectGlobalLookup(self):
         options = detectCompletionType('', '', 'b', 1, 1, 'b', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=False, klass=None, parents=None, funcName=None, rindex=None)
+        expected = CompletionOptions(Types.TOPLEVEL)
         self.assertEquals(options, expected)
 
 
     def testDetectAttrLookup(self):
-        options = detectCompletionType('', '', 'somethign.a', 1, 11, 'a', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName=None, rindex=None)
+        line = 'somethign.a'
+        options = detectCompletionType('', '', line, 1, len(line), 'a', self.pysmelldict)
+        expected = CompletionOptions(Types.INSTANCE, klass=None, parents=[])
         self.assertEquals(options, expected)
 
 
     def testDetectCompleteArgumentListMethodClosingParen(self):
-        options = detectCompletionType('', '', 'salf.bm()', 1, 8, 'bm(', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName='bm', rindex=-1)
+        line = 'salf.bm()'
+        options = detectCompletionType('', '', line, 1, len(line) - 1, 'bm(', self.pysmelldict)
+        expected = CompletionOptions(Types.METHOD, klass=None, parents=[], name='bm', rindex=-1)
         self.assertEquals(options, expected)
 
 
     def testDetectCompleteArgumentListMethod(self):
-        options = detectCompletionType('', '', 'salf.bm(', 1, 8, 'bm(', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName='bm', rindex=None)
+        line = 'salf.bm('
+        options = detectCompletionType('', '', line, 1, len(line), 'bm(', self.pysmelldict)
+        expected = CompletionOptions(Types.METHOD, klass=None, parents=[], name='bm', rindex = None)
         self.assertEquals(options, expected)
 
 
     def testDetectCompleteArgumentListFunctionClosingParen(self):
-        options = detectCompletionType('', '', '   b()', 1, 5, 'b(', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=False, klass=None, parents=None, funcName='b', rindex=-1)
+        line = '   b()'
+        options = detectCompletionType('', '', line, 1, len(line) - 1, 'b(', self.pysmelldict)
+        expected = CompletionOptions(Types.FUNCTION, name='b', rindex=-1)# module?
         self.assertEquals(options, expected)
 
     
     def testDetectCompleteArgumentListFunction(self):
-        options = detectCompletionType('', '', '  b(', 1, 4, 'b(', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=False, klass=None, parents=None, funcName='b', rindex=None)
+        line = '  b('
+        options = detectCompletionType('', '', line, 1, len(line), 'b(', self.pysmelldict)
+        expected = CompletionOptions(Types.FUNCTION, name='b', rindex=None)
         self.assertEquals(options, expected)
 
 
@@ -230,9 +235,9 @@ class DetectOptionsTest(unittest.TestCase):
                     self.
         
         """)
-        options = detectCompletionType('Module.py', source, "%sself." % (' ' * 8), 3, 13, '', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=True, klass='Module.aClass',
-                            parents=['object'], funcName=None, rindex=None)
+        line = "%sself." % (' ' * 8)
+        options = detectCompletionType('Module.py', source, line, 3, len(line), '', self.pysmelldict)
+        expected = CompletionOptions(Types.INSTANCE, klass='Module.aClass', parents=['object'])
         self.assertEquals(options, expected)
 
 
@@ -243,9 +248,10 @@ class DetectOptionsTest(unittest.TestCase):
                     self.
         
         """)
+        line = "%sself." % (' ' * 8)
         options = detectCompletionType(os.path.join('Nested', 'Package', 'Module.py'), source,
-                            "%sself." % (' ' * 8), 3, 13, '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=True, klass='Nested.Package.Module.Class', parents=['object'], funcName=None, rindex=None)
+                            line, 3, len(line), '', NESTEDDICT)
+        expected = CompletionOptions(Types.INSTANCE, klass='Nested.Package.Module.Class', parents=['object'])
         self.assertEquals(options, expected)
 
 
@@ -257,11 +263,10 @@ class DetectOptionsTest(unittest.TestCase):
                     self.
         
         """)
+        line = "%sself." % (' ' * 8)
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            "%sself." % (' ' * 8), 4, 13, '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=True,
-                            klass='PackageA.Module.Other', parents=['Nested.Package.Module.Class'],
-                            funcName=None, rindex=None)
+                            line, 4, len(line), '', NESTEDDICT)
+        expected = CompletionOptions(Types.INSTANCE, klass='PackageA.Module.Other', parents=['Nested.Package.Module.Class'])
         self.assertEquals(options, expected)
         
 
@@ -273,10 +278,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "from Nested.Package.Mo"
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                         line, 1, len(line), '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested.Package")
-
+        expected = CompletionOptions(Types.MODULE, module='Nested.Package', showMembers=False)
         self.assertEquals(options, expected)
         
         source = dedent("""\
@@ -285,10 +287,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "from Module."
         options = detectCompletionType('Module.py', source, line, 1, len(line), '', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Module")
-
+        expected = CompletionOptions(Types.MODULE, module='Module', showMembers=False)
         self.assertEquals(options, expected)
         
         source = dedent("""\
@@ -297,10 +296,7 @@ class DetectOptionsTest(unittest.TestCase):
         """)
         line = "from Mo"
         options = detectCompletionType('Module.py', source, line, 1, len(line), '', self.pysmelldict)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Mo")
-
+        expected = CompletionOptions(Types.MODULE, module='Mo', showMembers=False)
         self.assertEquals(options, expected)
         
 
@@ -312,10 +308,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "from Nested.Package import "
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested.Package", completeModuleMembers=True)
-
+        expected = CompletionOptions(Types.MODULE, module="Nested.Package", showMembers=True)
         self.assertEquals(options, expected)
 
         source = dedent("""\
@@ -325,10 +318,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "from Nested import "
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested", completeModuleMembers=True)
-
+        expected = CompletionOptions(Types.MODULE, module="Nested", showMembers=True)
         self.assertEquals(options, expected)
 
         source = dedent("""\
@@ -338,10 +328,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "from Nested import Pack"
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested", completeModuleMembers=True)
-
+        expected = CompletionOptions(Types.MODULE, module="Nested", showMembers=True)
         self.assertEquals(options, expected)
 
     def testModuleCompletionThree(self):
@@ -353,10 +340,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "import Nested.Package."
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Nested.Package", completeModuleMembers=False)
-
+        expected = CompletionOptions(Types.MODULE, module="Nested.Package", showMembers=False)
         self.assertEquals(options, expected)
 
         source = dedent("""\
@@ -366,10 +350,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "import Ne"
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             line, 1, len(line), '', NESTEDDICT)
-        expected = CompletionOptions(isAttrLookup=False,
-                            klass=None, parents=None,
-                            funcName=None, rindex=None, module="Ne")
-
+        expected = CompletionOptions(Types.MODULE, module="Ne", showMembers=False)
         self.assertEquals(options, expected)
 
 

@@ -93,58 +93,68 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         
     return fullKlass, parents
 
+class Types(object):
+    TOPLEVEL = 'TOPLEVEL'
+    FUNCTION = 'FUNCTION'
+    METHOD = 'METHOD'
+    MODULE = 'MODULE'
+    INSTANCE = 'INSTANCE'
 
 class CompletionOptions(object):
-    def __init__(self, **kwargs):
-        self._dict = dict(isAttrLookup=False, klass=None, parents=[],
-                        funcName=None, rindex=None, module=None, completeModuleMembers=False)
-        self._dict.update(kwargs)
+    def __init__(self, compType, **kwargs):
+        self.compType = compType
+        self.extra = kwargs
 
     def __getattr__(self, item):
-        return self._dict[item]
+        return self.extra[item]
         
     def __eq__(self, other):
-        return self._dict == other._dict
+        return (isinstance(other, CompletionOptions)
+                and self.compType == other.compType and self.extra == other.extra)
 
     def __repr__(self):
-        return repr(self._dict)
+        return repr(self.compType) + 'with extra: ' + repr(self.extra)
         
 
 def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     leftSideStripped = leftSide.lstrip()
 
-    klass = None
-    rindex = None
-    funcName = None
-    parents = None
-    module = None
-    completeModuleMembers = False
-
     isImportCompletion = (leftSideStripped.startswith("from ") or leftSideStripped.startswith("import "))
     if isImportCompletion:
         module = leftSideStripped.split(" ")[1]
         if "." in module and " import " not in leftSideStripped:
             module, _ = module.rsplit(".", 1)
+        showMembers = False
         if " import " in leftSide:
-            completeModuleMembers = True
+            showMembers = True
+        return CompletionOptions(Types.MODULE, module=module, showMembers=showMembers)
 
     isAttrLookup = "." in leftSide and not isImportCompletion
-    isClassLookup = isAttrLookup and leftSide[:leftSide.rindex('.')].endswith('self')
-    if isClassLookup:
-        klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
-
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
+
     if isArgCompletion:
-        lindex = 0
-        if isAttrLookup:
-            lindex = leftSide.rindex('.') + 1
-        funcName = leftSide[lindex:-1].lstrip()
+        rindex = None
         if rightSide.startswith(')'):
             rindex = -1
+        funcName = None
+        lindex = leftSide.rfind('.') + 1 #rfind will return -1, so with +1 it will be zero
+        funcName = leftSide[lindex:-1].lstrip()
+        if isAttrLookup:
+            return CompletionOptions(Types.METHOD, parents=[], klass=None, name=funcName, rindex=rindex)
+        else:
+            return CompletionOptions(Types.FUNCTION, name=funcName, rindex=rindex)
 
-    return CompletionOptions(isAttrLookup=isAttrLookup, klass=klass,
-                            parents=parents, funcName=funcName, rindex=rindex, module=module, completeModuleMembers=completeModuleMembers)
+    if isAttrLookup:
+        klass = None
+        parents = []
+        isClassLookup = leftSide[:leftSide.rindex('.')].endswith('self')
+        if isClassLookup:
+            klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
+        return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
+
+    return CompletionOptions(Types.TOPLEVEL)
+
 
 
 def findCompletions(base, PYSMELLDICT, options, matcher=None):
