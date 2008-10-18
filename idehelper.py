@@ -159,27 +159,29 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
 
 def findCompletions(base, PYSMELLDICT, options, matcher=None):
     doesMatch = MATCHERS[matcher](base)
+    compType = options.compType
 
-    funcName = options.funcName
-
-    if options.module is not None:
-        completions = _createModuleCompletions(PYSMELLDICT, options.module, options.completeModuleMembers)
-    else:
-        completions = _createCompletionList(PYSMELLDICT, options.isAttrLookup, options.klass, options.parents)
-
-    if base and not funcName:
+    if compType is Types.MODULE:
+        completions = _createModuleCompletions(PYSMELLDICT, options.module, options.showMembers)
+    elif compType is Types.INSTANCE:
+        completions = _createCompletionList(PYSMELLDICT, True, options.klass, options.parents)
+    elif compType in (Types.METHOD, Types.FUNCTION):
+        completions = _createCompletionList(PYSMELLDICT, compType==Types.METHOD, options.klass, options.parents)
+        doesMatch = lambda word: word == options.name
+    elif compType is Types.TOPLEVEL:
+        completions = _createCompletionList(PYSMELLDICT, False, None, [])
+        
+    if base:
         filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
-    elif funcName:
-        filteredCompletions = [comp for comp in completions if comp['word'] == funcName]
     else:
         filteredCompletions = completions
 
     filteredCompletions.sort(sortCompletions)
 
-    if filteredCompletions and funcName:
+    if filteredCompletions and compType in (Types.METHOD, Types.FUNCTION):
         #return the arg list instead
         oldComp = filteredCompletions[0]
-        if oldComp['word'] == funcName:
+        if oldComp['word'] == options.name:
             oldComp['word'] = oldComp['abbr'][:options.rindex]
     return filteredCompletions
 

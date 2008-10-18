@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 import os
 
-from idehelper import findCompletions, CompletionOptions
+from idehelper import findCompletions, CompletionOptions, Types
 
 
 def compMeth(name, klass):
@@ -66,21 +66,21 @@ class CompletionTest(unittest.TestCase):
 
 
     def testCompletions(self):
-        options = CompletionOptions(isAttrLookup=False, klass=None, parents=None, funcName=None, rindex=None)
+        options = CompletionOptions(Types.TOPLEVEL)
         compls = findCompletions('b', self.pysmelldict, options)
         expected = [compFunc('b', 'arg1, arg2'), compClass('bClass'), compConst('bconst')]
         self.assertEquals(compls, expected)
 
 
     def testCompleteMembers(self):
-        options = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName=None, rindex=None)
+        options = CompletionOptions(Types.INSTANCE, klass=None, parents=[])
         compls = findCompletions('a', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass')]
         self.assertEquals(compls, expected)
 
 
     def testCompleteArgumentListsPropRightParen(self):
-        options = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName='bm', rindex=-1)
+        options = CompletionOptions(Types.METHOD, klass=None, parents=[], name='bm', rindex=-1)
         compls = findCompletions('bm(', self.pysmelldict, options)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr'][:-1]
@@ -88,7 +88,7 @@ class CompletionTest(unittest.TestCase):
 
         
     def testCompleteArgumentListsProp(self):
-        options = CompletionOptions(isAttrLookup=True, klass=None, parents=None, funcName='bm', rindex=None)
+        options = CompletionOptions(Types.METHOD, klass=None, parents=[], name='bm', rindex=None)
         compls = findCompletions('bm(', self.pysmelldict, options)
         orig = compMeth('bm', 'aClass')
         orig['word'] = orig['abbr']
@@ -96,7 +96,7 @@ class CompletionTest(unittest.TestCase):
         
 
     def testCompleteArgumentListsRightParen(self):
-        options = CompletionOptions(isAttrLookup=False, klass=None, parents=None, funcName='b', rindex=-1)
+        options = CompletionOptions(Types.FUNCTION, klass=None, parents=[], name='b', rindex=-1)
         compls = findCompletions('b(', self.pysmelldict, options)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr'][:-1]
@@ -104,7 +104,7 @@ class CompletionTest(unittest.TestCase):
 
 
     def testCompleteArgumentLists(self):
-        options = CompletionOptions(isAttrLookup=False, klass=None, parents=None, funcName='b', rindex=None)
+        options = CompletionOptions(Types.FUNCTION, klass=None, parents=[], name='b', rindex=None)
         compls = findCompletions('b(', self.pysmelldict, options)
         orig = compFunc('b', 'arg1, arg2')
         orig['word'] = orig['abbr']
@@ -112,7 +112,7 @@ class CompletionTest(unittest.TestCase):
 
 
     def testCompleteWithSelfInfer(self):
-        options = CompletionOptions(isAttrLookup=True, klass='Module.aClass', parents=[], funcName=None, rindex=None)
+        options = CompletionOptions(Types.INSTANCE, klass='Module.aClass', parents=[])
         compls = findCompletions('', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass')]
@@ -120,14 +120,14 @@ class CompletionTest(unittest.TestCase):
 
 
     def testCompletionsWithPackages(self):
-        expected = [dict(word='cprop', kind='m', menu='Nested.Package.Module:Class', dup='1')]
-        options = CompletionOptions(isAttrLookup=True, klass='Nested.Package.Module.Class', parents=[], funcName=None, rindex=None)
+        options = CompletionOptions(Types.INSTANCE, klass='Nested.Package.Module.Class', parents=[])
         compls = findCompletions('', self.nestedDict, options)
+        expected = [dict(word='cprop', kind='m', menu='Nested.Package.Module:Class', dup='1')]
         self.assertEquals(compls, expected)
 
 
     def testKnowAboutClassHierarchies(self):
-        options = CompletionOptions(isAttrLookup=True, klass='Module.bClass', parents=[], funcName=None, rindex=None)
+        options = CompletionOptions(Types.INSTANCE, klass='Module.bClass', parents=[]) #possible error - why no parents
         compls = findCompletions('', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
@@ -135,7 +135,7 @@ class CompletionTest(unittest.TestCase):
                     compMeth('dm', 'bClass'), compProp('dprop', 'bClass')]
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(isAttrLookup=True, klass='Module.cClass', parents=['Module.bClass'], funcName=None, rindex=None)
+        options = CompletionOptions(Types.INSTANCE, klass='Module.cClass', parents=['Module.bClass'])
         compls = findCompletions('', self.pysmelldict, options)
         expected = [compMeth('am', 'aClass'), compProp('aprop', 'aClass'),
                     compMeth('bm', 'aClass'), compProp('bprop', 'aClass'),
@@ -145,37 +145,37 @@ class CompletionTest(unittest.TestCase):
 
 
     def testModuleCompletion(self):
-        options = CompletionOptions(module="Ne")
+        options = CompletionOptions(Types.MODULE, module="Ne", showMembers=False)
         expected = [dict(word='Nested', kind='t', dup='1')]
         compls = findCompletions('Ne', self.nestedDict, options)
         self.assertEquals(compls, expected)
         
-        options = CompletionOptions(module="Nested")
+        options = CompletionOptions(Types.MODULE, module="Nested", showMembers=False)
         expected = [dict(word='Package', kind='t', dup='1')]
         compls = findCompletions('P', self.nestedDict, options)
         self.assertEquals(compls, expected)
         
-        options = CompletionOptions(module="Nested.Package")
+        options = CompletionOptions(Types.MODULE, module="Nested.Package", showMembers=False)
         expected = [dict(word='Module', kind='t', dup='1')]
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="Mo")
+        options = CompletionOptions(Types.MODULE, module="Mo", showMembers=False)
         expected = [dict(word='Module', kind='t', dup='1')]
         compls = findCompletions('Mo', self.pysmelldict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="Module")
+        options = CompletionOptions(Types.MODULE, module="Module", showMembers=False)
         expected = []
         compls = findCompletions('', self.pysmelldict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="Nested.Package", completeModuleMembers=True)
+        options = CompletionOptions(Types.MODULE, module="Nested.Package", showMembers=True)
         expected = [dict(word='Module', kind='t', dup='1')]
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="Nested.Package.Module", completeModuleMembers=True)
+        options = CompletionOptions(Types.MODULE, module="Nested.Package.Module", showMembers=True)
         expected = [
             dict(word='Class', dup="1", kind="t", menu="Nested.Package.Module", abbr="Class()"),
             dict(word='Something', dup="1", kind="t"),
@@ -183,7 +183,7 @@ class CompletionTest(unittest.TestCase):
         compls = findCompletions('', self.nestedDict, options)
         self.assertEquals(compls, expected)
 
-        options = CompletionOptions(module="A", completeModuleMembers=True)
+        options = CompletionOptions(Types.MODULE, module="A", showMembers=True)
         expected = [
             dict(word='CONST_A', kind='d', dup='1', menu='A'),
             dict(word='CONST_B', kind='d', dup='1', menu='B'),
