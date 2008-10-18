@@ -5,48 +5,6 @@ from textwrap import dedent
 from idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT
 
 class IDEHelperTest(unittest.TestCase):
-    def setUp(self):
-        self.pysmelldict = {
-                'CONSTANTS' : ['Module.aconstant', 'Module.bconst'],
-                'FUNCTIONS' : [('Module.a', [], ''), ('Module.arg', [], ''), ('Module.b', ['arg1', 'arg2'], '')],
-                'CLASSES' : {
-                    'Module.aClass': {
-                        'constructor': [],
-                        'bases': ['object', 'ForeignModule.alien'],
-                        'properties': ['aprop', 'bprop'],
-                        'methods': [('am', [], ''), ('bm', [], ())]
-                    },
-                    'Module.bClass': {
-                        'constructor': [],
-                        'bases': ['Module.aClass'],
-                        'properties': ['cprop', 'dprop'],
-                        'methods': [('cm', [], ''), ('dm', [], ())]
-                    },
-                },
-                'POINTERS' : {},
-                'HIERARCHY' : ['Module'],
-            }
-        self.nestedDict = {
-                'CONSTANTS' : [],
-                'FUNCTIONS' : [],
-                'CLASSES' : {
-                    'Nested.Package.Module.Class': {
-                        'constructor': [],
-                        'bases': [],
-                        'properties': ['cprop'],
-                        'methods': []
-                    }
-                    
-                },
-                'POINTERS' : {
-                    'Another.Thing': 'Nested.Package.Module.Class',
-                    'Star.*': 'Nested.Package.Module.*',
-                
-                },
-                'HIERARCHY' : ['Nested.Package.Module'],
-        }
-
-    
     def testFindPYSMELLDICT(self):
         # include everything that starts with PYSMELLTAGS
         if os.path.exists('PYSMELLTAGS'):
@@ -183,8 +141,51 @@ class IDEHelperTest(unittest.TestCase):
                             4, self.nestedDict)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
-        
-        
+
+
+class DetectOptionsTest(unittest.TestCase):
+    def setUp(self):
+        self.pysmelldict = {
+                'CONSTANTS' : ['Module.aconstant', 'Module.bconst'],
+                'FUNCTIONS' : [('Module.a', [], ''), ('Module.arg', [], ''), ('Module.b', ['arg1', 'arg2'], '')],
+                'CLASSES' : {
+                    'Module.aClass': {
+                        'constructor': [],
+                        'bases': ['object', 'ForeignModule.alien'],
+                        'properties': ['aprop', 'bprop'],
+                        'methods': [('am', [], ''), ('bm', [], ())]
+                    },
+                    'Module.bClass': {
+                        'constructor': [],
+                        'bases': ['Module.aClass'],
+                        'properties': ['cprop', 'dprop'],
+                        'methods': [('cm', [], ''), ('dm', [], ())]
+                    },
+                },
+                'POINTERS' : {},
+                'HIERARCHY' : ['Module'],
+            }
+        self.nestedDict = {
+                'CONSTANTS' : [],
+                'FUNCTIONS' : [],
+                'CLASSES' : {
+                    'Nested.Package.Module.Class': {
+                        'constructor': [],
+                        'bases': [],
+                        'properties': ['cprop'],
+                        'methods': []
+                    }
+                    
+                },
+                'POINTERS' : {
+                    'Another.Thing': 'Nested.Package.Module.Class',
+                    'Star.*': 'Nested.Package.Module.*',
+                
+                },
+                'HIERARCHY' : ['Nested.Package.Module'],
+        }
+
+    
 
     def testDetectGlobalLookup(self):
         options = detectCompletionType('', '', 'b', 1, 1, 'b', self.pysmelldict)
