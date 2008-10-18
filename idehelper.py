@@ -164,12 +164,15 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
     if compType is Types.MODULE:
         completions = _createModuleCompletions(PYSMELLDICT, options.module, options.showMembers)
     elif compType is Types.INSTANCE:
-        completions = _createCompletionList(PYSMELLDICT, True, options.klass, options.parents)
-    elif compType in (Types.METHOD, Types.FUNCTION):
-        completions = _createCompletionList(PYSMELLDICT, compType==Types.METHOD, options.klass, options.parents)
+        completions = _createInstanceCompletionList(PYSMELLDICT, options.klass, options.parents)
+    elif compType is Types.METHOD:
+        completions = _createInstanceCompletionList(PYSMELLDICT, options.klass, options.parents)
+        doesMatch = lambda word: word == options.name
+    elif compType is Types.FUNCTION:
+        completions = [_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS']]
         doesMatch = lambda word: word == options.name
     elif compType is Types.TOPLEVEL:
-        completions = _createCompletionList(PYSMELLDICT, False, None, [])
+        completions = _createTopLevelCompletionList(PYSMELLDICT)
         
     if base:
         filteredCompletions = [comp for comp in completions if doesMatch(comp['word'])]
@@ -186,6 +189,24 @@ def findCompletions(base, PYSMELLDICT, options, matcher=None):
     return filteredCompletions
 
 
+def _createInstanceCompletionList(PYSMELLDICT, klass, parents):
+    completions = []
+    if klass: #if we know the class
+        completions.extend(getCompletionsForClass(klass, parents, PYSMELLDICT))
+    else: #just put everything
+        for klass, klassDict in PYSMELLDICT['CLASSES'].items():
+            addCompletionsForClass(klass, klassDict, completions)
+    return completions
+
+
+def _createTopLevelCompletionList(PYSMELLDICT):
+    completions = []
+    completions.extend(_getCompForConstant(word) for word in PYSMELLDICT['CONSTANTS'])
+    completions.extend(_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS'])
+    completions.extend(_getCompForConstructor(klass, klassDict) for (klass, klassDict) in PYSMELLDICT['CLASSES'].items())
+    return completions
+
+
 def _createModuleCompletions(PYSMELLDICT, module, completeModuleMembers):
     completions = []
     splitModules = set()
@@ -198,11 +219,9 @@ def _createModuleCompletions(PYSMELLDICT, module, completeModuleMembers):
             if mod != ref:
                 splitModules.add(ref)
                 break
-                
-                    
 
     if completeModuleMembers:
-        members = _createCompletionList(PYSMELLDICT, False, False, False)
+        members = _createTopLevelCompletionList(PYSMELLDICT)
         completions.extend(comp for comp in members if comp["menu"] == module and not comp["word"].startswith("_"))
         pointers = []
         for pointer in PYSMELLDICT['POINTERS']:
@@ -218,20 +237,6 @@ def _createModuleCompletions(PYSMELLDICT, module, completeModuleMembers):
     completions.extend(dict(word=name, kind="t", dup="1") for name in splitModules)
     return completions
 
-
-def _createCompletionList(PYSMELLDICT, isAttrLookup, klass, parents):
-    completions = []
-    if not isAttrLookup:
-        completions.extend([_getCompForConstant(word) for word in PYSMELLDICT['CONSTANTS']])
-        completions.extend([_getCompForFunction(func, 'f') for func in PYSMELLDICT['FUNCTIONS']])
-        completions.extend([_getCompForConstructor(klass, klassDict) for (klass, klassDict) in PYSMELLDICT['CLASSES'].items()])
-    elif klass:
-        completions.extend(getCompletionsForClass(klass, parents, PYSMELLDICT))
-    else: #plain attribute lookup
-        for klass, klassDict in PYSMELLDICT['CLASSES'].items():
-            addCompletionsForClass(klass, klassDict, completions)
-    
-    return completions
 
 def getCompletionsForClass(klass, parents, PYSMELLDICT):
         klassDict = PYSMELLDICT['CLASSES'].get(klass, None)
