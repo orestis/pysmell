@@ -8,7 +8,7 @@
 # Released subject to the BSD License 
 
 import os
-from codefinder import infer, findRootPackageList
+from codefinder import findRootPackageList, getImports, getClassAndParents
 from matchers import MATCHERS
 from dircache import listdir
 import fnmatch
@@ -58,8 +58,17 @@ def debug(vim, msg):
         debBuffer.append(msg)
 
 
+def inferModule(var, origSource, lineNo):
+    names, imports = getImports(origSource, lineNo)
+    if var in names:
+        return names[var]
+    if var in imports:
+        return imports[var]
+    
+    
+
 def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
-    klass, parents = infer(origSource, origLineNo)
+    klass, parents = getClassAndParents(origSource, origLineNo)
 
     pathParts = []
     fullPath = fullPath
@@ -116,7 +125,21 @@ class CompletionOptions(object):
         return repr(self.compType) + 'with extra: ' + repr(self.extra)
         
 
-def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol, base, PYSMELLDICT):
+def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDICT):
+    """
+    Return a CompletionOptions instance describing the type of the completion, along with extra parameters.
+    
+    args: fullPath -> The full path and filename of the file that is edited
+          origSource -> The source of the edited file (it's probably not saved)
+          lineNo -> The line number the cursor is in, 1-based
+          origCol -> The column number the cursor is in, 0-based
+          base -> The string that will be replaced when the completion is inserted
+          PYSMELLDICT -> The loaded PYSMELLDICT
+
+    Note that Vim deletes the "base" when a completion is requested so extra trickery must be performed to get it from the source.
+
+    """
+    origLineText = origSource.splitlines()[lineNo - 1] # lineNo is 1 based
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     leftSideStripped = leftSide.lstrip()
 
@@ -148,9 +171,14 @@ def detectCompletionType(fullPath, origSource, origLineText, origLineNo, origCol
     if isAttrLookup:
         klass = None
         parents = []
-        isClassLookup = leftSide[:leftSide.rindex('.')].endswith('self')
+        var = leftSideStripped[:leftSideStripped.rindex('.')]
+        isClassLookup = var == 'self'
         if isClassLookup:
-            klass, parents = inferClass(fullPath, origSource, origLineNo, PYSMELLDICT)
+            klass, parents = inferClass(fullPath, origSource, lineNo, PYSMELLDICT)
+        else:
+            possibleModule = inferModule(var, origSource, lineNo)
+            if possibleModule is not None:
+                return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)
         return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
 
     return CompletionOptions(Types.TOPLEVEL)

@@ -5,7 +5,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 from pprint import pformat
 
-from codefinder import CodeFinder, infer, ModuleDict, findPackage
+from codefinder import CodeFinder, getClassAndParents, ModuleDict, findPackage
 
 class ModuleDictTest(unittest.TestCase):
     def testUpdate(self):
@@ -356,7 +356,7 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass, parents = infer(source, 5)
+        klass, parents = getClassAndParents(source, 5)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['object'])
 
@@ -373,7 +373,7 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass, parents = infer(source, 6)
+        klass, parents = getClassAndParents(source, 6)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['something.mother', 'something.father'])
 
@@ -389,7 +389,7 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass, parents = infer(source, 5)
+        klass, parents = getClassAndParents(source, 5)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['something.this.other.bother'])
 
@@ -423,29 +423,29 @@ class InferencingTest(unittest.TestCase):
                         self.ass
         """)
         
-        self.assertEquals(infer(source, 1)[0], None, 'no class yet!')
+        self.assertEquals(getClassAndParents(source, 1)[0], None, 'no class yet!')
         for line in range(2, 5):
-            klass, _ = infer(source, line)
+            klass, _ = getClassAndParents(source, line)
             self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(5, 7):
-            klass, _ = infer(source, line)
+            klass, _ = getClassAndParents(source, line)
             self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(7, 9):
-            klass, _ = infer(source, line)
+            klass, _ = getClassAndParents(source, line)
             self.assertEquals(klass, 'EvenSneakier', 'wrong class %s in line %d' % (klass, line))
 
         line = 9
-        klass, _ = infer(source, line)
+        klass, _ = getClassAndParents(source, line)
         self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(10, 17):
-            klass, _ = infer(source, line)
+            klass, _ = getClassAndParents(source, line)
             self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(17, 51):
-            klass, _ = infer(source, line)
+            klass, _ = getClassAndParents(source, line)
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
     
 

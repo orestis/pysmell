@@ -453,13 +453,11 @@ class SelfInferer(BaseVisitor):
         self.lastlineno = klassNode.lineno
 
 
-
-
-def infer(source, lineNo):
-    sourceLines = source.splitlines()
+def _getSafeTree(source, lineNo):
     try:
         tree = compiler.parse(source)
     except:
+        sourceLines = source.splitlines()
         line = sourceLines[lineNo-1]
         unindented = line.lstrip()
         indentation = len(line) - len(unindented)
@@ -470,8 +468,24 @@ def infer(source, lineNo):
             tree = compiler.parse(replacedSource)
         except SyntaxError, e:
             print >> sys.stderr, e.args
-            return None, []
-            
+            return None
+    return tree
+
+
+def getImports(source, lineNo):
+    tree = _getSafeTree(source, lineNo)
+    if tree is None:
+        return None
+    inferer = BaseVisitor()
+    compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
+
+    return inferer.importedNames, inferer.imports
+
+
+def getClassAndParents(source, lineNo):
+    tree = _getSafeTree(source, lineNo)
+    if tree is None:
+        return None, []
 
     inferer = SelfInferer()
     compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
