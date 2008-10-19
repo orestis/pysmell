@@ -154,6 +154,9 @@ class CompletionOptions(object):
         return (isinstance(other, CompletionOptions)
                 and self.compType == other.compType and self.extra == other.extra)
 
+    def __ne__(self, other):
+        return not self == other
+
     def __repr__(self):
         return repr(self.compType) + 'with extra: ' + repr(self.extra)
         
