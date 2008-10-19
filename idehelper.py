@@ -7,8 +7,8 @@
 
 # Released subject to the BSD License 
 
-import os
-from codefinder import findRootPackageList, getImports, getClassAndParents
+import os, re
+from codefinder import findRootPackageList, getImports, getNames, getClassAndParents
 from matchers import MATCHERS
 from dircache import listdir
 import fnmatch
@@ -95,7 +95,6 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
                 if pointer.endswith('*') and parent.startswith(pointer[:-2]):
                     parents[index] = '%s.%s' % (PYSMELLDICT['POINTERS'][pointer][:-2], parent.split('.', 1)[-1])
 
-
     fullKlass = klass
     while pathParts:
         fullKlass = "%s.%s" % (pathParts.pop(), fullKlass)
@@ -108,6 +107,20 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         fullKlass = "%s.%s.%s" % (".".join(packages), filename[:-3], klass)
         
     return fullKlass, parents
+
+
+funcCellRE = re.compile(r'(.+)\(.*\)')
+def inferInstance(source, lineNo, var, PYSMELLDICT):
+    names = getNames(source, lineNo)
+    assignment = names.get(var, None)
+    klass = None
+    parents = []
+    if assignment:
+        possibleMatch = funcCellRE.match(assignment)
+        if possibleMatch:
+            klass = possibleMatch.groups(1)[0]
+        
+    return klass, []
 
 
 _TERMINATORS = " ()[]{}'\"<>,/-=+*:%^|"
@@ -189,17 +202,19 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
             return CompletionOptions(Types.FUNCTION, name=funcName, rindex=rindex)
 
     if isAttrLookup:
-        klass = None
-        parents = []
-        isClassLookup = leftSideStripped[:leftSideStripped.rindex('.')] == 'self'
+        var = leftSideStripped[:leftSideStripped.rindex('.')]
+        isClassLookup = var == 'self'
         if isClassLookup:
             klass, parents = inferClass(fullPath, origSource, lineNo, PYSMELLDICT)
+            return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         else:
             chain = getChain(leftSideStripped)[:-1] # strip dot
             possibleModule = inferModule(chain, origSource, lineNo)
             if possibleModule is not None:
                 return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)
+        klass, parents = inferInstance(origSource, lineNo, var, PYSMELLDICT)
         return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
+        
 
     return CompletionOptions(Types.TOPLEVEL)
 

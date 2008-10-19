@@ -393,6 +393,21 @@ class DetectOptionsTest(unittest.TestCase):
         self.assertEquals(options, expected)
 
 
+    def testDetectClassCreation(self):
+        source = dedent("""\
+            from Module import aClass
+
+            thing = aClass()
+            thing.
+        """)
+        line = "thing."
+        options = detectCompletionType('apath', source,
+                                            4, len(line), '', self.pysmelldict)
+        expected = CompletionOptions(Types.INSTANCE, klass='aClass', parents=['object', 'ForeignModule.alien'])
+        self.assertEquals(options, expected)
+        
+
+
 
 
 if __name__ == '__main__':
