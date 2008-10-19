@@ -61,8 +61,7 @@ class IDEHelperTest(unittest.TestCase):
             tags = findPYSMELLDICT(os.path.join('random', 'dirA', 'file'))
             self.assertEquals(tags, None, 'should not find pysmelltags')
             self.assertEquals(listdirs,
-                [os.path.join('random', 'dirA'),
-                 'random'],
+                [os.path.join('random', 'dirA'), 'random'],
                 'did not list dirs correctly: %s' % listdirs)
             self.assertEquals(TRPArgs,
                 [(os.path.join('random', 'dirA'), 'PYSMELLTAGS.django')],
@@ -71,6 +70,7 @@ class IDEHelperTest(unittest.TestCase):
         finally:
             idehelper.tryReadPYSMELLDICT = oldTryReadPSD
             idehelper.listdir = oldListDir
+
 
     def testInferClassAbsolute(self):
         source = dedent("""\
@@ -122,6 +122,7 @@ class IDEHelperTest(unittest.TestCase):
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
         self.assertEquals(parents, ['object'])
 
+
     def testInferUnknownClassParents(self):
         source = dedent("""\
             from Nested.Package.Module import Class
@@ -134,6 +135,7 @@ class IDEHelperTest(unittest.TestCase):
                             4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Other')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
+
 
     def testInferClassParentsWithPointers(self):
         source = dedent("""\
