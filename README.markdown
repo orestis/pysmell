@@ -70,8 +70,8 @@ To use PySmell omnicompletion from inside Vim, you have to have:
 2. The pysmell package in your PYTHONPATH (sometimes
 Vim is silly about this) 
 3. Source pysmell/pysmell.vim 
-4. `:set omnifunc=pysmell#Complete` Note: If you want to always use pysmell for
-python, do: `autocmd FileType python set omnifunc=pysmell#Complete`
+4. `:setlocal omnifunc=pysmell#Complete` Note: If you want to always use pysmell for
+python, do: `autocmd FileType python setlocal omnifunc=pysmell#Complete`
 5. [OPTIONAL] Select a matcher of your liking - look at pysmell.vim for
 options. Eg: `:let g:pysmell_matcher='camel-case'`
 
@@ -83,12 +83,12 @@ You can generate debugging information by doing:
     :e PYSMELL_DEBUG
 
 Debug information will be appended in that buffer, copy and paste it
-into an email.
+into the report.
 
 ##Reporting issues
+PySmell is hosted at [Google Code](http://code.google.com/p/pysmell).
 
-Look in the [TODO](http://github.com/orestis/pysmell/wikis/todo) first.
-Vote up on issues that you feel strongly about!
+Look in the [issues list](http://code.google.com/p/pysmell/issues) first.
+Star issues that you feel strongly about, or create your own.
 
-Send me an email at orestis@orestis.gr. If you can create a unit test
-that exposes that behaviour, it'd be great!
+If you can create a unit test that exposes that behaviour, it'd be great!
