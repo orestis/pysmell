@@ -95,10 +95,10 @@ def VisitChildren(fun):
         self.handleChildren(args[0])
     return decorated
 
+
 class BaseVisitor(object):
     def __init__(self):
         self.scope = []
-        self.importedNames = {}
         self.imports = {}
 
 
@@ -125,7 +125,7 @@ class BaseVisitor(object):
     def visitFrom(self, node):
         for name in node.names:
             asName = name[1] or name[0]
-            self.importedNames[asName] = "%s.%s" % (node.modname, name[0])
+            self.imports[asName] = "%s.%s" % (node.modname, name[0])
 
     @VisitChildren
     def visitImport(self, node):
@@ -136,12 +136,8 @@ class BaseVisitor(object):
     def qualify(self, name, curModule):
         if name in __builtins__:
             return name
-        if name in self.importedNames:
-            return self.importedNames[name]
-        for imp in self.importedNames:
-            if name.startswith(imp):
-                actual = self.importedNames[imp]
-                return "%s%s" % (actual, name[len(imp):])
+        if name in self.imports:
+            return self.imports[name]
         for imp in self.imports:
             if name.startswith(imp):
                 actual = self.imports[imp]
@@ -469,7 +465,37 @@ def _getSafeTree(source, lineNo):
         except SyntaxError, e:
             print >> sys.stderr, e.args
             return None
+
     return tree
+
+class NameVisitor(BaseVisitor):
+    def __init__(self):
+        BaseVisitor.__init__(self)
+        self.names = {}
+        self.lastlineno = 1
+
+
+    def handleChildren(self, node):
+        self.lastlineno = node.lineno
+        BaseVisitor.handleChildren(self, node)
+
+
+    @VisitChildren
+    def visitAssign(self, node):
+        self.names[node.nodes[0].name] = getName(node.expr)
+
+
+
+def getNames(source, lineno):
+    tree = _getSafeTree(source, lineno)
+    if tree is None:
+        return None
+    inferer = NameVisitor()
+    compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
+    names = inferer.names
+    names.update(inferer.imports)
+    return names
+    
 
 
 def getImports(source, lineNo):
@@ -479,7 +505,7 @@ def getImports(source, lineNo):
     inferer = BaseVisitor()
     compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
 
-    return inferer.importedNames, inferer.imports
+    return inferer.imports
 
 
 def getClassAndParents(source, lineNo):

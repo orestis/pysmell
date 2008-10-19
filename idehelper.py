@@ -59,14 +59,11 @@ def debug(vim, msg):
 
 
 def inferModule(chain, origSource, lineNo):
-    names, imports = getImports(origSource, lineNo)
+    imports = getImports(origSource, lineNo)
     fullModuleParts = []
     valid = False
     for part in chain.split('.'):
-        if part in names:
-            fullModuleParts.append(names[part])
-            valid = True
-        elif part in imports:
+        if part in imports:
             fullModuleParts.append(imports[part])
             valid = True
         else:

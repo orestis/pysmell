@@ -5,7 +5,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 from pprint import pformat
 
-from codefinder import CodeFinder, getClassAndParents, ModuleDict, findPackage
+from codefinder import CodeFinder, getClassAndParents, getNames, ModuleDict, findPackage
 
 class ModuleDictTest(unittest.TestCase):
     def testUpdate(self):
@@ -447,6 +447,17 @@ class InferencingTest(unittest.TestCase):
         for line in range(17, 51):
             klass, _ = getClassAndParents(source, line)
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
+
+
+    def testGetNames(self):
+        source = dedent("""\
+            from something import Class
+
+            a = Class()
+        """)
+
+        expectedNames = {'Class': 'something.Class', 'a': 'Class()'}
+        self.assertEquals(getNames(source, 3), expectedNames)
     
 
 if __name__ == '__main__':
