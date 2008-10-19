@@ -102,9 +102,9 @@ class BaseVisitor(object):
         self.imports = {}
 
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssName', 'AssTuple', 'AssList',
-                'AugAssign', 'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'CallFunc',
-                'Compare', 'Const', 'Continue', 'Dict', 'Discard', 'Div', 'Exec',
+    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssAttr', 'AssName', 'AssTuple', 'AssList',
+                'AugAssign', 'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'Class', 'CallFunc',
+                'Compare', 'Const', 'Continue', 'Decorators', 'Dict', 'Discard', 'Div', 'Exec',
                 'FloorDiv', 'For', 'Function', 'GenExpr', 'GenExprIf',
                 'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 'IfExp',
                 'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',

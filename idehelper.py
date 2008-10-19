@@ -137,6 +137,7 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
 DELIMITERS = " ()[]{}'\"<>,/-=+*:%^|!@`;"
 
 def getChain(line):
+    "get the last chain of property accesses, ie some.thing.other.bother"
     chain = []
     for c in reversed(line):
         if c in DELIMITERS:
