@@ -403,7 +403,7 @@ class DetectOptionsTest(unittest.TestCase):
         line = "thing."
         options = detectCompletionType('apath', source,
                                             4, len(line), '', self.pysmelldict)
-        expected = CompletionOptions(Types.INSTANCE, klass='aClass', parents=['object', 'ForeignModule.alien'])
+        expected = CompletionOptions(Types.INSTANCE, klass='Module.aClass', parents=['object', 'ForeignModule.alien'])
         self.assertEquals(options, expected)
         
 

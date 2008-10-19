@@ -72,10 +72,39 @@ def inferModule(chain, origSource, lineNo):
         return '.'.join(fullModuleParts)
     return None
     
+
+funcCellRE = re.compile(r'(.+)\(.*\)')
+def inferInstance(source, lineNo, var, PYSMELLDICT):
+    names = getNames(source, lineNo)
+    assignment = names.get(var, None)
+    klass = None
+    parents = []
+    if assignment:
+        possibleMatch = funcCellRE.match(assignment)
+        if possibleMatch:
+            klass = possibleMatch.groups(1)[0]
+            klass = _qualify(names.get(klass, klass), PYSMELLDICT)
+            parents = PYSMELLDICT['CLASSES'].get(klass, {'bases': []})['bases']
+
+    return klass, parents
+
+
+def _qualify(thing, PYSMELLDICT):
+    if thing in PYSMELLDICT['POINTERS']:
+        return PYSMELLDICT['POINTERS'][thing]
+    else:
+        for pointer in PYSMELLDICT['POINTERS']:
+            if pointer.endswith('*') and thing.startswith(pointer[:-2]):
+                return '%s.%s' % (PYSMELLDICT['POINTERS'][pointer][:-2], thing.split('.', 1)[-1])
+    return thing
     
 
 def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
     klass, parents = getClassAndParents(origSource, origLineNo)
+
+    # replace POINTERS with their full reference
+    for index, parent in enumerate(parents[:]):
+        parents[index] = _qualify(parent, PYSMELLDICT)
 
     pathParts = []
     fullPath = fullPath
@@ -86,15 +115,6 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         if tail:
             pathParts.append(tail)
     pathParts.reverse()
-    # replace POINTERS with their full reference
-    for index, parent in enumerate(parents):
-        if parent in PYSMELLDICT['POINTERS']:
-            parents[index] = PYSMELLDICT['POINTERS'][parent]
-        else:
-            for pointer in PYSMELLDICT['POINTERS']:
-                if pointer.endswith('*') and parent.startswith(pointer[:-2]):
-                    parents[index] = '%s.%s' % (PYSMELLDICT['POINTERS'][pointer][:-2], parent.split('.', 1)[-1])
-
     fullKlass = klass
     while pathParts:
         fullKlass = "%s.%s" % (pathParts.pop(), fullKlass)
@@ -109,26 +129,12 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
     return fullKlass, parents
 
 
-funcCellRE = re.compile(r'(.+)\(.*\)')
-def inferInstance(source, lineNo, var, PYSMELLDICT):
-    names = getNames(source, lineNo)
-    assignment = names.get(var, None)
-    klass = None
-    parents = []
-    if assignment:
-        possibleMatch = funcCellRE.match(assignment)
-        if possibleMatch:
-            klass = possibleMatch.groups(1)[0]
-        
-    return klass, []
-
-
-_TERMINATORS = " ()[]{}'\"<>,/-=+*:%^|"
+DELIMITERS = " ()[]{}'\"<>,/-=+*:%^|!@`;"
 
 def getChain(line):
     chain = []
     for c in reversed(line):
-        if c in _TERMINATORS:
+        if c in DELIMITERS:
             break
         chain.append(c)
     return ''.join(reversed(chain))
