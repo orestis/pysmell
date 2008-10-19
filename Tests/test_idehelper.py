@@ -51,7 +51,7 @@ class IDEHelperTest(unittest.TestCase):
             self.assertEquals(listdirs,
                 [os.path.join('a', 'random', 'path'),
                  os.path.join('a', 'random'),
-                 'a', '', ''], # two '' because of root again
+                 'a'], # two '' because of root again
                 'did not list dirs correctly: %s' % listdirs)
             self.assertEquals(TRPArgs, [], 'did not read tags correctly')
 
@@ -62,7 +62,7 @@ class IDEHelperTest(unittest.TestCase):
             self.assertEquals(tags, None, 'should not find pysmelltags')
             self.assertEquals(listdirs,
                 [os.path.join('random', 'dirA'),
-                 'random', '', ''],
+                 'random'],
                 'did not list dirs correctly: %s' % listdirs)
             self.assertEquals(TRPArgs,
                 [(os.path.join('random', 'dirA'), 'PYSMELLTAGS.django')],

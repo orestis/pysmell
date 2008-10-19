@@ -31,21 +31,35 @@ def tryReadPYSMELLDICT(directory, filename, dictToUpdate):
     
 
 def findPYSMELLDICT(filename):
-    directory, basename = os.path.split(filename)
+    pathParts = _getPathParts(filename)[:-1]
     PYSMELLDICT = {}
-    while not os.path.exists(os.path.join(directory, 'PYSMELLTAGS')) and basename:
+    while pathParts:
+        directory = os.path.join(*pathParts)
+        print directory
         for tagsfile in fnmatch.filter(listdir(directory), 'PYSMELLTAGS.*'):
             tryReadPYSMELLDICT(directory, tagsfile, PYSMELLDICT)
-        directory, basename = os.path.split(directory)
-
-    for tagsfile in fnmatch.filter(listdir(directory), 'PYSMELLTAGS.*'):
-        tryReadPYSMELLDICT(directory, tagsfile, PYSMELLDICT)
-    tagsPath = os.path.join(directory, 'PYSMELLTAGS')
-    if not os.path.exists(tagsPath):
-        print 'Could not file PYSMELLTAGS for omnicompletion'
-        return
-    tryReadPYSMELLDICT(directory, 'PYSMELLTAGS', PYSMELLDICT)
+        tagsPath = os.path.join(directory, 'PYSMELLTAGS')
+        if os.path.exists(tagsPath):
+            tryReadPYSMELLDICT(directory, 'PYSMELLTAGS', PYSMELLDICT)
+            break
+        pathParts.pop()
+    else:
+        print 'could not find PYSMELLTAGS'
+        return None
     return PYSMELLDICT
+            
+
+def _getPathParts(path):
+    "given a full path, return its components without the extension"
+    pathParts = []
+    head, tail = os.path.split(path[:-3])
+    pathParts.append(tail)
+    while head and tail:
+        head, tail = os.path.split(head)
+        if tail:
+            pathParts.append(tail)
+    pathParts.reverse()
+    return pathParts
 
 
 def debug(vim, msg):
@@ -97,7 +111,6 @@ def _qualify(thing, PYSMELLDICT):
             if pointer.endswith('*') and thing.startswith(pointer[:-2]):
                 return '%s.%s' % (PYSMELLDICT['POINTERS'][pointer][:-2], thing.split('.', 1)[-1])
     return thing
-    
 
 def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
     klass, parents = getClassAndParents(origSource, origLineNo)
@@ -106,15 +119,7 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
     for index, parent in enumerate(parents[:]):
         parents[index] = _qualify(parent, PYSMELLDICT)
 
-    pathParts = []
-    fullPath = fullPath
-    head, tail = os.path.split(fullPath[:-3])
-    pathParts.append(tail)
-    while head and tail:
-        head, tail = os.path.split(head)
-        if tail:
-            pathParts.append(tail)
-    pathParts.reverse()
+    pathParts = _getPathParts(fullPath)
     fullKlass = klass
     while pathParts:
         fullKlass = "%s.%s" % (pathParts.pop(), fullKlass)
