@@ -6,4 +6,4 @@
 # http://orestis.gr
 
 # Released subject to the BSD License 
-
+from pysmell import *

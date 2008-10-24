@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 import os
 
-from idehelper import findCompletions, CompletionOptions, Types
+from pysmell.idehelper import findCompletions, CompletionOptions, Types
 
 
 def compMeth(name, klass):

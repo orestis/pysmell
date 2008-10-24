@@ -5,7 +5,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 from pprint import pformat
 
-from codefinder import CodeFinder, getClassAndParents, ModuleDict, findPackage
+from pysmell.codefinder import CodeFinder, getClassAndParents, ModuleDict, findPackage
 
 class ModuleDictTest(unittest.TestCase):
     def testUpdate(self):
@@ -235,7 +235,7 @@ class CodeFinderTest(unittest.TestCase):
 
 
     def testArgToStr(self):
-        from codefinder import argToStr
+        from pysmell.codefinder import argToStr
         self.assertEquals(argToStr('stuff'), 'stuff')
         self.assertEquals(argToStr(('ala', 'ma', 'kota')), '(ala, ma, kota)')
         self.assertEquals(argToStr((('x1', 'y1'), ('x2', 'y2'))), '((x1, y1), (x2, y2))')
@@ -282,15 +282,15 @@ class CodeFinderTest(unittest.TestCase):
 
     
     def testRelativeImports(self):
-        import codefinder
-        oldExists = codefinder.os.path.exists
+        import pysmell.codefinder
+        oldExists = pysmell.codefinder.os.path.exists
         # monkeypatch relative.py into the path somewhere
         paths = []
         def mockExists(path):
             paths.append(path)
             return True
 
-        codefinder.os.path.exists = mockExists
+        pysmell.codefinder.os.path.exists = mockExists
 
         try:
             out = self.getModule("""
@@ -309,7 +309,7 @@ class CodeFinderTest(unittest.TestCase):
             ]
             self.assertEquals(paths, expectedPaths)
         finally:
-            codefinder.os.path.exists = oldExists
+            pysmell.codefinder.os.path.exists = oldExists
 
 
     def testHierarchy(self):

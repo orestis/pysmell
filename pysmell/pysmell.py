@@ -80,8 +80,7 @@ def process(argList, excluded, output, verbose=False):
     generateClassTag(modules, output)
 
 
-
-if __name__ == '__main__':
+def main():
     fileList = sys.argv[1:]
     if not fileList:
         print """\
@@ -139,3 +138,5 @@ Options:
         print 'took %f seconds' % took
 
 
+if __name__ == '__main__':
+    main()

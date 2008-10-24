@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 import subprocess
 import os
-import idehelper
+import pysmell.idehelper
 
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
@@ -89,7 +89,7 @@ class FunctionalTest(unittest.TestCase):
     def testMultiPackage(self):
         if os.path.exists('TestData/PYSMELLTAGS'):
             os.remove('TestData/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmell.py", "PackageA", "PackageB"], cwd='TestData')
+        subprocess.call(["pysmell", "PackageA", "PackageB"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = {}
@@ -104,20 +104,20 @@ class FunctionalTest(unittest.TestCase):
     def testPackageA(self):
         if os.path.exists('TestData/PYSMELLTAGS'):
             os.remove('TestData/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmell.py", "PackageA"], cwd='TestData')
+        subprocess.call(["pysmell", "PackageA"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
-        foundDict = idehelper.findPYSMELLDICT(os.path.join('TestData', 'PackageA', 'something'))
+        foundDict = pysmell.idehelper.findPYSMELLDICT(os.path.join('TestData', 'PackageA', 'something'))
         self.assertDictsEqual(foundDict, expectedDict)
 
 
     def testPackageB(self):
         if os.path.exists('TestData/PYSMELLTAGS'):
             os.remove('TestData/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmell.py", "PackageB"], cwd='TestData')
+        subprocess.call(["pysmell", "PackageB"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = self.packageB
@@ -127,7 +127,7 @@ class FunctionalTest(unittest.TestCase):
     def testPackageDot(self):
         if os.path.exists('TestData/PackageA/PYSMELLTAGS'):
             os.remove('TestData/PackageA/PYSMELLTAGS')
-        subprocess.call(["python", "../../pysmell.py", "."], cwd='TestData/PackageA')
+        subprocess.call(["pysmell", "."], cwd='TestData/PackageA')
         self.assertTrue(os.path.exists('TestData/PackageA/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PackageA/PYSMELLTAGS').read())
         expectedDict = self.packageA
@@ -137,7 +137,7 @@ class FunctionalTest(unittest.TestCase):
     def testAllPackages(self):
         if os.path.exists('TestData/PYSMELLTAGS'):
             os.remove('TestData/PYSMELLTAGS')
-        subprocess.call(["python", "../pysmell.py", "."], cwd='TestData')
+        subprocess.call(["pysmell", "."], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
         expectedDict = {}
@@ -156,7 +156,7 @@ class FunctionalTest(unittest.TestCase):
         path = 'TestData/PackageA/NestedPackage/EvenMore/'
         if os.path.exists('%sPYSMELLTAGS' % path):
             os.remove('%sPYSMELLTAGS' % path)
-        subprocess.call(["python", "../../../../pysmell.py", "ModuleC.py"], cwd=path)
+        subprocess.call(["pysmell", "ModuleC.py"], cwd=path)
         self.assertTrue(os.path.exists('%sPYSMELLTAGS' % path ))
         PYSMELLDICT = eval(open('%sPYSMELLTAGS' % path).read())
         expectedDict = {
@@ -175,7 +175,7 @@ class FunctionalTest(unittest.TestCase):
         pysmell = os.path.join(path, 'PYSMELLTAGS')
         if os.path.exists(pysmell):
             os.remove(pysmell)
-        subprocess.call(["python", "../pysmell.py", os.path.join("PackageA", "NestedPackage", "EvenMore", "ModuleC.py")], cwd=path)
+        subprocess.call(["pysmell", os.path.join("PackageA", "NestedPackage", "EvenMore", "ModuleC.py")], cwd=path)
         self.assertTrue(os.path.exists(pysmell))
         PYSMELLDICT = eval(open(pysmell).read())
         expectedDict = {
@@ -193,7 +193,7 @@ class FunctionalTest(unittest.TestCase):
     def testOutputRedirect(self):
         if os.path.exists('TestData/OUTPUTREDIR'):
             os.remove('TestData/OUTPUTREDIR')
-        subprocess.call(["python", "../pysmell.py", "PackageA", "-o",
+        subprocess.call(["pysmell", "PackageA", "-o",
             "OUTPUTREDIR"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/OUTPUTREDIR'))
         PYSMELLDICT = eval(open('TestData/OUTPUTREDIR').read())
@@ -203,7 +203,7 @@ class FunctionalTest(unittest.TestCase):
         absPath = os.path.join(os.getcwd(), 'TestData', 'OUTPUTREDIR2')
         if os.path.exists(absPath):
             os.remove(absPath)
-        subprocess.call(["python", "../pysmell.py", "PackageA", "-o", absPath], cwd='TestData')
+        subprocess.call(["pysmell", "PackageA", "-o", absPath], cwd='TestData')
         self.assertTrue(os.path.exists(absPath))
         PYSMELLDICT = eval(open(absPath).read())
         expectedDict = self.packageA
@@ -211,7 +211,7 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testNoArgs(self):
-        proc = subprocess.Popen(["python", "pysmell.py"], stdout=subprocess.PIPE)
+        proc = subprocess.Popen(["pysmell"], stdout=subprocess.PIPE)
         proc.wait()
         stdout = proc.stdout.read()
         expected = dedent("""\
