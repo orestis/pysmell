@@ -18,7 +18,7 @@ setup(
     include_package_data = True,
     license = 'BSD',
     keywords = 'vim autocomplete',
-    url = 'http://orestis.gr/tags/pysmell',
+    url = 'http://code.google.com/p/pysmell',
     long_description =
 """\
 PySmell is a python IDE completion helper. 
