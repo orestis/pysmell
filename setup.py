@@ -9,7 +9,7 @@ setup(name='pysmell',
         author_email = 'orestis@orestis.gr',
         packages = ['pysmell'],
         entry_points = {
-            'console_scripts': [ 'pysmell = pysmell:main' ]
+            'console_scripts': [ 'pysmell = pysmell.pysmell:main' ]
             },
         data_files = [
             ('vim', ['pysmell.vim'])
