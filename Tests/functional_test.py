@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 import subprocess
 import os
-import pysmell.idehelper
+from pysmell import idehelper
 
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
@@ -110,7 +110,7 @@ class FunctionalTest(unittest.TestCase):
         expectedDict = self.packageA
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
-        foundDict = pysmell.idehelper.findPYSMELLDICT(os.path.join('TestData', 'PackageA', 'something'))
+        foundDict = idehelper.findPYSMELLDICT(os.path.join('TestData', 'PackageA', 'something'))
         self.assertDictsEqual(foundDict, expectedDict)
 
 

@@ -1,3 +1,4 @@
 include README.markdown
+include AUTHORS
 include pysmell.vim
 include CHANGELOG
