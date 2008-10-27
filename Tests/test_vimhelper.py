@@ -1,5 +1,5 @@
 import unittest
-from vimhelper import findWord, findBase
+from pysmell.vimhelper import findWord, findBase
 
 class MockVim(object):
     class _current(object):
@@ -15,8 +15,8 @@ class MockVim(object):
 class VimHelperTest(unittest.TestCase):
 
     def setUp(self):
-        import vimhelper
-        vimhelper.vim = self.vim = MockVim()
+        import pysmell.vimhelper
+        pysmell.vimhelper.vim = self.vim = MockVim()
 
     def testFindBaseName(self):
         self.vim.current.buffer = ['aaaa', 'bbbb', 'cccc']

@@ -4,3 +4,6 @@
 PYSMELLTAGS
 PYSMELLTAGS.*
 OUTPUTREDIR*
+build
+dist
+pysmell.egg-info

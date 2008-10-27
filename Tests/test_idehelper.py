@@ -2,7 +2,7 @@ import unittest
 import os
 from textwrap import dedent
 
-from idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT, Types
+from pysmell.idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT, Types
 NESTEDDICT = {
         'CONSTANTS' : [],
         'FUNCTIONS' : [],
@@ -29,9 +29,9 @@ class IDEHelperTest(unittest.TestCase):
         # include everything that starts with PYSMELLTAGS
         if os.path.exists('PYSMELLTAGS'):
             os.remove('PYSMELLTAGS')
-        import idehelper
-        oldTryReadPSD = idehelper.tryReadPYSMELLDICT
-        oldListDir = idehelper.listdir
+        import pysmell.idehelper
+        oldTryReadPSD = pysmell.idehelper.tryReadPYSMELLDICT
+        oldListDir = pysmell.idehelper.listdir
         TRPArgs = []
         def mockTRP(direct, fname, dictToUpdate):
             TRPArgs.append((direct, fname))
@@ -44,8 +44,8 @@ class IDEHelperTest(unittest.TestCase):
                     os.path.join('random', 'dirA'): ['PYSMELLTAGS.django'],
                 }.get(dirname, [])
 
-        idehelper.tryReadPYSMELLDICT = mockTRP
-        idehelper.listdir = mockListDir
+        pysmell.idehelper.tryReadPYSMELLDICT = mockTRP
+        pysmell.idehelper.listdir = mockListDir
         try:
             self.assertEquals(findPYSMELLDICT(os.path.join('a', 'random', 'path', 'andfile')), None, 'should not find PYSMELLTAGS')
             self.assertEquals(listdirs,
@@ -68,8 +68,8 @@ class IDEHelperTest(unittest.TestCase):
                 'did not read tags correctly: %s' % TRPArgs)
 
         finally:
-            idehelper.tryReadPYSMELLDICT = oldTryReadPSD
-            idehelper.listdir = oldListDir
+            pysmell.idehelper.tryReadPYSMELLDICT = oldTryReadPSD
+            pysmell.idehelper.listdir = oldListDir
 
 
     def testInferClassAbsolute(self):

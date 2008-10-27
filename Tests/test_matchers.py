@@ -1,5 +1,5 @@
 import unittest
-from matchers import (matchCaseSensitively, matchCaseInsensitively,
+from pysmell.matchers import (matchCaseSensitively, matchCaseInsensitively,
         matchCamelCased, matchSmartass, matchFuzzyCS, matchFuzzyCI, camelGroups)
 
 class MatcherTest(unittest.TestCase):
