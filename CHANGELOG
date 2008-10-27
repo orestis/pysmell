@@ -1,3 +1,14 @@
+Pusmell v0.7 *UNRELEASED*
+
+Added module member completion: import os followed by os. will give members of
+os.
+Added rudimentary type-inferencing: instance = A(), when A is a class.
+"instance" will be detected as an instance of A.
+A lot of under-the-hood refactoring, making adding features easier.
+Added setuptools support: pysmell is now a script.
+PySmell has now a bug tracker on Google Code. Also available at PyPI.
+
+
 PySmell v0.6
 
 Added module completion, including absolute and relative imports. Completing import

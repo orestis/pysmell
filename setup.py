@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='pysmell',
-    version ='0.6',
+    version ='0.7a',
     description = 'An autocompletion library for Python',
     author = 'Orestis Markou',
     author_email = 'orestis@orestis.gr',

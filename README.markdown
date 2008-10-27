@@ -11,25 +11,32 @@ completion mechanism is very straightforward.
 
 ##Download and Installation
 
-PySmell's code is available at
-[GitHub](http://github.com/orestis/pysmell/tree/v0.6). You can click
-'Download' to get it as a zip/tar if you don't have git installed.
+PySmell is available at [PyPI](http://pypi.python.org/pypi/pysmell). The best
+way to install PySmell is by downloading the source distribution and doing
+`python setup.py install`. While `easy_install pysmell` also works, I haven't
+yet found a way of distributing the vim script with it (suggestions welcome).
 
-Extract and drop the pysmell package somewhere in your `PYTHONPATH`.
-Distutils support coming soon - patches welcome!
+You be able to `import pysmell` inside your Python interpreter and invoke
+`pysmell` at the command line.
+
+You can track the development of PySmell by visiting 
+[GitHub](http://github.com/orestis/pysmell/). You can click 'Download'
+to get it as a zip/tar if you don't have git installed. `python setup.py
+develop` will setup your enviroment.
 
 ##Usage
 
 To generate a PYSMELLTAGS file, use:
 
-    cd /root/of/project /dir/of/pysmell.py .
+    cd /root/of/project
+    pysmell .
 
 If you want to specifically include or exclude some files or directories
 (eg. tests), you can use: 
 
-    /dir/of/pysmell.py [Package Package File File ...] [-x Excluded Excluded ...]
+    pysmell [Package Package File File ...] [-x Excluded Excluded ...]
 
-Check for more options by invoking `pysmell.py` without any arguments
+Check for more options by invoking `pysmell` without any arguments
 
 ##Using external libraries
 
@@ -39,7 +46,7 @@ Library and Django.
 To use external libraries, you have to first analyze the libraries you
 want, eg. for stdlib:
 
-    pysmell.py . -x site-packages test -o ~/PYSMELLTAGS.stdlib
+    pysmell . -x site-packages test -o ~/PYSMELLTAGS.stdlib
 
 This will create PYSMELLTAGS.stdlib in your HOME. Copy that in the root
 of your project, and repeat for other libraries by changing the
@@ -57,7 +64,7 @@ To accomplish that, you can put PYSMELLTAGS.* files inside
 subdirectories, and they will be used only when you're working on a file
 somewhere in that directory or its children.
 
-    /dir/of/pysmell.py Tests/FunctionalTest.py Tests/UndoTestCase.py -o Tests/PYSMELLTAGS.Tests
+    pysmell Tests/FunctionalTest.py Tests/UndoTestCase.py -o Tests/PYSMELLTAGS.Tests
 
 The information in FunctionalTest and UndoTestCase will only be
 accessible when editing a file inside the Tests package.
@@ -66,10 +73,9 @@ accessible when editing a file inside the Tests package.
 
 To use PySmell omnicompletion from inside Vim, you have to have:
 
-1. Python support 
-2. The pysmell package in your PYTHONPATH (sometimes
-Vim is silly about this) 
-3. Source pysmell/pysmell.vim 
+1. Python support in vim (`:echo has('python')`)
+2. The pysmell package in the PYTHONPATH that Vim uses: `python import pysmell` should work.
+3. Drop pysmell.vim in ~/.vim/plugins
 4. `:setlocal omnifunc=pysmell#Complete` Note: If you want to always use pysmell for
 python, do: `autocmd FileType python setlocal omnifunc=pysmell#Complete`
 5. [OPTIONAL] Select a matcher of your liking - look at pysmell.vim for
