@@ -16,7 +16,6 @@ setup(
         ('vim', ['pysmell.vim'])
     ],
     include_package_data = True,
-    license = 'BSD',
     keywords = 'vim autocomplete',
     url = 'http://code.google.com/p/pysmell',
     long_description =
