@@ -35,7 +35,7 @@ def test(aname):
 
 
 def generateClassTag(modules, output):
-    p = os.path.join(os.getcwd(), output)
+    p = os.path.abspath(output)
     f = open(p, 'w')
     pprint(modules, f, width=100)
     f.close()
