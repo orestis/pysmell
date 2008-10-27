@@ -30,7 +30,7 @@ The first target is Vim, because that's what I'm using and because its
 completion mechanism is very straightforward, but it's not limited to it.
 """,
     classifiers = [
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
