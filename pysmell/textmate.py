@@ -22,6 +22,9 @@ def main():
     options = idehelper.detectCompletionType(cur_file, source, line_no, cur_col, base, PYSMELLDICT)
     completions = idehelper.findCompletions(base, PYSMELLDICT, options)
 
+    if not completions:
+        write('No completions found')
+        sys.exit(206) #magic code for tooltip
     if len(completions) == 1:
         new_word = completions[0]['word']
         write(new_word)

@@ -91,6 +91,17 @@ You can generate debugging information by doing:
 Debug information will be appended in that buffer, copy and paste it
 into the report.
 
+##TextMate
+
+Double-click PySmell.tmbundle :)
+
+##Emacs
+
+Put pysmell.el into your `load-path`, and inside your .emacs file put:
+
+    (require 'pysmell)
+    (add-hook 'python-mode-hook (lambda () (pysmell-mode 1)))
+
 ##Reporting issues
 PySmell is hosted at [Google Code](http://code.google.com/p/pysmell).
 
