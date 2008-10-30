@@ -15,7 +15,8 @@ from codefinder import ModuleDict, processFile
 from idehelper import findRootPackageList
 from pprint import pprint
 
-__version__ = "v0.7a"
+ 
+version = __import__('pysmell').__version__
 
 source = """
 class Aclass(object):
@@ -102,7 +103,7 @@ Options:
     -t        Will print timing information.
 
     -v        Verbose mode; useful for debugging
-""" % __version__
+""" % version
         sys.exit(0)
     timing = False
     verbose = False

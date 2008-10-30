@@ -3,7 +3,7 @@ from textwrap import dedent
 import subprocess
 import os
 from pysmell import idehelper
-from pysmell.pysmell import __version__ as version
+from pysmell import __version__ as version
 
 class FunctionalTest(unittest.TestCase):
     def setUp(self):

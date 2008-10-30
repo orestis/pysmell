@@ -6,3 +6,6 @@
 # http://orestis.gr
 
 # Released subject to the BSD License 
+
+
+__version__ = "v0.7a"
