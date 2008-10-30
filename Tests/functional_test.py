@@ -3,6 +3,7 @@ from textwrap import dedent
 import subprocess
 import os
 from pysmell import idehelper
+from pysmell.pysmell import __version__ as version
 
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
@@ -215,7 +216,7 @@ class FunctionalTest(unittest.TestCase):
         proc.wait()
         stdout = proc.stdout.read()
         expected = dedent("""\
-        PySmell v0.7a
+        PySmell %s
 
         usage: python pysmell.py package [package, ...] [-x excluded, ...] [options]
 
@@ -234,7 +235,7 @@ class FunctionalTest(unittest.TestCase):
 
             -v        Verbose mode; useful for debugging
 
-        """).splitlines()
+        """ % version).splitlines()
         self.assertEquals(stdout.splitlines(), expected)
 
 

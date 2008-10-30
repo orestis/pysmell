@@ -2,9 +2,11 @@
 # -*- coding: UTF-8 -*-
 from setuptools import setup
 
+version = __import__('pysmell.pysmell').pysmell.__version__
+
 setup(
     name='pysmell',
-    version ='0.7',
+    version = version,
     description = 'An autocompletion library for Python',
     author = 'Orestis Markou',
     author_email = 'orestis@orestis.gr',
