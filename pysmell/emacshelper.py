@@ -1,4 +1,4 @@
-import idehelper
+from pysmell import idehelper
 from re import split
 
 
