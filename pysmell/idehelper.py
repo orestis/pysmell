@@ -51,13 +51,14 @@ def findPYSMELLDICT(filename):
 
 def _getPathParts(path):
     "given a full path, return its components without the extension"
-    pathParts = []
     head, tail = os.path.split(path[:-3])
-    pathParts.append(tail)
+    pathParts = [tail]
     while head and tail:
         head, tail = os.path.split(head)
         if tail:
             pathParts.append(tail)
+    if head:
+        pathParts.append(head)
     pathParts.reverse()
     return pathParts
 
