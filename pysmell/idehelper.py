@@ -35,7 +35,6 @@ def findPYSMELLDICT(filename):
     PYSMELLDICT = {}
     while pathParts:
         directory = os.path.join(*pathParts)
-        print directory
         for tagsfile in fnmatch.filter(listdir(directory), 'PYSMELLTAGS.*'):
             tryReadPYSMELLDICT(directory, tagsfile, PYSMELLDICT)
         tagsPath = os.path.join(directory, 'PYSMELLTAGS')

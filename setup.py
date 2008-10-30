@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 from setuptools import setup
 
-version = __import__('pysmell.pysmell').pysmell.__version__
+version = __import__('pysmell.pysmell').__version__
 
 setup(
     name='pysmell',
