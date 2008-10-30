@@ -9,12 +9,11 @@
 
 # Released subject to the BSD License 
 
-
 import sys, os
-from codefinder import ModuleDict, processFile
-from idehelper import findRootPackageList
 from pprint import pprint
 
+from pysmell.codefinder import ModuleDict, processFile
+from pysmell.idehelper import findRootPackageList
  
 version = __import__('pysmell').__version__
 

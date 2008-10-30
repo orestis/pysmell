@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 from setuptools import setup
 
-version = __import__('pysmell.pysmell').__version__
+version = __import__('pysmell').__version__
 
 setup(
     name='pysmell',
@@ -12,7 +12,7 @@ setup(
     author_email = 'orestis@orestis.gr',
     packages = ['pysmell'],
     entry_points = {
-        'console_scripts': [ 'pysmell = pysmell.pysmell:main' ]
+        'console_scripts': [ 'pysmell = pysmell.tags:main' ]
     },
     data_files = [
         ('vim', ['pysmell.vim']),

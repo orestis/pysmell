@@ -8,10 +8,11 @@
 # Released subject to the BSD License 
 
 import os, re
-from codefinder import findRootPackageList, getImports, getNames, getClassAndParents
-from matchers import MATCHERS
-from dircache import listdir
 import fnmatch
+from dircache import listdir
+
+from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents
+from pysmell.matchers import MATCHERS
 
 def updatePySmellDict(master, partial):
     for key, value in partial.items():

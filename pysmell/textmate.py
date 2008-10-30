@@ -1,6 +1,6 @@
 import os
 import sys
-import idehelper, vimhelper
+from pysmell import idehelper, vimhelper
 
 sys.path.append(os.environ['TM_SUPPORT_PATH'] + '/lib')
 import dialog
