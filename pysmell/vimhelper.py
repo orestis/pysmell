@@ -7,9 +7,7 @@
 
 # Released subject to the BSD License 
 
-def findBase(vim):
-    row, col = vim.current.window.cursor
-    line = vim.current.buffer[row-1]
+def findBase(line, col):
     index = col
     # col points at the end of the completed string
     # so col-1 is the last character of base

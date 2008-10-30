@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/opt/local/bin/python
+
+import os
+import sys
+from pysmell import idehelper, vimhelper
+
+def write(word):
+    sys.stdout.write(word)
+
+sys.path.append(os.environ['TM_SUPPORT_PATH'] + '/lib')
+import dialog
+
+cur_file = os.environ.get("TM_FILEPATH")
+source = sys.stdin.read()
+line_no = int(os.environ.get("TM_LINE_NUMBER"))
+cur_col = int(os.environ.get("TM_LINE_INDEX"))
+
+PYSMELLDICT = idehelper.findPYSMELLDICT(cur_file)
+line = source.splitlines()[line_no - 1]
+index = vimhelper.findBase(line, cur_col)
+base = line[index:cur_col]
+
+options = idehelper.detectCompletionType(cur_file, source, line_no, cur_col, base, PYSMELLDICT)
+completions = idehelper.findCompletions(base, PYSMELLDICT, options)
+
+if len(completions) == 1:
+    new_word = completions[0]['word']
+    write(new_word)
+elif len(completions) &gt; 1:
+    dialogTuples = [
+        (
+          "%s - %s" % (comp.get('abbr', comp['word']), comp.get('menu', '')),
+          index)
+        for index, comp in enumerate(completions)
+    ]
+    compIndex = dialog.menu(dialogTuples)
+    if compIndex is not None:
+        write(completions[compIndex]['word'])</string>
+	<key>input</key>
+	<string>document</string>
+	<key>keyEquivalent</key>
+	<string>~</string>
+	<key>name</key>
+	<string>Complete</string>
+	<key>output</key>
+	<string>afterSelectedText</string>
+	<key>scope</key>
+	<string>source.python</string>
+	<key>uuid</key>
+	<string>B67F0AD3-74B0-4ADF-BF99-015E15AF4D84</string>
+</dict>
+</plist>

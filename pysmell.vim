@@ -41,8 +41,9 @@ function! pysmell#Complete(findstart, base)
     if a:findstart == 1
 python << eopython
 row, col = vim.current.window.cursor
+line = vim.current.buffer[row-1]
+index = vimhelper.findBase(line, col)
 vim.command('let g:pysmell_origCol = %d' % col)
-index = vimhelper.findBase(vim)
 vim.command('return %d' % index)
 eopython
     "findstart = 0 when we need to return the list of completions
