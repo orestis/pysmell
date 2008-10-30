@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='pysmell',
-    version ='0.7a',
+    version ='0.7',
     description = 'An autocompletion library for Python',
     author = 'Orestis Markou',
     author_email = 'orestis@orestis.gr',
@@ -13,7 +13,8 @@ setup(
         'console_scripts': [ 'pysmell = pysmell.pysmell:main' ]
     },
     data_files = [
-        ('vim', ['pysmell.vim'])
+        ('vim', ['pysmell.vim']),
+        ('emacs', ['pysmell.el']),
     ],
     include_package_data = True,
     keywords = 'vim autocomplete',
@@ -30,7 +31,7 @@ The first target is Vim, because that's what I'm using and because its
 completion mechanism is very straightforward, but it's not limited to it.
 """,
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
