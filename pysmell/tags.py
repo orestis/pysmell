@@ -86,7 +86,7 @@ def main():
         print """\
 PySmell %s
 
-usage: python pysmell.py package [package, ...] [-x excluded, ...] [options]
+usage: pysmell package [package, ...] [-x excluded, ...] [options]
 
 Generate a PYSMELLTAGS file with information about the Python code contained
 in the specified packages (recursively). This file is then used to

@@ -1,12 +1,21 @@
 import os
 import sys
 from pysmell import idehelper, vimhelper
+from pysmell import tags as tags_module
 
 sys.path.append(os.environ['TM_SUPPORT_PATH'] + '/lib')
 import dialog
 
 def write(word):
     sys.stdout.write(word)
+
+
+def tags(projectDir):
+    args = ['pysmell', projectDir, '-o', os.path.join(projectDir, 'PYSMELLTAGS')]
+    sys.argv = args
+    tags_module.main()
+    write('PYSMELLTAGS created in %s' % projectDir)
+
 
 def main():
     cur_file = os.environ.get("TM_FILEPATH")

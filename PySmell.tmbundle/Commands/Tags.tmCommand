@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>saveModifiedFiles</string>
+	<key>command</key>
+	<string>#!/usr/bin/env python
+
+import os
+projectDir = os.environ.get('TM_PROJECT_DIRECTORY') or os.environ.get('TM_DIRECTORY')
+
+from pysmell import textmate
+textmate.tags(projectDir)
+
+</string>
+	<key>input</key>
+	<string>none</string>
+	<key>keyEquivalent</key>
+	<string>~@T</string>
+	<key>name</key>
+	<string>Tags</string>
+	<key>output</key>
+	<string>showAsTooltip</string>
+	<key>scope</key>
+	<string>source.python</string>
+	<key>uuid</key>
+	<string>88EFA3FB-E2C2-4E71-BC9F-22DB802B5A60</string>
+</dict>
+</plist>
