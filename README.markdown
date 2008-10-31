@@ -6,17 +6,17 @@ It tries to statically analyze Python source code, without executing it,
 and generates information about a project's structure that IDE tools can
 use.
 
-The first target is Vim, because that's what I'm using and because its
-completion mechanism is very straightforward.
+There is currently support for Vim, Emacs and TextMate. Feel free to contribute
+your own favourite editor bindings, or to improve the existing ones.
 
 ##Download and Installation
 
 PySmell is available at [PyPI](http://pypi.python.org/pypi/pysmell). The best
 way to install PySmell is by downloading the source distribution and doing
 `python setup.py install`. While `easy_install pysmell` also works, I haven't
-yet found a way of distributing the vim script with it (suggestions welcome).
+yet found a way of distributing the editor scripts with it (suggestions welcome).
 
-You be able to `import pysmell` inside your Python interpreter and invoke
+You should be able to `import pysmell` inside your Python interpreter and invoke
 `pysmell` at the command line.
 
 You can track the development of PySmell by visiting 
@@ -26,7 +26,7 @@ develop` will setup your enviroment.
 
 ##Usage
 
-To generate a PYSMELLTAGS file, use:
+Before you invoke PySmell, you need to generate a PYSMELLTAGS file: 
 
     cd /root/of/project
     pysmell .
@@ -95,6 +95,15 @@ into the report.
 
 Double-click PySmell.tmbundle :)
 
+Complete with alt-esc - look into the bundle for more commands.
+
+You can find the bundle in the source distribution - it's not installed
+with the egg, because it's too much trouble. 
+
+One usual problem you might face is when you install PySmell on a different Python
+than your editor uses. Setting the PATH in TextMate's preferences to what is
+your normal $PATH resolves this.
+
 ##Emacs
 
 Put pysmell.el into your `load-path`, and inside your .emacs file put:
@@ -102,7 +111,12 @@ Put pysmell.el into your `load-path`, and inside your .emacs file put:
     (require 'pysmell)
     (add-hook 'python-mode-hook (lambda () (pysmell-mode 1)))
 
+Complete with M-/, create tags with M-x pysmell-make-tags
+
+[Pymacs](http://pymacs.progiciels-bpi.ca/) is required as well.
+
 ##Reporting issues
+
 PySmell is hosted at [Google Code](http://code.google.com/p/pysmell).
 
 Look in the [issues list](http://code.google.com/p/pysmell/issues) first.

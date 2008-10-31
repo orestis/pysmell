@@ -8,4 +8,4 @@
 # Released subject to the BSD License 
 
 
-__version__ = "0.7a"
+__version__ = "0.7"

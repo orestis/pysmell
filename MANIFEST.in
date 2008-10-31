@@ -3,3 +3,5 @@ include AUTHORS
 include pysmell.vim
 include pysmell.el
 include CHANGELOG
+include PySmell.tmbundle/**
+include PySmell.tmbundle/Commands/**
