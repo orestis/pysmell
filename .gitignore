@@ -1,9 +1,3 @@
-*.swp
 *.pyc
-.DS_Store
-PYSMELLTAGS
-PYSMELLTAGS.*
-OUTPUTREDIR*
-build
-dist
-pysmell.egg-info
+*~
+*#*

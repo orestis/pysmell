@@ -17,6 +17,12 @@
        (print err)
        (kill-emacs 1)))))
 
+(defun string-in-bufferp (string)
+  "Check if a string is in the current buffer"
+  (goto-char 0)
+  (search-forward "finished" nil t))
+
+
 (defun test-basic ()
   ;; Harold wants pysmell completion to more or less work
   
@@ -29,11 +35,16 @@
   ;; He opens a new file in the TestData folder and switches on pysmell mode.
   (setq input-buffer (find-file "TestData/test.py"))
 
+
   ;; He runs pysmell-make-tags on the TestData directory
   (pysmell-make-tags ".")
 
   ;; A new buffer is displayed with the name "*make-pysmell-tags*"
   (assert (equal (buffer-name) "*make-pysmell-tags*"))
+
+  ;; He does nothing for a while
+  (sit-for 3) ;;; yay for non-determinism - someone more intelligent can fix this. - beware blocking sleeps.
+  (assert (not (string-in-bufferp "EXCEPTION")))
 
   ;; He switches back to his new file.
   (switch-to-buffer input-buffer)

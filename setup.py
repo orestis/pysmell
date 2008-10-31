@@ -19,6 +19,7 @@ setup(
         ('emacs', ['pysmell.el']),
     ],
     include_package_data = True,
+    test_suite = "Tests",
     keywords = 'vim autocomplete',
     url = 'http://code.google.com/p/pysmell',
     long_description =
