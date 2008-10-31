@@ -3,13 +3,16 @@
 ;; Author: Tom Wright <tat.wright@tat.wright.name>
 ;; Keywords: python completion pysmell
 
+;; Bug reports should be filed at <http://code.google.com/p/pysmell>
+
 ;; This code is released under a BSD license.
 
 ;;; INSTALLATION:
 
 ;; To install:
-;; * Ensure pysmell has been installed with setup.py
-;; * Add this directory to your emacs load-path
+;; * Install pysmell (python setup.py install)
+;; * Add pysmell.el to your emacs load-path
+;; * Install pymacs.el and make sure it's working
 ;; * Require pysmell on startup
 ;; * Start pysmell mode whenever python mode is started by adding it to a mode hook.
 ;; This can be done by adding the following lines to your .emacs file
@@ -17,24 +20,12 @@
 ;; (require 'pysmell)
 ;; (add-hook 'python-mode-hook (lambda () (pysmell-mode 1)))
 
+;;; DEVELOPING
 
-;;; ALTERNATIVE INSTALLATION FOR THOSE WHO HATE setuputils OR LIKE CHANGING THINGS:
-
-;; To install this:
-;; * Unzip the pysmell tarball to a directory
-;; * Add this directory to your emacs load-path
-;; * Require pysmell on startup
-;; * Start pysmell mode whenever python mode is started by adding it to a mode hook.
-;; This can be done by adding the following lines to your .emacs file
-;; (add-to-list 'load-path "PATH TO DIRECTORY")
-;; (require 'pysmell)
-;; (add-hook 'python-mode-hook (lambda () (pysmell-mode 1)))
-
-;; This allows one to edit the python source code.
-
-;; [If adding something to your load-path seems cumbersome you can instead place pysmell.el in your load-path
-;; and then set the variable pysmell-python-dir to point to an unzipped version of the pysmell tarball, 
-;; or simply place an unzipped version of the pysmell tarball to a directory in your load-path.]
+;; If you want to hack on the Python part of PySmell, you can do
+;; 'python setup.py develop' instead of 'install'. This will create
+;; symlinks instead of copying the files in site-packages, meaning
+;; that changes will be picked up automatically.
 
 ;;; MINIMAL USAGE INSTRUCTIONS:
 
@@ -42,7 +33,6 @@
 ;; * Open a python file (ensure the Pysmell appears in the modeline)
 ;; * Run M-x pysmell-make-tags in some directory containing the directory tree containing the current file.
 ;; * Press M-/ to complete a symbols using pysmell
-
 
 ;;; Documentation:
 ;; PySmell will try to intelligently complete symbol in Python
@@ -56,18 +46,9 @@
 ;; case pysmelltags.py, after this file has been produced PySmell
 ;; searches the files to find possible completions. This means
 ;; that if this data file gets out of date PySmell may not find
-;; completions or may produce spurious completions. When 
-;; a developers annoyance with this exceeds there
-;; laziness they will recreate the tags file. The 
-;; command pysmell-make-tags will produce this data file
-
-;; PySmell was written by a Python programmer to handle Python code,
-;; and was therefore, unsuprisingly, written mainly in Python. This has the advantage
-;; of producing a cross platform utility that can run with almost
-;; all editors. It has the disadvantage that 
-;; the users of said editors have to jump through hoops to to bind
-;; their editor to python. In particular, emacs users must have the pymacs 
-;; package installed.
+;; completions or may produce spurious completions. You can always
+;; regenerate this file with pysmell-make-tags. Look into the main
+;; documentation for more examples, including external libraries.
 
 ;;; Caveats:
 
@@ -89,43 +70,10 @@
 
 (pymacs-terminate-services)
 
-
-(setq pysmell-python-dir nil)
-(defvar pysmell-python-dir nil "Type of matching to perform")
 (defvar pysmell-matcher "case-sensitive" "Type of matching to perform")
 
-;scour load-path for a directory containing pysmell
-(if (null pysmell-python-dir)
-    (dolist (dir load-path)
-      (if (and
-	   (file-directory-p dir)
-	   (member "pysmell" (directory-files dir)))
-	  (setq pysmell-python-dir (format "%s/%s" (directory-file-name dir) 
-					   "pysmell")))))
-
-;scour load-path for a directory which is pysmell
-(if (null pysmell-python-dir)
-    (dolist (dir load-path)
-      (if (file-directory-p dir)
-	  (let ((files (directory-files dir)))
-	    (if (and
-		 (member "emacshelper.py" files)
-		 (member "idehelper.py" files))
-		(setq pysmell-python-dir dir))))))
-
-
-(if (not (null pysmell-python-dir))
-    (progn
-      (pymacs-load (expand-file-name (format "%s/%s" pysmell-python-dir "pysmell.emacshelper")) "pysmell-")
-      (setq pysmell-make-tags-process
-	    (list
-	     "python"
-	     (format "%s/%s/%s" (expand-file-name pysmell-python-dir) "pysmell" "pysmell.py"))))
-  (progn
-    (pymacs-load "pysmell.emacshelper" "pysmell-")
-    (setq pysmell-make-tags-process (list "pysmell"))))
-
-
+(pymacs-load "pysmell.emacshelper" "pysmell-")
+(setq pysmell-make-tags-process (list "pysmell"))
 
 (defun pysmell-all-completions ()
     (setq completions (pysmell-get-completions 
@@ -135,7 +83,6 @@
 		       (current-column)
 		       pysmell-matcher))
     (lambda () (pop completions)))
-
 
 
 (defun pysmell-first-completion ()
