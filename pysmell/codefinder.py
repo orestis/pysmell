@@ -482,7 +482,13 @@ class NameVisitor(BaseVisitor):
 
     @VisitChildren
     def visitAssign(self, node):
-        self.names[node.nodes[0].name] = getName(node.expr)
+        assNode = node.nodes[0]
+        name = None
+        if isinstance(assNode, ast.AssName):
+            name = assNode.name
+        elif isinstance(assNode, ast.AssAttr):
+            name = assNode.attrname
+        self.names[name] = getName(node.expr)
 
 
 
