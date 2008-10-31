@@ -33,7 +33,7 @@
 ;; * Follow the installation instructions
 ;; * Open a python file (ensure the Pysmell appears in the modeline)
 ;; * Run M-x pysmell-make-tags in some directory containing the directory tree containing the current file.
-;; * Press M-/ to complete a symbols using pysmell
+;; * Press M-/ to complete a symbol using pysmell
 
 ;;; Documentation:
 ;; PySmell will try to intelligently complete symbol in Python
@@ -63,34 +63,26 @@
 
 ; Integration of pysmell with autocompletion
 
-
 (require 'pymacs)
 (require 'hippie-exp)
 (require 'cl)
-
-
-(pymacs-terminate-services)
 
 (defvar pysmell-matcher "case-sensitive" "Type of matching to perform")
 
 (pymacs-load "pysmell.emacshelper" "pysmell-")
 (setq pysmell-make-tags-process (list "pysmell"))
 
-(defun pysmell-all-completions ()
-    (setq completions (pysmell-get-completions 
-		       (buffer-file-name)
-		       (buffer-string)
-		       (line-number-at-pos)
-		       (current-column)
-		       pysmell-matcher))
-    (lambda () (pop completions)))
+
+(defun pysmell-get-all-completions ()
+  "Get all the completions for the symbol under the point."
+  (pysmell-get-completions 
+   (buffer-file-name)
+   (buffer-string)
+   (line-number-at-pos)
+   (current-column)
+   pysmell-matcher))
 
 
-(defun pysmell-first-completion ()
-  (interactive)
-  (insert (funcall (pysmell-all-completions))))
-
-  
 (defun pysmell-make-tags (directory)
   "Makes tags in the current tree"
   (interactive "D")
@@ -104,15 +96,13 @@
   (switch-to-buffer-other-window "*make-pysmell-tags*")))
 
 
-(setq pymsell-completion-iterator nil)
-
-
+(setq pysmell-completions nil)
 (defun try-pysmell-complete (old)
   "Cycle through pysmell completions for the text behind the point"
   (interactive "P")
   (let (sub)
     (if (not old)
-	(setq pysmell-completion-iterator (pysmell-all-completions)))
+	(setq pysmell-completions (pysmell-get-all-completions)))
     (if (null old)
 	(let ((region (pysmell-find-subst-region)))
 	      (if region
@@ -122,8 +112,7 @@
 		 (progn
 		   (insert " ")
 		   (point)))))))
-
-    (if (setq sub (funcall pysmell-completion-iterator))
+    (if (setq sub (pop pysmell-completions))
 	(he-substitute-string sub)
       (he-reset-string))
     (not (null sub)))
@@ -139,7 +128,6 @@
 	    (cons (point) 
 		  (progn (insert " ") (point))))
       (list beg end))))
-
 
 (define-minor-mode pysmell-mode
   "Toggle PySmell mode.
@@ -158,11 +146,7 @@ static analysis."
  ;; The minor mode bindings.
  `((,(kbd "M-/") . pysmell-complete))
  :group 'pysmell)
-
-
-
-
 (provide 'pysmell)
 
-;;; ends here
+;;; pysmell.el ends here
      
