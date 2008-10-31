@@ -69,15 +69,3 @@
   (assert-word-at-point "classPropertyB"))
 
 (run-test 'test-basic)
-
-
-
-
-
-
-
-
-
-
-
-
