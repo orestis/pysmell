@@ -19,6 +19,7 @@ class ProducesFile(object):
                 for f in self.files:
                     if os.path.exists(f):
                         os.remove(f)
+        patched.__name__ = func.__name__
         return patched
 
 class FunctionalTest(unittest.TestCase):
