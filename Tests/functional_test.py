@@ -5,6 +5,22 @@ import os
 from pysmell import idehelper
 from pysmell import __version__ as version
 
+class ProducesFile(object):
+    def __init__(self, *files):
+        self.files = files
+    def __call__(self, func):
+        def patched(*args, **kw):
+            for f in self.files:
+                if os.path.exists(f):
+                    os.remove(f)
+            try:
+                return func(*args, **kw)
+            finally:
+                for f in self.files:
+                    if os.path.exists(f):
+                        os.remove(f)
+        return patched
+
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
         self.packageA = {
@@ -87,9 +103,8 @@ class FunctionalTest(unittest.TestCase):
                 self.assertEquals(value, expectedDict[key], "wrong value for key %s: %s" % (key, value)) 
 
 
+    @ProducesFile('TestData/PYSMELLTAGS')
     def testMultiPackage(self):
-        if os.path.exists('TestData/PYSMELLTAGS'):
-            os.remove('TestData/PYSMELLTAGS')
         subprocess.call(["pysmell", "PackageA", "PackageB"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
@@ -102,9 +117,8 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
+    @ProducesFile('TestData/PYSMELLTAGS')
     def testPackageA(self):
-        if os.path.exists('TestData/PYSMELLTAGS'):
-            os.remove('TestData/PYSMELLTAGS')
         subprocess.call(["pysmell", "PackageA"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
@@ -115,9 +129,8 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(foundDict, expectedDict)
 
 
+    @ProducesFile('TestData/PYSMELLTAGS')
     def testPackageB(self):
-        if os.path.exists('TestData/PYSMELLTAGS'):
-            os.remove('TestData/PYSMELLTAGS')
         subprocess.call(["pysmell", "PackageB"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
@@ -125,9 +138,8 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
+    @ProducesFile('TestData/PackageA/PYSMELLTAGS')
     def testPackageDot(self):
-        if os.path.exists('TestData/PackageA/PYSMELLTAGS'):
-            os.remove('TestData/PackageA/PYSMELLTAGS')
         subprocess.call(["pysmell", "."], cwd='TestData/PackageA')
         self.assertTrue(os.path.exists('TestData/PackageA/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PackageA/PYSMELLTAGS').read())
@@ -135,9 +147,8 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
+    @ProducesFile('TestData/PYSMELLTAGS')
     def testAllPackages(self):
-        if os.path.exists('TestData/PYSMELLTAGS'):
-            os.remove('TestData/PYSMELLTAGS')
         subprocess.call(["pysmell", "."], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
         PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
@@ -152,11 +163,10 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
     
+    @ProducesFile('TestData/PackageA/NestedPackage/EvenMore/PYSMELLTAGS')
     def testSingleFile(self):
         "should recurse up until it doesn't find __init__.py"
         path = 'TestData/PackageA/NestedPackage/EvenMore/'
-        if os.path.exists('%sPYSMELLTAGS' % path):
-            os.remove('%sPYSMELLTAGS' % path)
         subprocess.call(["pysmell", "ModuleC.py"], cwd=path)
         self.assertTrue(os.path.exists('%sPYSMELLTAGS' % path ))
         PYSMELLDICT = eval(open('%sPYSMELLTAGS' % path).read())
@@ -171,11 +181,10 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
 
+    @ProducesFile("TestData/PYSMELLTAGS")
     def testSingleFilesWithPaths(self):
         path = 'TestData'
         pysmell = os.path.join(path, 'PYSMELLTAGS')
-        if os.path.exists(pysmell):
-            os.remove(pysmell)
         subprocess.call(["pysmell", os.path.join("PackageA", "NestedPackage", "EvenMore", "ModuleC.py")], cwd=path)
         self.assertTrue(os.path.exists(pysmell))
         PYSMELLDICT = eval(open(pysmell).read())
@@ -188,12 +197,10 @@ class FunctionalTest(unittest.TestCase):
                         
         }
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
-        
 
 
+    @ProducesFile('TestData/OUTPUTREDIR', 'TestData/OUTPUTREDIR2')
     def testOutputRedirect(self):
-        if os.path.exists('TestData/OUTPUTREDIR'):
-            os.remove('TestData/OUTPUTREDIR')
         subprocess.call(["pysmell", "PackageA", "-o",
             "OUTPUTREDIR"], cwd='TestData')
         self.assertTrue(os.path.exists('TestData/OUTPUTREDIR'))
@@ -202,8 +209,6 @@ class FunctionalTest(unittest.TestCase):
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
 
         absPath = os.path.join(os.getcwd(), 'TestData', 'OUTPUTREDIR2')
-        if os.path.exists(absPath):
-            os.remove(absPath)
         subprocess.call(["pysmell", "PackageA", "-o", absPath], cwd='TestData')
         self.assertTrue(os.path.exists(absPath))
         PYSMELLDICT = eval(open(absPath).read())
