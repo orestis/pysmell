@@ -1,10 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+from distutils import cmd
 from setuptools import setup
+
+
+from setuptools.command.install import install as _install
+
+post_install_message = """\
+
+===================================================================
+PySmell has a number of support scripts for Vim, Emacs.
+You have to manually copy them from the source distribution to your
+.vim/plugins, .emacs.d to be able to use PySmell. 
+
+TextMate users should double-click on the bundle to install it.
+
+Consult the README for more information
+===================================================================
+"""
+
+class install(_install):
+    def run(self):
+        _install.run(self)
+        print post_install_message
 
 version = __import__('pysmell').__version__
 
+
 setup(
+    cmdclass={'install': install},
     name='pysmell',
     version = version,
     description = 'An autocompletion library for Python',
@@ -14,10 +38,6 @@ setup(
     entry_points = {
         'console_scripts': [ 'pysmell = pysmell.tags:main' ]
     },
-    data_files = [
-        ('vim', ['pysmell.vim']),
-        ('emacs', ['pysmell.el']),
-    ],
     include_package_data = True,
     test_suite = "Tests",
     keywords = 'vim autocomplete',
