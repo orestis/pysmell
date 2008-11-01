@@ -68,4 +68,5 @@
   ;; The word under the point is "classPropertyB" 
   (assert-word-at-point "classPropertyB"))
 
-(run-test 'test-basic)
+(defun run-all-tests ()
+  (run-test 'test-basic))
