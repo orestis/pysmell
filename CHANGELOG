@@ -1,15 +1,17 @@
-Pusmell v0.7 *UNRELEASED*
+Pusmell v0.7 - 2 Nov 2008
 
-Added module member completion: import os followed by os. will give members of
-os.
-Added rudimentary type-inferencing: instance = A(), when A is a class.
-"instance" will be detected as an instance of A.
+Added module member completion: "import os" followed by "os." will give members of os.
+Added rudimentary type-inferencing: 
+	a = A() # A is a class.
+	"a" will be detected as an instance of A.
 A lot of under-the-hood refactoring, making adding features easier.
-Added setuptools support: pysmell is now a script.
+Added setuptools support: pysmell is now a script. Thanks, Michael Thalmeier
+Added Emacs support. Thanks, Tom Wright
+Added TextMate support. Thanks, dbr - http://neverfear.org/
 PySmell has now a bug tracker on Google Code. Also available at PyPI.
 
 
-PySmell v0.6
+PySmell v0.6 - 13 Oct 2008
 
 Added module completion, including absolute and relative imports. Completing import
 statements works, but the messages may look a bit wonky - please report oddities.
@@ -24,19 +26,19 @@ Renamed pysmelltags.py to pysmell.py
 Added shebang to pysmell.py
 
 
-PySmell v0.5
+PySmell v0.5 - 15 Sep 2008
 
 Bug fix: infinite loop when no PYSMELLTAGS is found.
 
 
-PySmell v0.4
+PySmell v0.4 - 11 Sep 2008
 
 Improved class detection: Now works even for classes which are not present in PYSMELLDICT
 Improved import handling: "absolute" imports work, as well as imported name detection.
 This version sort-of correctly handles Django (not the dynamic part of course!)
 
 
-PySmell v0.3
+PySmell v0.3 - 10 Sep 2008
 
 Added simple type-inferencing when inside classes, hardcoded to "self". It will present methods and properties
 of current and parent classes (but not built-in types). It only works with relative imports for now.
@@ -48,14 +50,14 @@ Bugfix: Set Vim to display duplicate arguments
 Bugfix: change name of omnifunc so to not clash with built-in python omnicompletion
 
 
-PySmell v0.2
+PySmell v0.2 - 1 Sep 2008
 
 Added support for nested packages
 Exceptions in files are not blocking the process
 Switched to parseFile, shouldn't have to worry about line endings
 
 
-PySmell v0.1 
+PySmell v0.1 - 31 Aug 2008
 
 Initial, roughly working version
 
