@@ -14,7 +14,7 @@ class EmacsTest(unittest.TestCase):
             if (os.path.isfile(pysmell_file)):
                 os.remove(pysmell_file)
             self.assertTrue(os.path.isfile(emacs_test), "Could not find emacs functional test")
-            user = os.environ.get('USER', os.environ['username'])
+            user = os.environ.get('USER', os.environ.get('username'))
             proc = Popen(["emacs",  "--batch", "--load", emacs_test, '--funcall', 'run-all-tests', '-u', user], stdout=PIPE, stderr=PIPE)
             result = proc.wait()
 
