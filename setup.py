@@ -40,7 +40,7 @@ setup(
     },
     include_package_data = True,
     test_suite = "Tests",
-    keywords = 'vim autocomplete',
+    keywords = 'vim emacs textmate autocomplete',
     url = 'http://code.google.com/p/pysmell',
     long_description =
 """\
@@ -50,8 +50,8 @@ It tries to statically analyze Python source code, without executing it,
 and generates information about a project's structure that IDE tools can
 use.
 
-The first target is Vim, because that's what I'm using and because its
-completion mechanism is very straightforward, but it's not limited to it.
+PySmell currently supports Vim, Emacs and TextMate. It can be integrated with
+any editor that can run Python scripts and has an auto-complete API.
 """,
     classifiers = [
         'Development Status :: 5 - Production/Stable',
