@@ -50,7 +50,12 @@ def main():
               index)
             for index, comp in enumerate(completions)
         ]
-        compIndex = dialog.menu(dialogTuples)
+        try:
+            dialogTuples = dialogTuples[:1500]
+            compIndex = dialog.menu(dialogTuples)
+        except:
+            print 'got %d completions - please narrow down' % len(dialogTuples)
+            sys.exit(206)
         if compIndex is not None:
             write(completions[compIndex]['word'])
 
