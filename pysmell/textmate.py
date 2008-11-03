@@ -19,11 +19,17 @@ def tags(projectDir):
 
 def main():
     cur_file = os.environ.get("TM_FILEPATH")
+    if not cur_file:
+        write('No filename - is the file saved?')
+        sys.exit(206) #magic code for tooltip
     source = sys.stdin.read()
     line_no = int(os.environ.get("TM_LINE_NUMBER"))
     cur_col = int(os.environ.get("TM_LINE_INDEX"))
 
     PYSMELLDICT = idehelper.findPYSMELLDICT(cur_file)
+    if PYSMELLDICT is None:
+        write('No PYSMELLTAGS found - you have to generate one.')
+        sys.exit(206) #magic code for tooltip
     line = source.splitlines()[line_no - 1]
     index = vimhelper.findBase(line, cur_col)
     base = line[index:cur_col]

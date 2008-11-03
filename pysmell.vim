@@ -62,10 +62,10 @@ endfunction
 
 python << eopython
 def vimcompletePYSMELL(origSource, origLineNo, origCol, base):
-    vim.command('let g:pysmell_completions = []')
     fullPath = vim.current.buffer.name
     PYSMELLDICT = idehelper.findPYSMELLDICT(fullPath)
     if not PYSMELLDICT:
+        vim.command("echoerr 'No PYSMELLTAGS found. You have to generate one.'")
         return
 
     options = idehelper.detectCompletionType(fullPath, origSource, origLineNo, origCol, base, PYSMELLDICT)

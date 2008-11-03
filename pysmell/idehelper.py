@@ -44,7 +44,6 @@ def findPYSMELLDICT(filename):
             break
         pathParts.pop()
     else:
-        print 'could not find PYSMELLTAGS'
         return None
     return PYSMELLDICT
             
