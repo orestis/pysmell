@@ -1,5 +1,6 @@
 
 import os.path
+import time
 from subprocess import Popen, PIPE, call
 import sys
 import unittest
@@ -21,7 +22,21 @@ class VimTest(unittest.TestCase):
 
             self.assertTrue(os.path.isfile(vim_test), "Could not find vim functional test")
             proc = Popen(["vim", "-u", "NONE", "-s", vim_test], stdout=PIPE, stderr=PIPE)
-            result = proc.wait()
+            WAITFOR = 4
+            while WAITFOR >= 0:
+                result = proc.poll()
+                if result is not None:
+                    break
+                time.sleep(1)
+                WAITFOR -= 1
+            else:
+                try:
+                    import win32api
+                    win32api.TerminateProcess(int(proc._handle), -1)
+                except:
+                    import signal
+                    os.kill(proc.pid, signal.SIGTERM)
+                self.fail("TIMED OUT WAITING FOR VIM.Stdout was:\n" + proc.stdout.read())
             test_output = open(test_file, 'r').read()
             if result != 0:
                 msg = proc.stdout.read()
