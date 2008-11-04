@@ -2,9 +2,12 @@ import os
 import sys
 from pysmell import idehelper, vimhelper
 from pysmell import tags as tags_module
+from pysmell import tm_dialog
 
-sys.path.append(os.environ['TM_SUPPORT_PATH'] + '/lib')
-import dialog
+tm_support_path = os.environ['TM_SUPPORT_PATH'] + '/lib'
+if tm_support_path not in sys.path:
+    sys.path.insert(0, tm_support_path)
+
 
 def write(word):
     sys.stdout.write(word)
@@ -51,10 +54,10 @@ def main():
             for index, comp in enumerate(completions)
         ]
         try:
-            dialogTuples = dialogTuples[:1500]
-            compIndex = dialog.menu(dialogTuples)
-        except:
-            print 'got %d completions - please narrow down' % len(dialogTuples)
+            compIndex = tm_dialog.menu(dialogTuples)
+        except Exception, e:
+            import traceback
+            write(traceback.format_exc(e))
             sys.exit(206)
         if compIndex is not None:
             write(completions[compIndex]['word'])
