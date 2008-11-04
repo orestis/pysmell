@@ -2,7 +2,7 @@ import unittest
 import os
 from textwrap import dedent
 
-from pysmell.idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT, Types
+from pysmell.idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT, Types, findBase
 NESTEDDICT = {
         'CONSTANTS' : [],
         'FUNCTIONS' : [],
@@ -409,8 +409,21 @@ class DetectOptionsTest(unittest.TestCase):
         self.assertEquals(options, expected)
         
 
+class FindBaseTest(unittest.TestCase):
 
-
+    def testThem(self):
+        index = findBase('bbbb', 2)
+        self.assertEquals(index, 0)
+        index = findBase('a.bbbb(', 7)
+        self.assertEquals(index, 2)
+        index = findBase('bbbb(', 5)
+        self.assertEquals(index, 0)
+        index = findBase('    bbbb', 6)
+        self.assertEquals(index, 4)
+        index = findBase('hehe.bbbb', 7)
+        self.assertEquals(index, 5)
+        index = findBase('    hehe.bbbb', 11)
+        self.assertEquals(index, 9)
 
 if __name__ == '__main__':
     unittest.main()

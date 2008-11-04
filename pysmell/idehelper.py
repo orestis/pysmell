@@ -14,6 +14,18 @@ from dircache import listdir
 from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents
 from pysmell.matchers import MATCHERS
 
+def findBase(line, col):
+    index = col
+    # col points at the end of the completed string
+    # so col-1 is the last character of base
+    while index > 0:
+        index -= 1
+        if line[index] in '. ':
+            index += 1
+            break
+    return index #this is zero based :S
+    
+
 def updatePySmellDict(master, partial):
     for key, value in partial.items():
         if isinstance(value, dict):
