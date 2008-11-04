@@ -7,7 +7,7 @@ tm_support_path = os.environ['TM_SUPPORT_PATH'] + '/lib'
 if tm_support_path not in sys.path:
     sys.path.insert(0, tm_support_path)
 
-from tm_helpers import sh_escape, to_plist, from_plist
+from tm_helpers import to_plist, from_plist
 
 dialog = os.environ["DIALOG"]
 try:
@@ -49,7 +49,7 @@ def menu(options):
     if all_are_instance(options, (tuple, NoneType)):
         hashed_options = True
     plist = to_plist(menu)
-    proc = subprocess.Popen([sh_escape(dialog), '-u'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    proc = subprocess.Popen([dialog, '-u'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     proc.stdin.write(plist)
     output, _ = proc.communicate()
     result = from_plist(output)
