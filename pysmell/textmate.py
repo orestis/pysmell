@@ -52,7 +52,7 @@ def _main(cur_file, line_no, cur_col):
         return TOOLTIP
     if len(completions) == 1:
         new_word = completions[0]['word']
-        write(new_word)
+        write(new_word[len(base):])
     elif len(completions) > 1:
         dialogTuples = [
             (
@@ -67,5 +67,5 @@ def _main(cur_file, line_no, cur_col):
             write(traceback.format_exc(e))
             return TOOLTIP
         if compIndex is not None:
-            write(completions[compIndex]['word'])
+            write(completions[compIndex]['word'][len(base):])
 
