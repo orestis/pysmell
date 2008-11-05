@@ -21,6 +21,7 @@ class ProducesFile(object):
         patched.__name__ = func.__name__
         return patched
 
+
 class FunctionalTest(unittest.TestCase):
     def setUp(self):
         self.packageA = {
@@ -100,7 +101,7 @@ class FunctionalTest(unittest.TestCase):
                 self.assertTrue(isinstance(expectedDict[key], list), "incompatible types found for key %s" % key)
                 self.assertEquals(sorted(value), sorted(expectedDict[key]), 'wrong sorted(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
             else:
-                self.assertEquals(value, expectedDict[key], "wrong value for key %s: %s" % (key, value)) 
+                self.assertEquals(value, expectedDict[key], "wrong value for key %s: %s" % (key, value))
 
 
     @ProducesFile('TestData/PYSMELLTAGS')
@@ -115,6 +116,24 @@ class FunctionalTest(unittest.TestCase):
         expectedDict['FUNCTIONS'].extend(self.packageB['FUNCTIONS'])
         expectedDict['HIERARCHY'].extend(self.packageB['HIERARCHY'])
         self.assertDictsEqual(PYSMELLDICT, expectedDict)
+
+
+
+    @ProducesFile('TestData/PYSMELLTAGS')
+    def testUpdateDict(self):
+        subprocess.call(["pysmell", "PackageA"], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
+        subprocess.call(["pysmell", "PackageB", "-i", "PYSMELLTAGS"], cwd='TestData')
+        self.assertTrue(os.path.exists('TestData/PYSMELLTAGS'))
+        PYSMELLDICT = eval(open('TestData/PYSMELLTAGS').read())
+        expectedDict = {}
+        expectedDict.update(self.packageA)
+        expectedDict['CLASSES'].update(self.packageB['CLASSES'])
+        expectedDict['CONSTANTS'].extend(self.packageB['CONSTANTS'])
+        expectedDict['FUNCTIONS'].extend(self.packageB['FUNCTIONS'])
+        expectedDict['HIERARCHY'].extend(self.packageB['HIERARCHY'])
+        self.assertDictsEqual(PYSMELLDICT, expectedDict)
+
 
 
     @ProducesFile('TestData/PYSMELLTAGS')
@@ -221,7 +240,8 @@ class FunctionalTest(unittest.TestCase):
         proc.wait()
         stderr = proc.stderr.read()
         expected = dedent("""\
-        usage: pysmell [-h] [-v] [-x [package [package ...]]] [-o OUTPUT] [-t] [-d]
+        usage: pysmell [-h] [-v] [-x [package [package ...]]] [-o OUTPUT] [-i INPUT]
+                       [-t] [-d]
                        package [package ...]
         pysmell: error: too few arguments
         """)

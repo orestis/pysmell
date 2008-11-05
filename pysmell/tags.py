@@ -10,6 +10,7 @@
 # Released subject to the BSD License 
 
 import os
+import sys
 from textwrap import dedent
 from pprint import pprint
 
@@ -44,8 +45,10 @@ def generateClassTag(modules, output):
     f.close()
 
 
-def process(argList, excluded, output, verbose=False):
+def process(argList, excluded, output, inputDict=None, verbose=False):
     modules = ModuleDict()
+    if inputDict:
+        modules.update(inputDict)
     for rootPackage in argList:
         if os.path.isdir(rootPackage):
             for path, dirs, files in os.walk(rootPackage):
@@ -97,6 +100,8 @@ def main():
         argument. Useful for excluding tests or version control directories."""))
     parser.add_argument('-o', '--output', default='PYSMELLTAGS',
         help="File to write the tags to")
+    parser.add_argument('-i', '--input',
+        help="Preexisting tags file to update")
     parser.add_argument('-t', '--timing', action='store_true',
         help="Will print timing information")
     parser.add_argument('-d', '--debug', action='store_true',
@@ -107,6 +112,15 @@ def main():
     timing = args.timing
     output = args.output
     verbose = args.debug
+    inputFile = args.input
+    if inputFile:
+        try:
+            inputDict = eval(file(inputFile).read())
+        except:
+            print >> sys.stderr, "Could not process %s - is it a PYSMELLTAGS file?" % inputFile
+            sys.exit(3)
+    else:
+        inputDict = None
 
 
     #if not fileList:
@@ -118,7 +132,7 @@ def main():
     if verbose:
         print 'processing', fileList
         print 'ignoring', excluded
-    process(fileList, excluded, output, verbose)
+    process(fileList, excluded, output, inputDict=inputDict, verbose=verbose)
     if timing:
         took = time.clock() - start
         print 'took %f seconds' % took
