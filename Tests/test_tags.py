@@ -3,7 +3,6 @@ from textwrap import dedent
 import subprocess
 import os
 from pysmell import idehelper
-from pysmell import __version__ as version
 
 class ProducesFile(object):
     def __init__(self, *files):
@@ -218,31 +217,15 @@ class FunctionalTest(unittest.TestCase):
 
 
     def testNoArgs(self):
-        proc = subprocess.Popen(["pysmell"], stdout=subprocess.PIPE)
+        proc = subprocess.Popen(["pysmell"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc.wait()
-        stdout = proc.stdout.read()
+        stderr = proc.stderr.read()
         expected = dedent("""\
-        PySmell %s
-
-        usage: pysmell package [package, ...] [-x excluded, ...] [options]
-
-        Generate a PYSMELLTAGS file with information about the Python code contained
-        in the specified packages (recursively). This file is then used to
-        provide autocompletion for various IDEs and editors that support it.
-
-        Options:
-
-            -x args   Will not analyze files in directories that match the argument.
-                      Useful for excluding tests or version control directories.
-
-            -o FILE   Will redirect the output to FILE instead of PYSMELLTAGS
-
-            -t        Will print timing information.
-
-            -v        Verbose mode; useful for debugging
-
-        """ % version).splitlines()
-        self.assertEquals(stdout.splitlines(), expected)
+        usage: pysmell [-h] [-v] [-x [package [package ...]]] [-o OUTPUT] [-t] [-d]
+                       package [package ...]
+        pysmell: error: too few arguments
+        """)
+        self.assertEquals(stderr, expected)
 
 
     def DONTtestDunderAll(self):

@@ -9,11 +9,14 @@
 
 # Released subject to the BSD License 
 
-import sys, os
+import os
+from textwrap import dedent
 from pprint import pprint
 
 from pysmell.codefinder import ModuleDict, processFile
 from pysmell.idehelper import findRootPackageList
+
+from pysmell import argparse
  
 version = __import__('pysmell').__version__
 
@@ -81,50 +84,33 @@ def process(argList, excluded, output, verbose=False):
 
 
 def main():
-    fileList = sys.argv[1:]
-    if not fileList:
-        print """\
-PySmell %s
+    description = dedent("""\
+        Generate a PYSMELLTAGS file with information about the
+        Python code contained in the specified packages (recursively). This file is
+        then used to provide autocompletion for various IDEs and editors that
+        support it. """)
+    parser = argparse.ArgumentParser(description=description, version=version)
+    parser.add_argument('fileList', metavar='package', type=str, nargs='+',
+        help='The packages to be analysed.')
+    parser.add_argument('-x', '--exclude', metavar='package', nargs='*', type=str, default=[],
+        help=dedent("""Will not analyze files in directories that match the
+        argument. Useful for excluding tests or version control directories."""))
+    parser.add_argument('-o', '--output', default='PYSMELLTAGS',
+        help="File to write the tags to")
+    parser.add_argument('-t', '--timing', action='store_true',
+        help="Will print timing information")
+    parser.add_argument('-d', '--debug', action='store_true',
+        help="Verbose mode; useful for debugging")
+    args = parser.parse_args()
+    fileList = args.fileList
+    excluded = args.exclude
+    timing = args.timing
+    output = args.output
+    verbose = args.debug
 
-usage: pysmell package [package, ...] [-x excluded, ...] [options]
 
-Generate a PYSMELLTAGS file with information about the Python code contained
-in the specified packages (recursively). This file is then used to
-provide autocompletion for various IDEs and editors that support it.
-
-Options:
-
-    -x args   Will not analyze files in directories that match the argument.
-              Useful for excluding tests or version control directories.
-
-    -o FILE   Will redirect the output to FILE instead of PYSMELLTAGS
-
-    -t        Will print timing information.
-
-    -v        Verbose mode; useful for debugging
-""" % version
-        sys.exit(0)
-    timing = False
-    verbose = False
-    output = 'PYSMELLTAGS'
-    excluded = []
-    if '-t' in fileList:
-        timing = True
-        fileList.remove('-t')
-
-    if '-v' in fileList:
-        verbose = True
-        fileList.remove('-v')
-
-    if '-o' in fileList:
-        fileList.remove('-o')
-        output = fileList.pop()
-
-    if '-x' in fileList:
-        excluded = fileList[fileList.index('-x')+1:]
-        fileList = fileList[:fileList.index('-x')]
-    if not fileList:
-        fileList = [os.getcwd()]
+    #if not fileList:
+    #    fileList = [os.getcwd()]
 
     if timing:
         import time
