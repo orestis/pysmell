@@ -88,6 +88,12 @@ class ModuleDict(dict):
     def __len__(self):
         return len(self.keys())
 
+    def __eq__(self, other):
+        return isinstance(other, ModuleDict) and other._modules == self._modules
+
+    def __ne__(self, other):
+        return not self == other
+
 
 def VisitChildren(fun):
     def decorated(self, *args, **kwargs):
@@ -333,9 +339,13 @@ def getName(node):
         return '%s[%s%s]' % (getName(children[0]), ':', children[-1].value)
     if isinstance(node, ast.Not):
         return "not %s" % ''.join(map(getName, ast.flatten(node)))
+    if isinstance(node, ast.Or):
+        return " or ".join(map(getName, node.nodes))
+    if isinstance(node, ast.And):
+        return " and ".join(map(getName, node.nodes))
     if isinstance(node, ast.Keyword):
         return "%s=%s" % (node.name, getName(node.expr))
-    raise Exception('Unknown node: %r %r' % (node, dir(node)))
+    return repr(node)
 
 
 def argToStr(arg):
@@ -390,29 +400,26 @@ def findRootPackageList(directory, filename):
             packages.append(tail)
     packages.reverse()
     return packages
-    
 
 
-def findPackage(path, root):
+def findPackage(path):
     packages = findRootPackageList(path, "")
     package = '.'.join(packages)
     return package
 
 
-def processFile(f, path, root):
+def processFile(f, path):
     """f is the the filename, path is the relative path in the project, root is
     the topmost package"""
     codeFinder = CodeFinder()
 
-    package = findPackage(path, root)
+    package = findPackage(path)
     codeFinder.package = package
     codeFinder.module = f[:-3]
     codeFinder.path = path
     try:
-        if os.path.isabs(path):
-            modules = getClassDict(os.path.join(path, f), codeFinder)
-        else:
-            raise Exception("path should be absolute")
+        assert os.path.isabs(path), "path should be absolute"
+        modules = getClassDict(os.path.join(path, f), codeFinder)
         return modules
     except Exception, e:
         print '-=#=- '* 10
@@ -420,6 +427,20 @@ def processFile(f, path, root):
         print e
         print '-=#=- '* 10
         return None
+
+
+def analyzeFile(fullPath, source, lineno):
+    tree = _getSafeTree(source, lineno)
+    if tree is None:
+        return None
+    codeFinder = CodeFinder()
+    absPath, filename = os.path.split(fullPath)
+    codeFinder.module = filename[:-3]
+    codeFinder.path = absPath
+    package = findPackage(absPath)
+    codeFinder.package = package
+    compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+    return codeFinder.modules
         
 
 class SelfInferer(BaseVisitor):

@@ -57,8 +57,6 @@ def process(argList, excluded, output, inputDict=None, verbose=False):
                         if verbose:
                             print 'removing', exc, 'in', path
                         dirs.remove(exc)
-                if rootPackage == '.':
-                    rootPackage = os.path.split(os.getcwd())[-1]
                 for f in files:
                     if not f.endswith(".py"):
                         continue
@@ -66,12 +64,11 @@ def process(argList, excluded, output, inputDict=None, verbose=False):
                     absPath = os.path.abspath(path)
                     if verbose:
                         print 'processing', absPath, f
-                    newmodules = processFile(f, absPath, rootPackage)
+                    newmodules = processFile(f, absPath)
                     modules.update(newmodules)
         else: # single file
             filename = rootPackage
             absPath, filename = os.path.split(filename)
-            rootPackageList = findRootPackageList(os.getcwd(), filename)
             if not absPath:
                 absPath = os.path.abspath(".")
             else:
@@ -80,7 +77,7 @@ def process(argList, excluded, output, inputDict=None, verbose=False):
             #path here is absolute
             if verbose:
                 print 'processing', absPath, filename
-            newmodules = processFile(filename, absPath, rootPackageList[0])
+            newmodules = processFile(filename, absPath)
             modules.update(newmodules)
             
     generateClassTag(modules, output)

@@ -11,7 +11,7 @@ import os, re
 import fnmatch
 from dircache import listdir
 
-from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents
+from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents, analyzeFile
 from pysmell.matchers import MATCHERS
 
 def findBase(line, col):
@@ -185,7 +185,7 @@ class CompletionOptions(object):
         return repr(self.compType) + 'with extra: ' + repr(self.extra)
         
 
-def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDICT):
+def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDICT, update=True):
     """
     Return a CompletionOptions instance describing the type of the completion, along with extra parameters.
     
@@ -199,6 +199,10 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
     Note that Vim deletes the "base" when a completion is requested so extra trickery must be performed to get it from the source.
 
     """
+    if update:
+        currentDict = analyzeFile(fullPath, origSource, lineNo)
+        if currentDict is not None:
+            updatePySmellDict(PYSMELLDICT, currentDict)
     origLineText = origSource.splitlines()[lineNo - 1] # lineNo is 1 based
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     leftSideStripped = leftSide.lstrip()

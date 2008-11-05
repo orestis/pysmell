@@ -5,7 +5,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 from pprint import pformat
 
-from pysmell.codefinder import CodeFinder, getClassAndParents, getNames, ModuleDict, findPackage
+from pysmell.codefinder import CodeFinder, getClassAndParents, getNames, ModuleDict, findPackage, analyzeFile
 from pysmell.codefinder import argToStr
 
 class ModuleDictTest(unittest.TestCase):
@@ -148,6 +148,8 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled("s|s|b")
         self.assertNamesIsHandled("s-s")
         self.assertNamesIsHandled("''")
+        self.assertNamesIsHandled("a or b")
+        self.assertNamesIsHandled("a and b")
         
 
     def testClassProperties(self):
@@ -458,6 +460,19 @@ class InferencingTest(unittest.TestCase):
 
         expectedNames = {'Class': 'something.Class', 'a': 'Class()'}
         self.assertEquals(getNames(source, 3), expectedNames)
+
+
+    def testAnalyzeFile(self):
+        path = os.path.abspath('File.py')
+        source = dedent("""\
+            CONSTANT = 1
+        """)
+        expectedDict = ModuleDict()
+        expectedDict.enterModule('File')
+        expectedDict.addProperty(None, 'CONSTANT')
+        outDict = analyzeFile(path, source, 1)
+        self.assertEquals(outDict, expectedDict, '%r != %r' % (outDict._modules, expectedDict._modules))
+
     
 
 if __name__ == '__main__':
