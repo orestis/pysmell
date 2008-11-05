@@ -2,7 +2,9 @@ import unittest
 import os
 from textwrap import dedent
 
-from pysmell.idehelper import inferClass, detectCompletionType, CompletionOptions, findPYSMELLDICT, Types, findBase
+from pysmell.idehelper import (inferClass, detectCompletionType,
+    CompletionOptions, findPYSMELLDICT, Types, findBase)
+
 NESTEDDICT = {
         'CONSTANTS' : [],
         'FUNCTIONS' : [],

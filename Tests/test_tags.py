@@ -245,7 +245,7 @@ class FunctionalTest(unittest.TestCase):
                        package [package ...]
         pysmell: error: too few arguments
         """)
-        self.assertEquals(stderr, expected)
+        self.assertEquals(stderr.replace('\r\n', '\n'), expected)
 
 
     def DONTtestDunderAll(self):

@@ -92,7 +92,7 @@ def main():
         Python code contained in the specified packages (recursively). This file is
         then used to provide autocompletion for various IDEs and editors that
         support it. """)
-    parser = argparse.ArgumentParser(description=description, version=version)
+    parser = argparse.ArgumentParser(description=description, version=version, prog='pysmell')
     parser.add_argument('fileList', metavar='package', type=str, nargs='+',
         help='The packages to be analysed.')
     parser.add_argument('-x', '--exclude', metavar='package', nargs='*', type=str, default=[],
