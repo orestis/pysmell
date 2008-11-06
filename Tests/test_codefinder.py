@@ -456,10 +456,14 @@ class InferencingTest(unittest.TestCase):
             from something import Class
 
             a = Class()
+
+            class D():
+                pass
+
         """)
 
         expectedNames = {'Class': 'something.Class', 'a': 'Class()'}
-        self.assertEquals(getNames(source, 3), expectedNames)
+        self.assertEquals(getNames(source, 3), (expectedNames, ['D']))
 
 
     def testAnalyzeFile(self):

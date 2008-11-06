@@ -100,8 +100,8 @@ def inferModule(chain, origSource, lineNo):
     
 
 funcCellRE = re.compile(r'(.+)\(.*\)')
-def inferInstance(source, lineNo, var, PYSMELLDICT):
-    names = getNames(source, lineNo)
+def inferInstance(fullPath, source, lineNo, var, PYSMELLDICT):
+    names, klasses = getNames(source, lineNo)
     assignment = names.get(var, None)
     klass = None
     parents = []
@@ -109,7 +109,16 @@ def inferInstance(source, lineNo, var, PYSMELLDICT):
         possibleMatch = funcCellRE.match(assignment)
         if possibleMatch:
             klass = possibleMatch.groups(1)[0]
-            klass = _qualify(names.get(klass, klass), PYSMELLDICT)
+            if klass in klasses:
+                path, filename = os.path.split(fullPath)
+                packages = findRootPackageList(path, filename)
+                if packages:
+                    packagesStr = (".".join(packages)) + "."
+                else:
+                    packagesStr = ""
+                klass = "%s%s.%s" % (packagesStr, filename[:-3], klass)
+            else:
+                klass = _qualify(names.get(klass, klass), PYSMELLDICT)
             parents = PYSMELLDICT['CLASSES'].get(klass, {'bases': []})['bases']
 
     return klass, parents
@@ -141,7 +150,11 @@ def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
         # we don't know about this class, look in the file system
         path, filename = os.path.split(fullPath)
         packages = findRootPackageList(path, filename)
-        fullKlass = "%s.%s.%s" % (".".join(packages), filename[:-3], klass)
+        if packages:
+            packagesStr = (".".join(packages)) + "."
+        else:
+            packagesStr = ""
+        fullKlass = "%s%s.%s" % (packagesStr, filename[:-3], klass)
         
     return fullKlass, parents
 
@@ -243,7 +256,7 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
             possibleModule = inferModule(chain, origSource, lineNo)
             if possibleModule is not None:
                 return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)
-        klass, parents = inferInstance(origSource, lineNo, var, PYSMELLDICT)
+        klass, parents = inferInstance(fullPath, origSource, lineNo, var, PYSMELLDICT)
         return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         
 

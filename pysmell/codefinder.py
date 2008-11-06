@@ -392,7 +392,7 @@ def findRootPackageList(directory, filename):
     "should walk up the tree until there is no __init__.py"
     isPackage = lambda path: os.path.exists(os.path.join(path, '__init__.py'))
     if not isPackage(directory):
-        return [filename[:-3]]
+        return []
     packages = []
     while directory and isPackage(directory):
         directory, tail = os.path.split(directory)
@@ -493,6 +493,7 @@ class NameVisitor(BaseVisitor):
     def __init__(self):
         BaseVisitor.__init__(self)
         self.names = {}
+        self.klasses = []
         self.lastlineno = 1
 
 
@@ -511,6 +512,9 @@ class NameVisitor(BaseVisitor):
             name = assNode.attrname
         self.names[name] = getName(node.expr)
 
+    @VisitChildren
+    def visitClass(self, node):
+        self.klasses.append(node.name)
 
 
 def getNames(source, lineno):
@@ -521,7 +525,7 @@ def getNames(source, lineno):
     compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
     names = inferer.names
     names.update(inferer.imports)
-    return names
+    return names, inferer.klasses
     
 
 

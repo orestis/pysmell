@@ -444,6 +444,21 @@ class DetectOptionsTest(unittest.TestCase):
         self.assertEquals(options, expected)
 
 
+    def testDetectClassCreationLocal(self):
+        source = dedent("""\
+            class aClass(object):
+                pass
+
+            thing = aClass()
+            thing.
+        """)
+        line = "thing."
+        options = detectCompletionType(os.path.abspath('Module.py'), source,
+                                            5, len(line), '', self.pysmelldict)
+        expected = CompletionOptions(Types.INSTANCE, klass='Module.aClass', parents=['object'])
+        self.assertEquals(options, expected)
+
+
 
 class FindBaseTest(unittest.TestCase):
 
