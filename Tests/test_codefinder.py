@@ -474,7 +474,7 @@ class InferencingTest(unittest.TestCase):
         expectedDict = ModuleDict()
         expectedDict.enterModule('File')
         expectedDict.addProperty(None, 'CONSTANT')
-        outDict = analyzeFile(path, source, 1)
+        outDict = analyzeFile(path, getSafeTree(source, 1))
         self.assertEquals(outDict, expectedDict, '%r != %r' % (outDict._modules, expectedDict._modules))
 
     

@@ -430,8 +430,7 @@ def processFile(f, path):
         return None
 
 
-def analyzeFile(fullPath, source, lineno):
-    tree = getSafeTree(source, lineno)
+def analyzeFile(fullPath, tree):
     if tree is None:
         return None
     codeFinder = CodeFinder()

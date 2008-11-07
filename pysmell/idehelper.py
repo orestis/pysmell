@@ -213,8 +213,9 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
     Note that Vim deletes the "base" when a completion is requested so extra trickery must be performed to get it from the source.
 
     """
+    AST = getSafeTree(origSource, lineNo)
     if update:
-        currentDict = analyzeFile(fullPath, origSource, lineNo)
+        currentDict = analyzeFile(fullPath, AST)
         if currentDict is not None:
             updatePySmellDict(PYSMELLDICT, currentDict)
     origLineText = origSource.splitlines()[lineNo - 1] # lineNo is 1 based
@@ -246,7 +247,6 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
         else:
             return CompletionOptions(Types.FUNCTION, name=funcName, rindex=rindex)
 
-    AST = getSafeTree(origSource, lineNo)
     if isAttrLookup and AST is not None:
         var = leftSideStripped[:leftSideStripped.rindex('.')]
         isClassLookup = var == 'self'
