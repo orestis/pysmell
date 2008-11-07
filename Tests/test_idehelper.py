@@ -3,7 +3,7 @@ import os
 from textwrap import dedent
 
 from pysmell.idehelper import (inferClass, detectCompletionType,
-    CompletionOptions, findPYSMELLDICT, Types, findBase)
+    CompletionOptions, findPYSMELLDICT, Types, findBase, getSafeTree)
 
 NESTEDDICT = {
         'CONSTANTS' : [],
@@ -87,7 +87,7 @@ class IDEHelperTest(unittest.TestCase):
         else:
             pathParts.insert(0, "C:")
         absPath = os.path.join(*pathParts)
-        inferred, _ = inferClass(absPath, source, 3, NESTEDDICT, None)
+        inferred, _ = inferClass(absPath, getSafeTree(source, 3), 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'Nested.Package.Module.Class')
 
 
@@ -100,7 +100,7 @@ class IDEHelperTest(unittest.TestCase):
         """)
         pathParts = ["Nested", "Package", "Module.py"]
         relPath = os.path.join(*pathParts)
-        inferred, _ = inferClass(relPath, source, 3, NESTEDDICT, None)
+        inferred, _ = inferClass(relPath, getSafeTree(source, 3), 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'Nested.Package.Module.Class')
 
 
@@ -113,14 +113,14 @@ class IDEHelperTest(unittest.TestCase):
         """)
         pathParts = ['TestData', 'PackageB', 'NewModule.py'] # TestData/PackageB contains an __init__.py file
         relPath = os.path.join(*pathParts)
-        inferred, parents = inferClass(relPath, source, 3, NESTEDDICT, None)
+        inferred, parents = inferClass(relPath, getSafeTree(source, 3), 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
         self.assertEquals(parents, ['object'])
 
         cwd = os.getcwd()
         pathParts = [cwd, 'TestData', 'PackageB', 'NewModule.py'] # TestData/PackageB contains an __init__.py file
         absPath = os.path.join(*pathParts)
-        inferred, parents = inferClass(absPath, source, 3, NESTEDDICT, None)
+        inferred, parents = inferClass(absPath, getSafeTree(source, 3), 3, NESTEDDICT, None)
         self.assertEquals(inferred, 'PackageB.NewModule.NewClass')
         self.assertEquals(parents, ['object'])
 
@@ -133,8 +133,8 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            4, NESTEDDICT)
+        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'),
+            getSafeTree(source, 4), 4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Other')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
 
@@ -147,8 +147,8 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            4, NESTEDDICT)
+        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'),
+            getSafeTree(source, 4), 4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
         
@@ -161,8 +161,8 @@ class IDEHelperTest(unittest.TestCase):
                     self.
         
         """)
-        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'), source,
-                            4, NESTEDDICT)
+        klass, parents = inferClass(os.path.join('TestData', 'PackageA', 'Module.py'),
+            getSafeTree(source, 4), 4, NESTEDDICT)
         self.assertEquals(klass, 'PackageA.Module.Bother')
         self.assertEquals(parents, ['Nested.Package.Module.Class'])
 
