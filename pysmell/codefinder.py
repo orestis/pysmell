@@ -10,6 +10,7 @@
 
 import os
 import sys
+import __builtin__
 import compiler
 
 from compiler import ast
@@ -140,7 +141,7 @@ class BaseVisitor(object):
             self.imports[asName] = name[0]
 
     def qualify(self, name, curModule):
-        if name in __builtins__:
+        if hasattr(__builtin__, name):
             return name
         if name in self.imports:
             return self.imports[name]
@@ -430,7 +431,7 @@ def processFile(f, path):
 
 
 def analyzeFile(fullPath, source, lineno):
-    tree = _getSafeTree(source, lineno)
+    tree = getSafeTree(source, lineno)
     if tree is None:
         return None
     codeFinder = CodeFinder()
@@ -470,7 +471,7 @@ class SelfInferer(BaseVisitor):
         self.lastlineno = klassNode.lineno
 
 
-def _getSafeTree(source, lineNo):
+def getSafeTree(source, lineNo):
     try:
         tree = compiler.parse(source)
     except:
@@ -517,8 +518,7 @@ class NameVisitor(BaseVisitor):
         self.klasses.append(node.name)
 
 
-def getNames(source, lineno):
-    tree = _getSafeTree(source, lineno)
+def getNames(tree):
     if tree is None:
         return None
     inferer = NameVisitor()
@@ -529,8 +529,7 @@ def getNames(source, lineno):
     
 
 
-def getImports(source, lineNo):
-    tree = _getSafeTree(source, lineNo)
+def getImports(tree):
     if tree is None:
         return None
     inferer = BaseVisitor()
@@ -539,8 +538,7 @@ def getImports(source, lineNo):
     return inferer.imports
 
 
-def getClassAndParents(source, lineNo):
-    tree = _getSafeTree(source, lineNo)
+def getClassAndParents(tree, lineNo):
     if tree is None:
         return None, []
 
