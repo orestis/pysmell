@@ -57,7 +57,7 @@ def findPYSMELLDICT(filename):
         pathParts.pop()
     else:
         return None
-    return PYSMELLDICT
+    return PYSMELLDICT, os.path.join(*pathParts)
             
 
 def _getPathParts(path):

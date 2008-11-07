@@ -3,7 +3,9 @@ import sys
 from pysmell import idehelper
 from pysmell import tags as tags_module
 from pysmell import tm_dialog
-
+from pysmell import pysmell_client
+import asyncore
+from datetime import datetime
 
 #tm_support_path = os.environ['TM_SUPPORT_PATH'] + '/lib'
 #if tm_support_path not in sys.path:
@@ -27,26 +29,26 @@ def main():
     line_no = int(os.environ.get("TM_LINE_NUMBER"))
     cur_col = int(os.environ.get("TM_LINE_INDEX"))
     result = _main(cur_file, line_no, cur_col)
+    end = datetime.now()
     if result is not None:
         sys.exit(result)
 
 def _main(cur_file, line_no, cur_col):
+    start = datetime.now()
     if not cur_file:
         write('No filename - is the file saved?')
         return TOOLTIP
     source = sys.stdin.read()
 
-    PYSMELLDICT = idehelper.findPYSMELLDICT(cur_file)
-    if PYSMELLDICT is None:
-        write('No PYSMELLTAGS found - you have to generate one.')
-        return TOOLTIP
     line = source.splitlines()[line_no - 1]
     index = idehelper.findBase(line, cur_col)
     base = line[index:cur_col]
 
-    options = idehelper.detectCompletionType(cur_file, source, line_no, cur_col, base, PYSMELLDICT)
-    completions = idehelper.findCompletions(base, PYSMELLDICT, options)
+    pysmellClient = pysmell_client.client(cur_file, source, line_no, cur_col, base)
+    asyncore.loop()
+    completions = pysmellClient.completions
 
+    end = datetime.now()
     if not completions:
         write('No completions found')
         return TOOLTIP
@@ -68,4 +70,5 @@ def _main(cur_file, line_no, cur_col):
             return TOOLTIP
         if compIndex is not None:
             write(completions[compIndex]['word'][len(base):])
+    print '#Took', (end-start).microseconds / 1000.0
 
