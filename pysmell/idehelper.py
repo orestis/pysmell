@@ -7,11 +7,12 @@
 
 # Released subject to the BSD License 
 
+import __builtin__
 import os, re
 import fnmatch
 from dircache import listdir
 
-from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents, analyzeFile
+from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents, analyzeFile, getSafeTree
 from pysmell.matchers import MATCHERS
 
 def findBase(line, col):
@@ -36,7 +37,7 @@ def updatePySmellDict(master, partial):
 
 def tryReadPYSMELLDICT(directory, filename, dictToUpdate):
     if os.path.exists(os.path.join(directory, filename)):
-        tagsFile = file(os.path.join(directory, filename))
+        tagsFile = open(os.path.join(directory, filename), 'r')
         try:
             updatePySmellDict(dictToUpdate, eval(tagsFile.read()))
         finally:
@@ -84,8 +85,8 @@ def debug(vim, msg):
         debBuffer.append(msg)
 
 
-def inferModule(chain, origSource, lineNo):
-    imports = getImports(origSource, lineNo)
+def inferModule(chain, AST, lineNo):
+    imports = getImports(AST)
     fullModuleParts = []
     valid = False
     for part in chain.split('.'):
@@ -100,8 +101,8 @@ def inferModule(chain, origSource, lineNo):
     
 
 funcCellRE = re.compile(r'(.+)\(.*\)')
-def inferInstance(fullPath, source, lineNo, var, PYSMELLDICT):
-    names, klasses = getNames(source, lineNo)
+def inferInstance(fullPath, AST, lineNo, var, PYSMELLDICT):
+    names, klasses = getNames(AST)
     assignment = names.get(var, None)
     klass = None
     parents = []
@@ -133,8 +134,8 @@ def _qualify(thing, PYSMELLDICT):
                 return '%s.%s' % (PYSMELLDICT['POINTERS'][pointer][:-2], thing.split('.', 1)[-1])
     return thing
 
-def inferClass(fullPath, origSource, origLineNo, PYSMELLDICT, vim=None):
-    klass, parents = getClassAndParents(origSource, origLineNo)
+def inferClass(fullPath, AST, origLineNo, PYSMELLDICT, vim=None):
+    klass, parents = getClassAndParents(AST, origLineNo)
 
     # replace POINTERS with their full reference
     for index, parent in enumerate(parents[:]):
@@ -212,8 +213,9 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
     Note that Vim deletes the "base" when a completion is requested so extra trickery must be performed to get it from the source.
 
     """
+    AST = getSafeTree(origSource, lineNo)
     if update:
-        currentDict = analyzeFile(fullPath, origSource, lineNo)
+        currentDict = analyzeFile(fullPath, AST)
         if currentDict is not None:
             updatePySmellDict(PYSMELLDICT, currentDict)
     origLineText = origSource.splitlines()[lineNo - 1] # lineNo is 1 based
@@ -245,18 +247,18 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
         else:
             return CompletionOptions(Types.FUNCTION, name=funcName, rindex=rindex)
 
-    if isAttrLookup:
+    if isAttrLookup and AST is not None:
         var = leftSideStripped[:leftSideStripped.rindex('.')]
         isClassLookup = var == 'self'
         if isClassLookup:
-            klass, parents = inferClass(fullPath, origSource, lineNo, PYSMELLDICT)
+            klass, parents = inferClass(fullPath, AST, lineNo, PYSMELLDICT)
             return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         else:
             chain = getChain(leftSideStripped)[:-1] # strip dot
-            possibleModule = inferModule(chain, origSource, lineNo)
+            possibleModule = inferModule(chain, AST, lineNo)
             if possibleModule is not None:
                 return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)
-        klass, parents = inferInstance(fullPath, origSource, lineNo, var, PYSMELLDICT)
+        klass, parents = inferInstance(fullPath, AST, lineNo, var, PYSMELLDICT)
         return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         
 
@@ -349,7 +351,7 @@ def getCompletionsForClass(klass, parents, PYSMELLDICT):
         klassDict = PYSMELLDICT['CLASSES'].get(klass, None)
         completions = []
         ancestorList = []
-        nonBuiltinParents = [p for p in parents if p not in __builtins__]
+        nonBuiltinParents = [p for p in parents if not hasattr(__builtin__, p)]
         if klassDict is None and not nonBuiltinParents:
             return completions
         elif klassDict is None and nonBuiltinParents:
@@ -385,7 +387,7 @@ def _findAllParents(klass, classesDICT, ancList):
     klassDict = classesDICT.get(klass, None)
     if klassDict is None: return
     for anc in klassDict['bases']:
-        if anc in __builtins__: continue
+        if hasattr(__builtin__, anc): continue
         ancList.append(anc)
         _findAllParents(anc, classesDICT, ancList)
 

@@ -5,7 +5,7 @@ import compiler
 from compiler.visitor import ExampleASTVisitor
 from pprint import pformat
 
-from pysmell.codefinder import CodeFinder, getClassAndParents, getNames, ModuleDict, findPackage, analyzeFile
+from pysmell.codefinder import CodeFinder, getClassAndParents, getNames, ModuleDict, findPackage, analyzeFile, getSafeTree
 from pysmell.codefinder import argToStr
 
 class ModuleDictTest(unittest.TestCase):
@@ -358,7 +358,7 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass, parents = getClassAndParents(source, 5)
+        klass, parents = getClassAndParents(getSafeTree(source, 5), 5)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['object'])
 
@@ -375,7 +375,7 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass, parents = getClassAndParents(source, 6)
+        klass, parents = getClassAndParents(getSafeTree(source, 6), 6)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['something.mother', 'something.father'])
 
@@ -391,7 +391,7 @@ class InferencingTest(unittest.TestCase):
                 def another(self):
                     pass
         """)
-        klass, parents = getClassAndParents(source, 5)
+        klass, parents = getClassAndParents(getSafeTree(source, 5), 5)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['something.this.other.bother'])
 
@@ -425,29 +425,29 @@ class InferencingTest(unittest.TestCase):
                         self.ass
         """)
         
-        self.assertEquals(getClassAndParents(source, 1)[0], None, 'no class yet!')
+        self.assertEquals(getClassAndParents(getSafeTree(source, 1), 1)[0], None, 'no class yet!')
         for line in range(2, 5):
-            klass, _ = getClassAndParents(source, line)
+            klass, _ = getClassAndParents(getSafeTree(source, line), line)
             self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(5, 7):
-            klass, _ = getClassAndParents(source, line)
+            klass, _ = getClassAndParents(getSafeTree(source, line), line)
             self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(7, 9):
-            klass, _ = getClassAndParents(source, line)
+            klass, _ = getClassAndParents(getSafeTree(source, line), line)
             self.assertEquals(klass, 'EvenSneakier', 'wrong class %s in line %d' % (klass, line))
 
         line = 9
-        klass, _ = getClassAndParents(source, line)
+        klass, _ = getClassAndParents(getSafeTree(source, line), line)
         self.assertEquals(klass, 'Sneak', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(10, 17):
-            klass, _ = getClassAndParents(source, line)
+            klass, _ = getClassAndParents(getSafeTree(source, line), line)
             self.assertEquals(klass, 'AClass', 'wrong class %s in line %d' % (klass, line))
 
         for line in range(17, 51):
-            klass, _ = getClassAndParents(source, line)
+            klass, _ = getClassAndParents(getSafeTree(source, line), line)
             self.assertEquals(klass, 'BClass', 'wrong class %s in line %d' % (klass, line))
 
 
@@ -457,13 +457,13 @@ class InferencingTest(unittest.TestCase):
 
             a = Class()
 
-            class D():
+            class D(object):
                 pass
 
         """)
 
         expectedNames = {'Class': 'something.Class', 'a': 'Class()'}
-        self.assertEquals(getNames(source, 3), (expectedNames, ['D']))
+        self.assertEquals(getNames(getSafeTree(source, 3)), (expectedNames, ['D']))
 
 
     def testAnalyzeFile(self):
@@ -474,7 +474,7 @@ class InferencingTest(unittest.TestCase):
         expectedDict = ModuleDict()
         expectedDict.enterModule('File')
         expectedDict.addProperty(None, 'CONSTANT')
-        outDict = analyzeFile(path, source, 1)
+        outDict = analyzeFile(path, getSafeTree(source, 1))
         self.assertEquals(outDict, expectedDict, '%r != %r' % (outDict._modules, expectedDict._modules))
 
     
