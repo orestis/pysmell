@@ -2,7 +2,7 @@
 
 ;; Author: Tom Wright <tat.wright@tat.wright.name>
 ;; Keywords: python completion pysmell
-;; Version: 0.7
+;; Version: 0.7.2
 
 ;; Bug reports should be filed at <http://code.google.com/p/pysmell>
 
