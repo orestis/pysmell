@@ -26,8 +26,12 @@ if !has('python')
     finish
 endif
 
-let g:pysmell_debug = 0
-let g:pysmell_matcher='case-insensitive'
+if !exists('g:pysmell_debug')
+    let g:pysmell_debug = 0
+endif
+if !exists('g:pysmell_matcher')
+    let g:pysmell_matcher='case-insensitive'
+endif
 
 python << eopython
 from pysmell import vimhelper, idehelper
