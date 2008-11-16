@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+from ez_setup import use_setuptools
+use_setuptools(version="0.6c8")
 from distutils import cmd
 from setuptools import setup
 
