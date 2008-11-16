@@ -351,12 +351,12 @@ class InferencingTest(unittest.TestCase):
         source = dedent("""\
             import something
             class AClass(object):
-                def amethod(self, other):
-                    other.do_something()
-                    self.
+            \tdef amethod(self, other):
+            \t\tother.do_something()
+            \t\tself.
 
-                def another(self):
-                    pass
+            \tdef another(self):
+            \t\tpass
         """)
         klass, parents = getClassAndParents(getSafeTree(source, 5), 5)
         self.assertEquals(klass, 'AClass')

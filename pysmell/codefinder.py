@@ -478,7 +478,10 @@ def getSafeTree(source, lineNo):
         line = sourceLines[lineNo-1]
         unindented = line.lstrip()
         indentation = len(line) - len(unindented)
-        sourceLines[lineNo-1] = '%spass' % (' ' * indentation)
+        whitespace = ' '
+        if line.startswith('\t'):
+            whitespace = '\t'
+        sourceLines[lineNo-1] = '%spass' % (whitespace * indentation)
 
         replacedSource = '\n'.join(sourceLines)
         try:
