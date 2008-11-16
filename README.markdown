@@ -100,9 +100,8 @@ Complete with alt-esc - look into the bundle for more commands.
 You can find the bundle in the source distribution - it's not installed
 with the egg, because it's too much trouble. 
 
-One usual problem you might face is when you install PySmell on a different Python
-than your editor uses. Setting the PATH in TextMate's preferences to what is
-your normal $PATH resolves this.
+Set TM_PYTHON in your Shell Variables to point to the Python where you
+installed PySmell.
 
 ##Emacs
 

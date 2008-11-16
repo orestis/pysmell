@@ -5,14 +5,10 @@
 	<key>beforeRunningCommand</key>
 	<string>nop</string>
 	<key>command</key>
-	<string>#!/usr/bin/env python
-
-#Pysmell version 0.7
-
-from pysmell import textmate
-textmate.main()
-
-
+    <string>
+TPY=${TM_PYTHON:-python}
+"$TPY" -c "from pysmell import textmate; textmate.main()"
+        
     </string>
 	<key>input</key>
 	<string>document</string>
