@@ -64,6 +64,8 @@ class VimHelperTest(unittest.TestCase):
 
 class VimTest(unittest.TestCase):
     def testVimFunctionally(self):
+        if sys.platform == 'win32':
+            return
         try:
             pysmell_file = os.path.join("TestData", "PYSMELLTAGS")
             if os.path.exists(pysmell_file):

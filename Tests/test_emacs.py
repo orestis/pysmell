@@ -9,6 +9,8 @@ emacs_test = os.path.join("Tests", "test_emacs.el")
 
 class EmacsTest(unittest.TestCase):
     def testEmacsFunctionally(self):
+        if sys.platform == 'win32':
+            return
         try:
             pysmell_file = os.path.join("TestData", "PYSMELLTAGS")
             if (os.path.isfile(pysmell_file)):
