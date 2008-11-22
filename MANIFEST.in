@@ -2,6 +2,7 @@ include README.markdown
 include AUTHORS
 include pysmell.vim
 include pysmell.el
+include ez_setup.py
 include CHANGELOG
 include PySmell.tmbundle/**
 include PySmell.tmbundle/Commands/**
