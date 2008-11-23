@@ -109,20 +109,8 @@ class BaseVisitor(object):
         self.imports = {}
 
 
-    OTHER = set(['Add', 'And', 'Assign', 'Assert', 'AssAttr', 'AssName', 'AssTuple', 'AssList',
-                'AugAssign', 'Backquote', 'Break', 'Bitand', 'Bitor', 'Bitxor', 'Class', 'CallFunc',
-                'Compare', 'Const', 'Continue', 'Decorators', 'Dict', 'Discard', 'Div', 'Exec',
-                'FloorDiv', 'For', 'Function', 'GenExpr', 'GenExprIf',
-                'GenExprInner', 'GenExprFor', 'Getattr', 'Global', 'If', 'IfExp',
-                'Invert', 'Keyword', 'Lambda', 'LeftShift', 'List', 'ListComp',
-                'ListCompFor', 'ListCompIf', 'Module', 'Mod', 'Mul', 'Name', 'Not', 'Or',
-                'Pass', 'Power', 'Print', 'Printnl', 'Raise', 'Return', 'RightShift',
-                'Slice', 'Sliceobj', 'Stmt', 'Sub', 'Subscript', 'Tuple', 'TryExcept',
-                'TryFinally', 'UnaryAdd', 'UnarySub', 'While', 'Yield', 'With'])
-
     def __getattr__(self, attr):
-        if attr[5:] in self.OTHER:
-            return self.handleChildren
+        return self.handleChildren
 
     def handleChildren(self, node):
         for c in node.getChildNodes():
@@ -471,6 +459,7 @@ class SelfInferer(BaseVisitor):
 
 
 def getSafeTree(source, lineNo):
+    source = source.replace('\r\n', '\n')
     try:
         tree = compiler.parse(source)
     except:

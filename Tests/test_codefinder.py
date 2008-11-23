@@ -389,8 +389,7 @@ class InferencingTest(unittest.TestCase):
                     self.
 
                 def another(self):
-                    pass
-        """)
+                    pass""")
         klass, parents = getClassAndParents(getSafeTree(source, 5), 5)
         self.assertEquals(klass, 'AClass')
         self.assertEquals(parents, ['something.this.other.bother'])
@@ -460,7 +459,7 @@ class InferencingTest(unittest.TestCase):
             class D(object):
                 pass
 
-        """)
+        """).replace('\n', '\r\n')
 
         expectedNames = {'Class': 'something.Class', 'a': 'Class()'}
         self.assertEquals(getNames(getSafeTree(source, 3)), (expectedNames, ['D']))
