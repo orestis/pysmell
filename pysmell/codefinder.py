@@ -14,7 +14,6 @@ import __builtin__
 import compiler
 
 from compiler import ast
-from compiler.visitor import ExampleASTVisitor
 
 class ModuleDict(dict):
     def __init__(self):
@@ -108,9 +107,6 @@ class BaseVisitor(object):
         self.scope = []
         self.imports = {}
 
-
-    def __getattr__(self, attr):
-        return self.handleChildren
 
     def handleChildren(self, node):
         for c in node.getChildNodes():
@@ -373,7 +369,7 @@ def getClassDict(path, codeFinder=None):
     tree = compiler.parseFile(path)
     if codeFinder is None:
         codeFinder = CodeFinder()
-    compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+    compiler.walk(tree, codeFinder)
     return codeFinder.modules
 
 
@@ -427,7 +423,7 @@ def analyzeFile(fullPath, tree):
     codeFinder.path = absPath
     package = findPackage(absPath)
     codeFinder.package = package
-    compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+    compiler.walk(tree, codeFinder)
     return codeFinder.modules
         
 
@@ -437,9 +433,13 @@ class SelfInferer(BaseVisitor):
         self.classRanges = []
         self.lastlineno = 1
 
+    def __getattr__(self, _):
+        return self.handleChildren
+
     def handleChildren(self, node):
         self.lastlineno = node.lineno
         BaseVisitor.handleChildren(self, node)
+
 
     def visitClass(self, klassNode):
         self.visit(klassNode.code)
@@ -513,7 +513,7 @@ def getNames(tree):
     if tree is None:
         return None
     inferer = NameVisitor()
-    compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
+    compiler.walk(tree, inferer)
     names = inferer.names
     names.update(inferer.imports)
     return names, inferer.klasses
@@ -524,7 +524,7 @@ def getImports(tree):
     if tree is None:
         return None
     inferer = BaseVisitor()
-    compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
+    compiler.walk(tree, inferer)
 
     return inferer.imports
 
@@ -534,7 +534,7 @@ def getClassAndParents(tree, lineNo):
         return None, []
 
     inferer = SelfInferer()
-    compiler.walk(tree, inferer, walker=ExampleASTVisitor(), verbose=1)
+    compiler.walk(tree, inferer)
     classRanges = inferer.classRanges
     classRanges.sort(sortClassRanges)
     
