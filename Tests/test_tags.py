@@ -259,7 +259,7 @@ class FunctionalTest(unittest.TestCase):
     def testOptionalOutput(self):
         modules = tags.process(['TestData/PackageA'], [], verbose=True)
         self.assertTrue(isinstance(modules, ModuleDict), 'did not return modules')
-        self.assertEquals(modules, self.packageA)
+        self.assertDictsEqual(modules, self.packageA)
 
 
 if __name__ == '__main__':
