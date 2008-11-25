@@ -45,11 +45,28 @@ def generateClassTag(modules, output):
     f.close()
 
 
-def process(argList, excluded, inputDict=None, verbose=False):
+def process(filesOrDirectories, excluded, inputDict=None, verbose=False):
+    """
+    Visit every package in ``filesOrDirectories`` and return a ModuleDict for everything,
+    that can be used to generate a PYSMELLTAGS file.
+
+    filesOrDirectories: list of paths to process. They can either be directories or files.
+                        Directories can either be packages or they can contain packages.
+
+    excluded: list of directories to exclude (eg. ['test', '.svn'])
+
+    inputDict: a ModuleDict instance to update with any new or updated python
+               namespaces.
+
+    verbose: flag that turns on verbose logging (print what is going on).
+
+    returns: The generated ModuleDict instance for the directories provided in
+             ``filesOrDirectories``.
+    """
     modules = ModuleDict()
     if inputDict:
         modules.update(inputDict)
-    for rootPackage in argList:
+    for rootPackage in filesOrDirectories:
         if os.path.isdir(rootPackage):
             for path, dirs, files in os.walk(rootPackage):
                 for exc in excluded:
