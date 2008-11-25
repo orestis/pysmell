@@ -89,7 +89,9 @@ class ModuleDict(dict):
         return len(self.keys())
 
     def __eq__(self, other):
-        return isinstance(other, ModuleDict) and other._modules == self._modules
+        return ((isinstance(other, ModuleDict) and other._modules == self._modules) or
+               (isinstance(other, dict) and other == self._modules))
+              
 
     def __ne__(self, other):
         return not self == other

@@ -45,7 +45,7 @@ def generateClassTag(modules, output):
     f.close()
 
 
-def process(argList, excluded, output, inputDict=None, verbose=False):
+def process(argList, excluded, inputDict=None, verbose=False):
     modules = ModuleDict()
     if inputDict:
         modules.update(inputDict)
@@ -80,7 +80,7 @@ def process(argList, excluded, output, inputDict=None, verbose=False):
             newmodules = processFile(filename, absPath)
             modules.update(newmodules)
             
-    generateClassTag(modules, output)
+    return modules
 
 
 def main():
@@ -120,16 +120,14 @@ def main():
         inputDict = None
 
 
-    #if not fileList:
-    #    fileList = [os.getcwd()]
-
     if timing:
         import time
         start = time.clock()
     if verbose:
         print 'processing', fileList
         print 'ignoring', excluded
-    process(fileList, excluded, output, inputDict=inputDict, verbose=verbose)
+    modules = process(fileList, excluded, inputDict=inputDict, verbose=verbose)
+    generateClassTag(modules, output)
     if timing:
         took = time.clock() - start
         print 'took %f seconds' % took

@@ -3,6 +3,8 @@ from textwrap import dedent
 import subprocess
 import os
 from pysmell import idehelper
+from pysmell.codefinder import ModuleDict
+from pysmell import tags
 
 class ProducesFile(object):
     def __init__(self, *files):
@@ -252,6 +254,12 @@ class FunctionalTest(unittest.TestCase):
         self.fail("when doing 'from place import *', do not bring in everything"
         "in the pointers but look for __all__ in the module and add only"
         "these.")
+
+
+    def testOptionalOutput(self):
+        modules = tags.process(['TestData/PackageA'], [], verbose=True)
+        self.assertTrue(isinstance(modules, ModuleDict), 'did not return modules')
+        self.assertEquals(modules, self.packageA)
 
 
 if __name__ == '__main__':
