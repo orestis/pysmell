@@ -37,6 +37,8 @@ python << eopython
 from pysmell import vimhelper, idehelper
 import vim
 import string
+from PerfTimer import PerfTimer
+
 TRANSLATEQUOTES = string.maketrans("\'\"", "\"\'")
 eopython
 
@@ -66,13 +68,20 @@ endfunction
 
 python << eopython
 def vimcompletePYSMELL(origSource, origLineNo, origCol, base):
+    import PerfTimer as PTModule
+    PTModule.OUT = file('perflog.txt', 'w')
+    t = PerfTimer('complete')
     fullPath = vim.current.buffer.name
+    t.BeforeFind
     PYSMELLDICT = idehelper.findPYSMELLDICT(fullPath)
+    t.AfterFind
     if not PYSMELLDICT:
         vim.command("echoerr 'No PYSMELLTAGS found. You have to generate one.'")
         return
 
+    t.BeforeDetection
     options = idehelper.detectCompletionType(fullPath, origSource, origLineNo, origCol, base, PYSMELLDICT)
+    t.AfterDetection
     if int(vim.eval('g:pysmell_debug')):
         for b in vim.buffers:
             if b.name.endswith('PYSMELL_DEBUG'):
@@ -80,9 +89,15 @@ def vimcompletePYSMELL(origSource, origLineNo, origCol, base):
                 b.append("%r" % (options,))
                 break
 
+    t.BeforeCompletions
     completions = idehelper.findCompletions(base, PYSMELLDICT, options, vim.eval('g:pysmell_matcher'))
+    t.AfterCompletions
     output = repr(completions)
+    t.AfterOutput
     translated = output.translate(TRANSLATEQUOTES)
+    t.AfterTranslate
     vim.command('let g:pysmell_completions = %s' % (translated, ))
+    t.end
+    PTModule.OUT.close()
 
 eopython

@@ -36,19 +36,31 @@ def updatePySmellDict(master, partial):
 
 
 def tryReadPYSMELLDICT(directory, filename, dictToUpdate):
+    from PerfTimer import PerfTimer
+    t = PerfTimer('tryRead: ' + directory + ' ' + filename, 2)
     if os.path.exists(os.path.join(directory, filename)):
+        t.BeforeOpen
         tagsFile = open(os.path.join(directory, filename), 'r')
         try:
-            updatePySmellDict(dictToUpdate, eval(tagsFile.read()))
+            t.BeforeRead
+            contents = tagsFile.read()
+            t.BeforeEval
+            d = eval(contents)
+            t.BeforeUpdate
+            updatePySmellDict(dictToUpdate, d)
         finally:
             tagsFile.close()
+    t.end
     
 
 def findPYSMELLDICT(filename):
+    from PerfTimer import PerfTimer
+    t = PerfTimer('findPYSMELLDICT', 1)
     pathParts = _getPathParts(filename)[:-1]
     PYSMELLDICT = {}
     while pathParts:
         directory = os.path.join(*pathParts)
+        getattr(t, directory)
         for tagsfile in fnmatch.filter(listdir(directory), 'PYSMELLTAGS.*'):
             tryReadPYSMELLDICT(directory, tagsfile, PYSMELLDICT)
         tagsPath = os.path.join(directory, 'PYSMELLTAGS')
@@ -58,6 +70,7 @@ def findPYSMELLDICT(filename):
         pathParts.pop()
     else:
         return None
+    t.end
     return PYSMELLDICT
             
 
@@ -213,16 +226,22 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
     Note that Vim deletes the "base" when a completion is requested so extra trickery must be performed to get it from the source.
 
     """
+    from PerfTimer import PerfTimer
+    t = PerfTimer('detect', 1)
+    t.BeforeAST
     AST = getSafeTree(origSource, lineNo)
+    t.AfterAST
     if update:
         currentDict = analyzeFile(fullPath, AST)
         if currentDict is not None:
             updatePySmellDict(PYSMELLDICT, currentDict)
+    t.AfterUpdate
     origLineText = origSource.splitlines()[lineNo - 1] # lineNo is 1 based
     leftSide, rightSide = origLineText[:origCol], origLineText[origCol:]
     leftSideStripped = leftSide.lstrip()
 
     isImportCompletion = (leftSideStripped.startswith("from ") or leftSideStripped.startswith("import "))
+    t.BeforeImportCompletion
     if isImportCompletion:
         module = leftSideStripped.split(" ")[1]
         if "." in module and " import " not in leftSideStripped:
@@ -230,11 +249,13 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
         showMembers = False
         if " import " in leftSide:
             showMembers = True
+        t.end
         return CompletionOptions(Types.MODULE, module=module, showMembers=showMembers)
 
     isAttrLookup = "." in leftSide and not isImportCompletion
     isArgCompletion = base.endswith('(') and leftSide.endswith(base)
 
+    t.BeforeArgCompletion
     if isArgCompletion:
         rindex = None
         if rightSide.startswith(')'):
@@ -242,26 +263,34 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
         funcName = None
         lindex = leftSide.rfind('.') + 1 #rfind will return -1, so with +1 it will be zero
         funcName = leftSide[lindex:-1].lstrip()
+        t.end
         if isAttrLookup:
             return CompletionOptions(Types.METHOD, parents=[], klass=None, name=funcName, rindex=rindex)
         else:
             return CompletionOptions(Types.FUNCTION, name=funcName, rindex=rindex)
 
+    t.BeforeClassCompletion
     if isAttrLookup and AST is not None:
         var = leftSideStripped[:leftSideStripped.rindex('.')]
         isClassLookup = var == 'self'
         if isClassLookup:
             klass, parents = inferClass(fullPath, AST, lineNo, PYSMELLDICT)
+            t.end
             return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         else:
+            t.BeforeModule
             chain = getChain(leftSideStripped)[:-1] # strip dot
             possibleModule = inferModule(chain, AST, lineNo)
             if possibleModule is not None:
                 return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)
+
+        t.BeforeInferInstance
         klass, parents = inferInstance(fullPath, AST, lineNo, var, PYSMELLDICT)
+        t.end
         return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         
 
+    t.end
     return CompletionOptions(Types.TOPLEVEL)
 
 
