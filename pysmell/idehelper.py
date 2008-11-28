@@ -15,6 +15,11 @@ from dircache import listdir
 from pysmell.codefinder import findRootPackageList, getImports, getNames, getClassAndParents, analyzeFile, getSafeTree
 from pysmell.matchers import MATCHERS
 
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 def findBase(line, col):
     index = col
     # col points at the end of the completed string
@@ -38,7 +43,12 @@ def updatePySmellDict(master, partial):
 def tryReadPYSMELLDICT(directory, filename, dictToUpdate):
     from PerfTimer import PerfTimer
     t = PerfTimer('tryRead: ' + directory + ' ' + filename, 2)
-    if os.path.exists(os.path.join(directory, filename)):
+    fullPath = os.path.join(directory, filename)
+    pickleFileName = os.path.join(directory, 'pickle_' + filename)
+    if os.path.exists(pickleFileName):
+        t.BeforeLoadPickle
+        d = pickle.load(open(pickleFileName, 'rb'))
+    elif os.path.exists(fullPath):
         t.BeforeOpen
         tagsFile = open(os.path.join(directory, filename), 'r')
         try:
@@ -46,10 +56,15 @@ def tryReadPYSMELLDICT(directory, filename, dictToUpdate):
             contents = tagsFile.read()
             t.BeforeEval
             d = eval(contents)
-            t.BeforeUpdate
-            updatePySmellDict(dictToUpdate, d)
+            t.BeforePickle
+            pickleFile = open(pickleFileName, 'wb')
+            pickle.dump(d, pickleFile, protocol=pickle.HIGHEST_PROTOCOL)
+            pickleFile.close()
         finally:
             tagsFile.close()
+    t.BeforeUpdate
+    updatePySmellDict(dictToUpdate, d)
+
     t.end
     
 

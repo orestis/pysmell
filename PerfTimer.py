@@ -17,6 +17,7 @@ class PerfTimer(object):
     def report(self, (startName, startTime), (endName, endTime)):
         print >> OUT, '%s: from %s to %s: %0.3f' % (self.name, startName, endName,
             (endTime - startTime).microseconds / 1000.0)
+        OUT.flush()
 
     def _end(self):
         self.add('end')
