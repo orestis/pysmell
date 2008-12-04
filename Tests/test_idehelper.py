@@ -404,6 +404,19 @@ class DetectOptionsTest(unittest.TestCase):
         self.assertEquals(options, expected)
 
 
+    def testDetectModuleAttrLookupWithBase(self):
+        source = dedent("""\
+            from Nested.Package import Module as mod
+
+            func(mod.some, arg)
+        """)
+        line = "func(mod.some"
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
+                                            3, len(line), 'some', NESTEDDICT, update=False)
+        expected = CompletionOptions(Types.MODULE, module="Nested.Package.Module", showMembers=True)
+        self.assertEquals(options, expected)
+
+
     def testDetectModuleAttrLookup2(self):
         source = dedent("""\
             from Nested.Package import Module
@@ -421,9 +434,9 @@ class DetectOptionsTest(unittest.TestCase):
         source = dedent("""\
             from Nested import Package
 
-            Package.Module.
+            funct(Package.Module., arg)
         """)
-        line = "Package.Module."
+        line = "funct(Package.Module."
         options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
                                             3, len(line), '', NESTEDDICT, update=False)
         expected = CompletionOptions(Types.MODULE, module="Nested.Package.Module", showMembers=True)
@@ -457,6 +470,7 @@ class DetectOptionsTest(unittest.TestCase):
                                             5, len(line), '', self.pysmelldict)
         expected = CompletionOptions(Types.INSTANCE, klass='Module.aClass', parents=['object'])
         self.assertEquals(options, expected)
+
 
 
 

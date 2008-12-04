@@ -254,7 +254,11 @@ def detectCompletionType(fullPath, origSource, lineNo, origCol, base, PYSMELLDIC
             klass, parents = inferClass(fullPath, AST, lineNo, PYSMELLDICT)
             return CompletionOptions(Types.INSTANCE, klass=klass, parents=parents)
         else:
-            chain = getChain(leftSideStripped)[:-1] # strip dot
+            chain = getChain(leftSideStripped) # strip dot
+            if base and chain.endswith(base):
+                chain = chain[:-len(base)]
+            if chain.endswith('.'):
+                chain = chain[:-1]
             possibleModule = inferModule(chain, AST, lineNo)
             if possibleModule is not None:
                 return CompletionOptions(Types.MODULE, module=possibleModule, showMembers=True)

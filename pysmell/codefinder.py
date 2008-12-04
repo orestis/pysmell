@@ -323,7 +323,15 @@ def getName(node):
         return '%s %r' % (' '.join(map(getName, node.getChildren()[:-1])), rhs.value)
     if isinstance(node, ast.Slice):
         children = node.getChildren()
-        return '%s[%s%s]' % (getName(children[0]), ':', children[-1].value)
+        slices = children[2:]
+        formSlices = []
+        for sl in slices:
+            if sl is None:
+                formSlices.append('')
+            else:
+                formSlices.append(getName(sl))
+        sliceStr = ':'.join(formSlices)
+        return '%s[%s]' % (getName(children[0]), sliceStr)
     if isinstance(node, ast.Not):
         return "not %s" % ''.join(map(getName, ast.flatten(node)))
     if isinstance(node, ast.Or):

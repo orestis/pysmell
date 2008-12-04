@@ -133,6 +133,8 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled('(a, b, c)')
         self.assertNamesIsHandled('[a, b, c]')
         self.assertNamesIsHandled('lambda a: (c, b)')
+        self.assertNamesIsHandled("name[1:]")
+        self.assertNamesIsHandled("name[1:2]")
         self.assertNamesIsHandled("lambda name: name[:1] != '_'")
         self.assertNamesIsHandled("-180")
         self.assertNamesIsHandled("10*180")

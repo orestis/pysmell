@@ -72,12 +72,21 @@ def vimcompletePYSMELL(origSource, origLineNo, origCol, base):
         vim.command("echoerr 'No PYSMELLTAGS found. You have to generate one.'")
         return
 
-    options = idehelper.detectCompletionType(fullPath, origSource, origLineNo, origCol, base, PYSMELLDICT)
+    try:
+        options = idehelper.detectCompletionType(fullPath, origSource, origLineNo, origCol, base, PYSMELLDICT)
+    except:
+        f = file('pysmell_exc.txt', 'wb')
+        import traceback
+        f.write(traceback.format_exc())
+        f.close()
+        vim.command("echoerr 'Exception written out at pysmell_exc.txt'")
+        return
+
     if int(vim.eval('g:pysmell_debug')):
         for b in vim.buffers:
             if b.name.endswith('PYSMELL_DEBUG'):
-                b.append("%s %s %s %s %s" % (fullPath, origSource[origLineNo], origCol, base))
-                b.append("%r" % (options,))
+                b.append("%s %s %s %s" % (fullPath, origSource[origLineNo], origCol, base))
+                b.append("%r" % options)
                 break
 
     completions = idehelper.findCompletions(base, PYSMELLDICT, options, vim.eval('g:pysmell_matcher'))
