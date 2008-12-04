@@ -417,6 +417,22 @@ class DetectOptionsTest(unittest.TestCase):
         self.assertEquals(options, expected)
 
 
+    def testDetectModuleAttrLookupWithBase2(self):
+        print '--------'
+        source = dedent("""\
+            from Nested.Package import Module as mod
+
+            class Some(object):
+                def init(self):
+                    self.func(mod.EVT_, self.something)
+        """)
+        line = "%sself.func(mod.EVT_" % (" " * 8)
+        options = detectCompletionType(os.path.join('TestData', 'PackageA', 'Module.py'), source,
+                                            5, len(line), 'EVT_', NESTEDDICT, update=False)
+        expected = CompletionOptions(Types.MODULE, module="Nested.Package.Module", showMembers=True)
+        self.assertEquals(options, expected)
+
+
     def testDetectModuleAttrLookup2(self):
         source = dedent("""\
             from Nested.Package import Module
@@ -441,6 +457,8 @@ class DetectOptionsTest(unittest.TestCase):
                                             3, len(line), '', NESTEDDICT, update=False)
         expected = CompletionOptions(Types.MODULE, module="Nested.Package.Module", showMembers=True)
         self.assertEquals(options, expected)
+
+
 
 
     def testDetectClassCreation(self):

@@ -48,6 +48,7 @@ row, col = vim.current.window.cursor
 line = vim.current.buffer[row-1]
 index = idehelper.findBase(line, col)
 vim.command('let g:pysmell_origCol = %d' % col)
+vim.command('let g:pysmell_origLine = %r' % line)
 vim.command('return %d' % index)
 eopython
     "findstart = 0 when we need to return the list of completions
@@ -56,8 +57,12 @@ eopython
         let g:pysmell_completions = [] 
 python << eopython
 origCol = int(vim.eval('g:pysmell_origCol'))
-origSource = '\n'.join(vim.current.buffer)
-vimcompletePYSMELL(origSource, vim.current.window.cursor[0], origCol, vim.eval("a:base"))
+origLine = vim.eval('g:pysmell_origLine')
+origSourceLines = vim.current.buffer[:]
+lineno = vim.current.window.cursor[0]
+origSourceLines[lineno - 1] = origLine
+origSource = '\n'.join(origSourceLines)
+vimcompletePYSMELL(origSource, lineno, origCol, vim.eval("a:base"))
 
 eopython
         return g:pysmell_completions
