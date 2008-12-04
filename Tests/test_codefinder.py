@@ -2,7 +2,6 @@ import os
 import unittest
 from textwrap import dedent
 import compiler
-from compiler.visitor import ExampleASTVisitor
 from pprint import pformat
 
 from pysmell.codefinder import CodeFinder, getClassAndParents, getNames, ModuleDict, findPackage, analyzeFile, getSafeTree
@@ -47,7 +46,7 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder = CodeFinder()
         codeFinder.module = 'TestModule'
         codeFinder.package = 'TestPackage'
-        compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+        compiler.walk(tree, codeFinder)
         try:
             return eval(pformat(codeFinder.modules))
         except:
@@ -66,7 +65,7 @@ class CodeFinderTest(unittest.TestCase):
         codeFinder = CodeFinder()
         codeFinder.package = 'TestPackage'
         codeFinder.module = '__init__'
-        compiler.walk(tree, codeFinder, walker=ExampleASTVisitor(), verbose=1)
+        compiler.walk(tree, codeFinder)
         expected = {'CLASSES': {'TestPackage.A': dict(docstring='', bases=['object'], constructor=[], methods=[], properties=[])},
             'FUNCTIONS': [], 'CONSTANTS': [], 'POINTERS': {}, 'HIERARCHY': ['TestPackage']}
         actual = eval(pformat(codeFinder.modules))
@@ -118,6 +117,14 @@ class CodeFinderTest(unittest.TestCase):
 
 
     def assertNamesIsHandled(self, name):
+        try:
+            from sourcecodegen.generation import ModuleSourceCodeGenerator
+            tree = compiler.parse(name)
+            source = ModuleSourceCodeGenerator(tree).getSourceCode()[:-1] #strip newline
+            if source != name:
+                print 'pycodegen: %s != %s' % (source, name)
+        except ImportError:
+            pass
         out = self.getModule("""
         def f(a=%s):
             pass
@@ -137,21 +144,23 @@ class CodeFinderTest(unittest.TestCase):
         self.assertNamesIsHandled("name[1:2]")
         self.assertNamesIsHandled("lambda name: name[:1] != '_'")
         self.assertNamesIsHandled("-180")
-        self.assertNamesIsHandled("10*180")
-        self.assertNamesIsHandled("10/180")
-        self.assertNamesIsHandled("10**180")
-        self.assertNamesIsHandled("10>>180")
-        self.assertNamesIsHandled("10<<180")
         self.assertNamesIsHandled("not x.ishidden()")
         self.assertNamesIsHandled("'='+repr(v)")
         self.assertNamesIsHandled("1L")
+        self.assertNamesIsHandled("1123.001")
         self.assertNamesIsHandled("Some(opts=None)")
         self.assertNamesIsHandled("s%s")
         self.assertNamesIsHandled("s|s|b")
         self.assertNamesIsHandled("s-s")
         self.assertNamesIsHandled("''")
+        self.assertNamesIsHandled("'123'")
         self.assertNamesIsHandled("a or b")
         self.assertNamesIsHandled("a and b")
+        self.assertNamesIsHandled("10*180")
+        self.assertNamesIsHandled("10/180")
+        self.assertNamesIsHandled("10**180")
+        self.assertNamesIsHandled("10>>180")
+        self.assertNamesIsHandled("10<<180")
         
 
     def testClassProperties(self):
