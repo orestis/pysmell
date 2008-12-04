@@ -23,8 +23,24 @@ class ProducesFile(object):
         patched.__name__ = func.__name__
         return patched
 
+class TestCase(unittest.TestCase):
+    def assertDictsEqual(self, actualDict, expectedDict):
+        self.assertEquals(len(actualDict.keys()), len(expectedDict.keys()),
+            "dicts don't have equal number of keys: %r != %r" % (actualDict.keys(), expectedDict.keys()))
+        self.assertEquals(set(actualDict.keys()), set(expectedDict.keys()), "dicts don't have equal keys")
+        for key, value in actualDict.items():
+            if isinstance(value, dict):
+                self.assertTrue(isinstance(expectedDict[key], dict), "incompatible types found for key %s" % key)
+                self.assertDictsEqual(value, expectedDict[key])
+            elif isinstance(value, list):
+                self.assertTrue(isinstance(expectedDict[key], list), "incompatible types found for key %s" % key)
+                self.assertEquals(sorted(value), sorted(expectedDict[key]), 'wrong sorted(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
+            else:
+                self.assertEquals(value, expectedDict[key], "wrong value for key %s: \n%s != %s" % (key, value, expectedDict[key]))
 
-class FunctionalTest(unittest.TestCase):
+
+
+class FunctionalTest(TestCase):
     def setUp(self):
         self.packageA = {
             'CONSTANTS': [
@@ -90,20 +106,6 @@ class FunctionalTest(unittest.TestCase):
             'POINTERS': {},
             'HIERARCHY': ['PackageB']
         }
-
-    def assertDictsEqual(self, actualDict, expectedDict):
-        self.assertEquals(len(actualDict.keys()), len(expectedDict.keys()),
-            "dicts don't have equal number of keys: %r != %r" % (actualDict.keys(), expectedDict.keys()))
-        self.assertEquals(set(actualDict.keys()), set(expectedDict.keys()), "dicts don't have equal keys")
-        for key, value in actualDict.items():
-            if isinstance(value, dict):
-                self.assertTrue(isinstance(expectedDict[key], dict), "incompatible types found for key %s" % key)
-                self.assertDictsEqual(value, expectedDict[key])
-            elif isinstance(value, list):
-                self.assertTrue(isinstance(expectedDict[key], list), "incompatible types found for key %s" % key)
-                self.assertEquals(sorted(value), sorted(expectedDict[key]), 'wrong sorted(list) for key %s:\n%r != %r' % (key, value, expectedDict[key]))
-            else:
-                self.assertEquals(value, expectedDict[key], "wrong value for key %s: %s" % (key, value))
 
 
     @ProducesFile('TestData/PYSMELLTAGS')
