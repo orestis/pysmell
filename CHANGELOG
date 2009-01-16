@@ -1,3 +1,23 @@
+PySmell v0.7.3 - 16 Jan 2009
+
+Better support for windows line endings.
+Added some docstrings
+Better error handling
+Better module attribute lookups
+
+
+PySmell v0.7.2 - 16 Nov 2008
+
+Better arguments handling.
+New -i option allows you to update existing PYSMELLTAGS file.
+The current file is analyzed when a completion is requested.
+TextMate improvements - TM_PYTHON is picked up.
+Handle local classes
+Minor speedups.
+Tabs are now handled.
+Added ez_setup
+
+
 PySmell v0.7.1 - 4 Nov 2008
 
 More robust TextMate support, better error reporting on Vim.
